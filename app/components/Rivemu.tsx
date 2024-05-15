@@ -161,11 +161,13 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     // END: rivemu
       
     return (
-        <main className="flex items-center justify-center">
+        <>
             { !cartridge_data ?
-            <div className="text-white">No Cartridge...</div>
+                <div className="flex items-center justify-center">
+                    <div className="text-white">No Cartridge...</div>
+                </div>
             :<canvas
-                className='gameplay-screen border border-gray-500'
+                className='gameplay-screen border border-gray-500 bg-black'
                 id="canvas"
                 onContextMenu={(e) => e.preventDefault()}
                 tabIndex={-1}
@@ -176,7 +178,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
             />}
             <Script src="/rivemu.js?" strategy="lazyOnload" />
             <Script src="/initializeRivemu.js?" strategy="lazyOnload" />
-        </main>
+        </>
     )
 })
 

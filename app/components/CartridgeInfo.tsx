@@ -179,7 +179,7 @@ function CartridgeInfo() {
                                                 </Tab.Panels>
                                             </Tab.Group>
 
-                                            <Link href={`play/cartridge/${selectedCartridge.id}`} rel="noopener noreferrer" target="_blank"
+                                            <Link href={`play/cartridge/${selectedCartridge.id}`}
                                             className="btn w-full mt-2 flex justify-center">
                                                 PLAY (default mode)
                                             </Link>
