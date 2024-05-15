@@ -4,7 +4,8 @@ import React from 'react'
 import { Parser } from "expr-eval";
 import { ethers } from "ethers";
 import { useState, useEffect, useRef } from "react";
-import { useConnectWallet } from '@web3-onboard/react';
+//import { useConnectWallet } from '@web3-onboard/react';
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -157,7 +158,8 @@ function RivemuEditor() {
     const filter = createFilterOptions<string>();
 
     // signer
-    const [{ wallet }] = useConnectWallet();
+    const {user, ready, connectWallet} = usePrivy();
+    const {wallets} = useWallets();
 
     const rivemuRef = useRef<RivemuRef>(null);
     
@@ -171,13 +173,15 @@ function RivemuEditor() {
     }, []);
 
     useEffect(() => {
-        if (!wallet) {
+        if (!ready) return;
+
+        if (!user) {
             setEntropy("entropy");
         }
         else {
-            setEntropy(generateEntropy(wallet.accounts[0].address.toLowerCase(), rule?.id || ""));
+            setEntropy(generateEntropy(user.wallet!.address.toLowerCase(), rule?.id || ""));
         }
-    },[wallet]);
+    },[user]);
 
     useEffect(() => {
         if (cartridgesComboOpen && cartridgeList.length == 0) {
@@ -445,13 +449,21 @@ function RivemuEditor() {
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {connectWallet(); setErrorFeedback(undefined)}
+                }
+            );
             return;
         }
 
         // submit the gameplay
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: InserCartridgePayload = {
             data: ethers.utils.hexlify(cartridgeData)
         }
@@ -508,13 +520,22 @@ function RivemuEditor() {
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
             return;
         }
 
         // submit the gameplay
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: RuleData = {
             cartridge_id:"0x"+cartridgeId,
             name:ruleName,
@@ -737,17 +758,17 @@ function RivemuEditor() {
                          InputLabelProps={{ shrink: true }} />
 
                     <div className='grid grid-cols-2 gap-2 justify-items-center'>
-                    <button disabled={!cartridgeData || storedCartridge || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
+                    <button disabled={!cartridgeData || storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
                         Insert Cartridge
                     </button>
 
-                    <button disabled={!ruleName || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
+                    <button disabled={!ruleName || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
                         Create Rule
                     </button>
                     </div>
                 </div>
 
-            {errorFeedback ? <ErrorModal error={errorFeedback} dissmissFunction={() => {setErrorFeedback(undefined)}} /> : <></>}
+            {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
             </main>
         </ThemeProvider>
     )
