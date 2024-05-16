@@ -35,7 +35,6 @@
     "react-dom": "^18",
     "react-qr-code": "^2.0.12",
     "react-use-downloader": "^1.2.4",
-    "react-youtube": "^10.1.0",
     "three": "^0.159.0"
   },
   "devDependencies": {

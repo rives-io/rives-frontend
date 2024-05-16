@@ -34,7 +34,7 @@ export default async function PlayPage({cartridge_id, rule_id}:{cartridge_id?: s
     }
 
     return (
-        <main className="flex h-lvh items-center justify-center">
+        <main className="flex items-center justify-center my-20">
             <RivemuPlayer rule_id={rule_id}/>
             {[ContestStatus.IN_PROGRESS,ContestStatus.INVALID].indexOf(status) > -1 ? <GameplaySubmitter /> : <></>}
         </main>

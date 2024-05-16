@@ -52,19 +52,19 @@ function Navbar() {
                 <RivesLogo className="w-full min-w-16 max-w-28" />
             </Link>
 
-            <Link href={"/cartridges"} className={`invisible lg:visible h-full grid grid-cols-1 items-center navbar-item ${pathname.startsWith("/cartridges") ? "lg:link-active" : "" }`}>
+            <Link href={"/cartridges"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "lg:link-active" : "" }`}>
                 <p>Cartridges</p>
             </Link>
 
-            <Link href={"/contests"} className={`invisible lg:visible h-full grid grid-cols-1 items-center navbar-item ${pathname.startsWith("/contests") ? "lg:link-active" : "" }`}>
+            <Link href={"/contests"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "lg:link-active" : "" }`}>
                 Contests
             </Link>
 
-            <Link href={"/tapes"} className={`invisible lg:visible h-full grid grid-cols-1 items-center navbar-item ${pathname.startsWith("/tapes") ? "lg:link-active" : "" }`}>
+            <Link href={"/tapes"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "lg:link-active" : "" }`}>
                 Tapes
             </Link>
 
-            <div className='invisible lg:visible flex-1 flex justify-end h-full'>
+            <div className='hidden lg:flex flex-1 justify-end h-full'>
                 <button className='navbar-item' disabled={connecting}
                     onClick={() => (wallet ? disconnect(wallet) : connect())}
                     title={wallet? wallet.accounts[0].address:""}
@@ -75,9 +75,9 @@ function Navbar() {
                 </button>
             </div>
 
-            <Menu as="div" className="lg:hidden navbar-item">
+            <Menu as="div" className="lg:hidden navbar-item ms-auto">
                 <Menu.Button className="h-full flex flex-col justify-center"><MenuIcon className='text-5xl' /></Menu.Button>
-                <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+                <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                     <div className="px-1 py-1 ">
                         <Menu.Item>
                             {({ active }) => (
