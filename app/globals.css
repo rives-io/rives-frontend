@@ -173,11 +173,11 @@ body {
   }
 
   .header {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex absolute top-0 z-10;
+    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap absolute top-0 z-10;
   }
 
   .footer {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex justify-center items-center absolute bottom-0;
+    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap justify-evenly  items-center absolute bottom-0;
   }
 
   .link-active {
@@ -220,6 +220,11 @@ body {
   width: 768px;
 }
 
+.youtube-frame {
+  width: 640px;
+  height: 360px;
+}
+
 /* consider height to see Score max-height 768 +64  */
 @media screen and (max-height: 832px)  {
   .gameplay-screen {
@@ -259,5 +264,19 @@ body {
   }
   .screen-controls {
     width: 256px;
+  }
+}
+
+@media screen and (max-width: 640px)  {
+  .youtube-frame {
+    width: 320px;
+    height: 180px;
+  }
+}
+
+@media screen and (max-height: 360px)  {
+  .youtube-frame {
+    width: 320px;
+    height: 180px;
   }
 }

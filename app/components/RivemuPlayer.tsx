@@ -394,14 +394,21 @@ function RivemuPlayer(
         rivemuRef.current?.setSpeed(10);
     };
     return (
-        <section className="flex items-center justify-center">
-            <div className="grid grid-cols-1 gap-1 place-items-center">
+        <section className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center text-center">
                 <span className="text-white" >Play mode: {rule?.name}</span>
                 {isTape && tapeInfo ? 
-                    <span className="text-xs text-white">Tape from {tapeInfo.player} on {tapeInfo.timestamp} {tapeInfo.score ? "with score "+tapeInfo.score : ""} ({tapeInfo.size})</span> : 
-                    <></>
+                        <span className="text-xs text-white">
+                            Tape from {tapeInfo.player} on {tapeInfo.timestamp} {tapeInfo.score ? "with score "+tapeInfo.score : ""} ({tapeInfo.size})
+                        </span>
+                    : 
+                        <></>
                 }
-                {!isTape && cstatus && cstatus != ContestStatus.INVALID ? <span className="text-xs text-white">Contest Status: {getContestStatusMessage(cstatus)}</span> : <></>}
+                {
+                    !isTape && cstatus && cstatus != ContestStatus.INVALID?
+                        <span className="text-xs text-white">Contest Status: {getContestStatusMessage(cstatus)}</span>
+                    : 
+                        <></>}
                 
                 { 
                             !rule_id? 
@@ -414,8 +421,8 @@ function RivemuPlayer(
                                         Score: {currScore}
                                     </span>
                 }
-
-                <div>
+            </div>
+            <div>
                 <div className='grid grid-cols-3 bg-gray-500 p-2 text-center screen-controls'>
                     <div className="flex justify-start gap-2">
                         <button className="justify-self-start bg-gray-700 text-white border border-gray-700 hover:border-black"
@@ -468,7 +475,7 @@ function RivemuPlayer(
                         </button>
                     </div>
 
-                </div>
+            </div>
                     <div className="relative">
                     { !playing.isPlaying?
                         <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
@@ -508,7 +515,6 @@ function RivemuPlayer(
                     </Box>
                     </div>
                 : <></>}
-            </div>
         </section>
     )
 }

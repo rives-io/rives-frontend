@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import YoutubeVideo from "./components/youtubeVideo";
 import rivesLogo from '../public/rives64px.png';
 
 
@@ -24,7 +23,8 @@ export default function Home() {
         <div className='w-11/12 my-12 h-1 rainbow-background'></div>
 
         <div className="flex items-center justify-center">
-          <YoutubeVideo videoId="7y22pdgGIE0" />
+          <iframe className="youtube-frame" src="http://www.youtube.com/embed/7y22pdgGIE0">
+          </iframe>
         </div>
 
         <a className='my-4 btn' href={"/cartridges"}>
