@@ -28,9 +28,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput } from "../backend-libs/core/lib";
+import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { CartridgeInfo, RuleInfo, InfoCartridge, RuleData, InserCartridgePayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, RuleInfo, InfoCartridge, RuleData, InsertCartridgePayload, RemoveCartridgePayload } from "../backend-libs/core/ifaces";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 
@@ -450,9 +450,8 @@ function RivemuEditor() {
             return;
         }
 
-        // submit the gameplay
         const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
-        const inputData: InserCartridgePayload = {
+        const inputData: InsertCartridgePayload = {
             data: ethers.utils.hexlify(cartridgeData)
         }
         try {
@@ -513,7 +512,6 @@ function RivemuEditor() {
             return;
         }
 
-        // submit the gameplay
         const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
         const inputData: RuleData = {
             cartridge_id:"0x"+cartridgeId,
@@ -536,6 +534,44 @@ function RivemuEditor() {
             return;
         }
     }
+
+    async function sendRemoveCartridge() {
+
+        if (!storedCartridge) {
+            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true});
+            return;
+        }
+        
+        if (!selectedCartridge) {
+            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true});
+            return;
+        }
+
+        if (!wallet) {
+            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            return;
+        }
+
+        if (wallet.accounts[0].address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
+            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true});
+            return;
+        }
+
+        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const inputData: RemoveCartridgePayload = {
+            id: selectedCartridge.id
+        }
+        try {
+            await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+        } catch (error) {
+            console.log(error)
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            return;
+        }
+    }
+
     return (
         <ThemeProvider theme={darkTheme}>
         <CssBaseline />
@@ -739,6 +775,10 @@ function RivemuEditor() {
                     <div className='grid grid-cols-2 gap-2 justify-items-center'>
                     <button disabled={!cartridgeData || storedCartridge || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
                         Insert Cartridge
+                    </button>
+
+                    <button className="btn mt-2 text-[10px] shadow" onClick={sendRemoveCartridge} hidden={!wallet || !selectedCartridge || wallet.accounts[0].address.toLowerCase() != selectedCartridge.user_address.toLowerCase()}>
+                        Remove Cartridge
                     </button>
 
                     <button disabled={!ruleName || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>

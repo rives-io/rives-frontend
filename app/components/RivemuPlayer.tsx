@@ -13,6 +13,7 @@ import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import FastForwardIcon from '@mui/icons-material/FastForward';
 import { GIF_FRAME_FREQ, gameplayContext } from "../play/GameplayContextProvider";
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
@@ -51,7 +52,7 @@ const getCartridgeData = async (cartridgeId:string) => {
     return data;
 }
 
-function generateEntropy(userAddress?:String, ruleId?:String): string {
+export function generateEntropy(userAddress?:String, ruleId?:String): string {
 
     const hexRuleId = `0x${ruleId}`;
     if (!userAddress || userAddress.length != 42 || !ethers.utils.isHexString(userAddress) || !ethers.utils.isHexString(hexRuleId)) {
@@ -87,25 +88,25 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
 }
 
 const getScore = async (tapeId:string):Promise<string> => {
-    const out:Array<VerificationOutput> = await getOutputs(
+    const out:Array<VerificationOutput> = (await getOutputs(
         {
             tags: ["score",tapeId],
             type: 'notice'
         },
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    );
+    )).data;
     if (out.length === 0) return "";
     return out[0].score.toString();
 }
 
 const getTapePayload = async (tapeId:string):Promise<VerifyPayload> => {
-    const replayLogs:Array<VerifyPayload> = await getOutputs(
+    const replayLogs:Array<VerifyPayload> = (await getOutputs(
         {
             tags: ["tape",tapeId],
             type: 'input'
         },
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    );
+    )).data;
     if (replayLogs.length === 0) throw new Error(`Tape ${tapeId} not found!`);
     return replayLogs[0];
 }
@@ -346,7 +347,6 @@ function RivemuPlayer(
     }
 
     async function pause() {
-        console.log("pause",playing.isPlaying)
         if (playing.isPlaying) {
             if (paused){
                 rivemuRef.current?.setSpeed(speed);
@@ -358,6 +358,12 @@ function RivemuPlayer(
         }
     }
 
+    async function resumeSpeed() {
+        if (skipToFrame) {
+            rivemuRef.current?.setSpeed(speed);
+            setSkipToFrame(undefined);
+        }
+    }
     async function rivemuChangeSpeed() {
         let newSpeed = 1.0;
         if (speed >= 4.0) {
@@ -458,7 +464,7 @@ function RivemuPlayer(
                     <div className="flex justify-end gap-2">
                         <button className="justify-self-end bg-gray-700 text-white border border-gray-700 hover:border-black font-thin"
                         title="Change Speed"
-                        disabled={!playing.isPlaying}
+                        disabled={!playing.isPlaying || !isTape}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={rivemuChangeSpeed}
                         >
@@ -492,7 +498,11 @@ function RivemuPlayer(
                         <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
                             <PlayArrowIcon className='text-7xl' />
                         </button>
-                    : <></>)
+                    : (skipToFrame ?     
+                        <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-md backdrop-opacity-40 border border-gray-500'} onClick={resumeSpeed}>
+                            <FastForwardIcon className='text-7xl animate-pulse' />
+                        </button>
+                    : <></>))
                     }
                         <Rivemu ref={rivemuRef} cartridge_data={cartridgeData} args={rule.args} entropy={entropy}
                             tape={tape?.tape && tape.tape.length > 0 && ethers.utils.arrayify(tape.tape)}

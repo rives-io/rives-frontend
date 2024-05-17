@@ -17,7 +17,7 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
     
     if (getVerificationOutputs) {
         const tags = ["score",cartridge_id,rule];
-        const tapes:Array<VerificationOutput> = await getOutputs(
+        const tapes:Array<VerificationOutput> = (await getOutputs(
             {
                 tags,
                 type: 'notice',
@@ -26,11 +26,11 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
                 order_by: "value",
                 order_dir: "desc"
             },
-            {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
         return tapes;
     }
     const tags = ["tape",cartridge_id,rule];
-    const tapes:Array<VerifyPayloadInput> = await getOutputs(
+    const tapes:Array<VerifyPayloadInput> = (await getOutputs(
         {
             tags,
             type: 'input',
@@ -39,7 +39,7 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
             order_by: "timestamp",
             order_dir: "desc"
         },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
     return tapes;
 }
 

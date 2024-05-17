@@ -89,12 +89,12 @@ export class IndexerPayloadInput extends Input<ifaces.IndexerPayload> { construc
 export function decodeToIndexerPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): IndexerPayloadInput {
     return new IndexerPayloadInput(output as CartesiInput);
 }
+
 export class IndexerPayload extends IOData<ifaces.IndexerPayload> { constructor(data: ifaces.IndexerPayload, validate: boolean = true) { super(models['IndexerPayload'],data,validate); } }
 export function exportToIndexerPayload(data: ifaces.IndexerPayload): string {
     const dataToExport: IndexerPayload = new IndexerPayload(data);
     return dataToExport.export();
 }
-
 export class IndexerOutput extends Output<ifaces.IndexerOutput> { constructor(output: CartesiReport | InspectReport) { super(models['IndexerOutput'],output); } }
 export function decodeToIndexerOutput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): IndexerOutput {
     return new IndexerOutput(output as CartesiReport);

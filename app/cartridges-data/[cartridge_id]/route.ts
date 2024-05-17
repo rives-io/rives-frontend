@@ -29,8 +29,24 @@ const getCartridgeData = async (cartridgeId:string) => {
 
 export async function GET(request: NextRequest, { params }: { params: { cartridge_id: string }}) {
     const cartridgeId = params.cartridge_id;
-    console.log("cartridgeId",cartridgeId)
-    return new Response(await getCartridgeData(cartridgeId),{
+    let data: Uint8Array = new Uint8Array();
+    try {
+      data = await getCartridgeData(cartridgeId);
+    } 
+    catch (error) {
+      console.log(error)
+    }
+    if (data.length == 0)
+      return new Response(data,{
+        status:404, 
+        headers: {
+          "Content-Type": "application/octet-stream",
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    return new Response(data,{
       status:200, 
       headers: {
         "Content-Type": "application/octet-stream",

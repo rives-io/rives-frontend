@@ -169,7 +169,11 @@ export class BasicIO<T extends object> extends IOData<T> {
     _msgSender?: string
 
 
-    constructor(model: ModelInterface<T>, payload: string, timestamp?: number, blockNumber?: number, msgSender?: string, inputIndex?: number) {
+    constructor(model: ModelInterface<T>, payload: string, timestamp?: number, blockNumber?: number, msgSender?: string, inputIndex?: number, proxyMsgSender: boolean = false) {
+        if (proxyMsgSender) {
+            msgSender = `0x${payload.slice(10,50)}`;
+            payload = `0x${payload.slice(2,10)}${payload.slice(50)}`;
+        }
         super(model,genericDecodeTo<T>(payload,model),false);
         this._timestamp = timestamp;
         this._blockNumber = blockNumber;
@@ -189,8 +193,8 @@ export class BasicOutput<T extends object> extends BasicIO<T> {
 }
 
 export class Input<T extends object> extends BasicIO<T>{
-    constructor(model: ModelInterface<T>, input: CartesiInput) {
-        super(model, input.payload, input.timestamp,input.blockNumber, input.msgSender, input.index);
+    constructor(model: ModelInterface<T>, input: CartesiInput, proxyMsgSender: boolean = false) {
+        super(model, input.payload, input.timestamp,input.blockNumber, input.msgSender, input.index, proxyMsgSender);
     }
 }
 

@@ -24,6 +24,8 @@ const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
 
   if (rulesFound.length == 0) return null;
 
+  
+
   return rulesFound[0];
 }
 
@@ -35,7 +37,7 @@ async function getGameInfo(cartridge_id:string) {
 
 const getWinner = async (cartridge_id:string, rule:string):Promise<string|undefined> => {
   const tags = ["score",cartridge_id,rule];
-  const tapes:Array<VerificationOutput> = await getOutputs(
+  const tapes:Array<VerificationOutput> = (await getOutputs(
       {
           tags,
           type: 'notice',
@@ -44,7 +46,7 @@ const getWinner = async (cartridge_id:string, rule:string):Promise<string|undefi
           order_by: "value",
           order_dir: "desc"
       },
-      {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+      {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
 
   if (tapes.length == 0) return undefined
   return tapes[0].user_address

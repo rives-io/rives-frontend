@@ -11,6 +11,7 @@ import { getTapeGif, getTapeImage, getTapesGifs, getTapesImages } from "../utils
 import Image from "next/image";
 import Link from "next/link";
 import { ContestStatus, formatBytes, getContestStatus } from '../utils/common';
+import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 
 
 interface TapesRequest {
@@ -29,7 +30,7 @@ function getTapeId(tapeHex: string): string {
 }
 
 async function getTapes(options:TapesRequest) {
-  const verificationINputs:Array<VerifyPayload> = await getOutputs(
+  const verificationINputs:Array<VerifyPayload> = (await getOutputs(
     {
         tags: ["tape"],
         type: 'input',
@@ -39,7 +40,7 @@ async function getTapes(options:TapesRequest) {
         order_dir: "desc"
     },
     {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-  );
+  )).data;
 
   return verificationINputs;
 }
@@ -204,9 +205,9 @@ export default function Tapes() {
                           type: 'notice'
                       },
                       {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-                    ).then((out: VerificationOutput[]) =>{
-                      if(out.length>0){
-                        scores[tapeId] = out[0].score;
+                    ).then((out: DecodedIndexerOutput) =>{
+                      if(out.data.length>0){
+                        scores[tapeId] = out.data[0].score;
                         setScores(scores);
                       }
                     });
