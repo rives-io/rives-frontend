@@ -23,7 +23,7 @@ export default function Home() {
         <div className='w-11/12 my-12 h-1 rainbow-background'></div>
 
         <div className="flex items-center justify-center">
-          <iframe className="youtube-frame" src="http://www.youtube.com/embed/7y22pdgGIE0">
+          <iframe className="youtube-frame" src="https://www.youtube.com/embed/7y22pdgGIE0">
           </iframe>
         </div>
 
