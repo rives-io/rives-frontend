@@ -6,27 +6,27 @@
  */
 
 export interface _Master_ {
-  InserCartridgePayload: InserCartridgePayload;
+  InsertCartridgePayload: InsertCartridgePayload;
   GetRuleTagsPayload: GetRuleTagsPayload;
   VerifyPayload: VerifyPayload;
   CartridgesOutput: CartridgesOutput;
   RemoveCartridgePayload: RemoveCartridgePayload;
   RuleCreated: RuleCreated;
+  CartridgePayloadSplittable: CartridgePayloadSplittable;
   GetRulesPayload: GetRulesPayload;
   VerificationOutput: VerificationOutput;
   CartridgePayload: CartridgePayload;
   RuleData: RuleData;
   RuleTagsOutput: RuleTagsOutput;
+  EmptyClass: EmptyClass;
   CartridgeInfo: CartridgeInfo;
   RulesOutput: RulesOutput;
-  EmptyClass: EmptyClass;
   CartridgesPayload: CartridgesPayload;
   CartridgeRemoved: CartridgeRemoved;
-  CartridgePayloadSplittable: CartridgePayloadSplittable;
   ExternalVerificationPayload: ExternalVerificationPayload;
   CartridgeInserted: CartridgeInserted;
 }
-export interface InserCartridgePayload {
+export interface InsertCartridgePayload {
   data: string;
 }
 export interface GetRuleTagsPayload {
@@ -74,6 +74,10 @@ export interface RuleCreated {
   created_by: string;
   created_at: number;
 }
+export interface CartridgePayloadSplittable {
+  id: string;
+  part?: number;
+}
 export interface GetRulesPayload {
   cartridge_id?: string;
   id?: string;
@@ -113,6 +117,7 @@ export interface RuleData {
 export interface RuleTagsOutput {
   tags: string[];
 }
+export interface EmptyClass {}
 export interface RulesOutput {
   data: RuleInfo[];
   total: number;
@@ -134,7 +139,6 @@ export interface RuleInfo {
   end?: number;
   tags: string[];
 }
-export interface EmptyClass {}
 export interface CartridgesPayload {
   name?: string;
   authors?: string[];
@@ -146,10 +150,6 @@ export interface CartridgesPayload {
 export interface CartridgeRemoved {
   cartridge_id: string;
   timestamp: number;
-}
-export interface CartridgePayloadSplittable {
-  id: string;
-  part?: number;
 }
 export interface ExternalVerificationPayload {
   user_addresses: string[];

@@ -29,6 +29,12 @@ interface OutMap {
 type outType = "report" | "notice" | "voucher";
 type AdvanceOutputMap = Record<outType,OutMap>
 
+export interface DecodedIndexerOutput {
+    data: any[],
+    page: number,
+    total: number
+}
+
 export async function decodeAdvance(
     advanceResult: AdvanceOutput,
     decoder: (data: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport, modelName:string) => any,
@@ -64,7 +70,7 @@ export async function genericGetOutputs(
     inputData: indexerIfaces.IndexerPayload,
     decoder: (data: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput, modelName:string) => any,
     options?:InspectOptions
-):Promise<any[]> {
+):Promise<DecodedIndexerOutput> {
     if (options == undefined) options = {};
     const indexerOutput: indexerLib.IndexerOutput = await indexerLib.indexerQuery(inputData,{...options, decode:true, decodeModel:"IndexerOutput"}) as indexerLib.IndexerOutput;
     const graphqlQueries: Promise<any>[] = [];
@@ -76,6 +82,6 @@ export async function genericGetOutputs(
             }
         ));
     }
-    return Promise.all(graphqlQueries);
+    return Promise.all(graphqlQueries).then((data: any[]) => {return {page:indexerOutput.page, total:indexerOutput.total, data:data};});
 }
 
