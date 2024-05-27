@@ -8,16 +8,18 @@ import { sha256 } from "js-sha256";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { useConnectWallet } from '@web3-onboard/react';
+import { DecodedIndexerOutput } from '../backend-libs/cartesapp/lib';
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const getGeneralVerificationPayloads = async (
 cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
-):Promise<Array<VerifyPayloadInput>|Array<VerificationOutput>> => {
+):Promise<DecodedIndexerOutput> => {
+    let res:DecodedIndexerOutput;
     
     if (getVerificationOutputs) {
-        const tags = ["score",cartridge_id,rule];
-        const tapes:Array<VerificationOutput> = (await getOutputs(
+        const tags = ["score", cartridge_id, rule];
+        res = await getOutputs(
             {
                 tags,
                 type: 'notice',
@@ -26,21 +28,22 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
                 order_by: "value",
                 order_dir: "desc"
             },
-            {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
-        return tapes;
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+    } else {
+        const tags = ["tape", cartridge_id, rule];
+        res = await getOutputs(
+            {
+                tags,
+                type: 'input',
+                page,
+                page_size: DEFAULT_PAGE_SIZE,
+                order_by: "timestamp",
+                order_dir: "desc"
+            },
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL});    
     }
-    const tags = ["tape",cartridge_id,rule];
-    const tapes:Array<VerifyPayloadInput> = (await getOutputs(
-        {
-            tags,
-            type: 'input',
-            page,
-            page_size: DEFAULT_PAGE_SIZE,
-            order_by: "timestamp",
-            order_dir: "desc"
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
-    return tapes;
+
+    return res;
 }
 
 function tapesBoardFallback() {
@@ -109,7 +112,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
 
 
     const reloadScores = async (page: number) => {
-        if (!rule) return [];
+        if (!rule) return null;
         return (await getGeneralVerificationPayloads(cartridge_id, rule, page, get_verification_outputs))
     }
 
@@ -131,25 +134,18 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
             page = 1;
         }
         if (currPage == pageToLoad && !newRule) return;
-        const currTapes = tapePayloads;
         if (tapePayloads) setTapePayloads(null) // set to null to trigger the loading effect
 
-        reloadScores(page).then((scores) => {
-            if (scores.length == 0 && !newRule) {
-                setAtEnd(true);
-                setTapePayloads(currTapes || []);
-                return;
-            } else if (scores.length < DEFAULT_PAGE_SIZE) {
-                setAtEnd(true);
-            } else {
-                setAtEnd(false);
-            }
-            
+        reloadScores(page).then((res) => {
+            if (!res) return;
+
+            const scores = res.data;
+            setAtEnd(res.total <= page * DEFAULT_PAGE_SIZE);
             setTapePayloads(scores);
             setCurrPage(page);
             setPageToLoad(page);
         });
-    }, [pageToLoad,rule, get_verification_outputs])
+    }, [pageToLoad, rule, get_verification_outputs])
 
     useEffect(() => {
         setTapePayloads(null);

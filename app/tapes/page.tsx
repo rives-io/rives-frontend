@@ -41,9 +41,8 @@ async function getTapes(options:TapesRequest) {
     },
     {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
   );
-  const verificationINputs:Array<VerifyPayload> = res.data;
 
-  return verificationINputs;
+  return res;
 }
 
 async function getScores(options:TapesRequest) {
@@ -125,14 +124,9 @@ export default function Tapes() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
 
     setTapesRequestOptions({...tapesRequestOptions, fetching: true});
-    const tapesInputs = await getTapes(tapesRequestOptions);
+    const res = await getTapes(tapesRequestOptions);
+    const tapesInputs = res.data;
     
-    // no more tapes to get
-    if (tapesInputs.length == 0) {
-      setTapesRequestOptions({...tapesRequestOptions, atEnd: true, fetching: false});
-      return;
-    }
-
     let tapes:Set<string> = new Set();
     let idToInfoMap:Record<string, CartridgeInfo> = {};
     let idToRuleInfoMap:Record<string, RuleInfo> = {};
@@ -160,7 +154,7 @@ export default function Tapes() {
     setTapesRequestOptions({...tapesRequestOptions, 
       currentPage: tapesRequestOptions.currentPage+1, 
       fetching: false,
-      atEnd: tapesInputs.length < tapesRequestOptions.pageSize
+      atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
     });
 
 
@@ -194,10 +188,8 @@ export default function Tapes() {
       let newScores:Record<string, number> = {};
 
       scoresResponse.forEach((newScore) => {
-        tapeId = newScore.tape_hash.substring(2)
-        if (tapeList.includes(tapeId)) {
-          newScores[tapeId] = newScore.score;
-        }
+        tapeId = newScore.tape_hash.substring(2);
+        newScores[tapeId] = newScore.score;
       });
 
       setScores({...scores, ...newScores});
