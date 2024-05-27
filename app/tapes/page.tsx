@@ -118,7 +118,10 @@ export default function Tapes() {
     getFirstPage();
   }, [])
 
-  useEffect(() => {nextPage()}, [inView])
+  useEffect(() => {
+    if (!inView) return;
+    nextPage()
+  }, [inView])
 
   async function nextPage() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
