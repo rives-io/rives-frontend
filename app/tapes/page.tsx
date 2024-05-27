@@ -7,12 +7,12 @@ import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { getTapeGif, getTapeImage, getTapesGifs, getTapesImages } from "../utils/util";
+import { getTapesGifs, getTapesImages } from "../utils/util";
 import Image from "next/image";
 import Link from "next/link";
-import { ContestStatus, formatBytes, getContestStatus } from '../utils/common';
+import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-
+import { useInView } from "react-intersection-observer";
 
 interface TapesRequest {
   currentPage:number,
@@ -30,7 +30,7 @@ function getTapeId(tapeHex: string): string {
 }
 
 async function getTapes(options:TapesRequest) {
-  const verificationINputs:Array<VerifyPayload> = (await getOutputs(
+  const res:DecodedIndexerOutput = await getOutputs(
     {
         tags: ["tape"],
         type: 'input',
@@ -40,7 +40,25 @@ async function getTapes(options:TapesRequest) {
         order_dir: "desc"
     },
     {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-  )).data;
+  );
+  const verificationINputs:Array<VerifyPayload> = res.data;
+
+  return verificationINputs;
+}
+
+async function getScores(options:TapesRequest) {
+  const res:DecodedIndexerOutput = await getOutputs(
+    {
+        tags: ["score"],
+        type: 'notice',
+        page: options.currentPage,
+        page_size: options.pageSize,
+        order_by: "timestamp",
+        order_dir: "desc"
+    },
+    {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+  );
+  const verificationINputs:Array<VerificationOutput> = res.data;
 
   return verificationINputs;
 }
@@ -85,8 +103,13 @@ export default function Tapes() {
   const [imgs, setImgs] = useState<Record<string,string>>({});
   const [cartridgeInfoMap, setCartridgeInfoMap] = useState<Record<string, CartridgeInfo>>({});
   const [ruleInfoMap, setRuleInfoMap] = useState<Record<string, RuleInfo>>({});
-  const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesRequest>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false})
+  const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesRequest>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false});
   const [scores, setScores] = useState<Record<string, number|undefined>>({});
+
+  const { ref, inView, entry } = useInView({
+    /* Optional options */
+    threshold: 0,
+  });
 
   useEffect(() => {
     const getFirstPage = async () => {
@@ -96,13 +119,7 @@ export default function Tapes() {
     getFirstPage();
   }, [])
 
-  if (typeof window !== "undefined") {
-    window.onscroll = function(ev) {
-      if ((window.innerHeight + Math.round(window.scrollY)) >= document.body.offsetHeight) {
-        nextPage();
-      }
-    };  
-  }
+  useEffect(() => {nextPage()}, [inView])
 
   async function nextPage() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
@@ -116,11 +133,6 @@ export default function Tapes() {
       return;
     }
 
-    if (!verificationInputs) {
-      setVerificationInputs(tapesInputs);
-    } else {
-      setVerificationInputs([...verificationInputs, ...tapesInputs]);
-    }
     let tapes:Set<string> = new Set();
     let idToInfoMap:Record<string, CartridgeInfo> = {};
     let idToRuleInfoMap:Record<string, RuleInfo> = {};
@@ -139,33 +151,56 @@ export default function Tapes() {
     if (Object.keys(idToInfoMap).length > 0) setCartridgeInfoMap({...cartridgeInfoMap, ...idToInfoMap});
     if (Object.keys(idToRuleInfoMap).length > 0) setRuleInfoMap({...ruleInfoMap, ...idToRuleInfoMap});
 
-      const tapeList = Array.from(tapes);
-      getTapesImages(tapeList).then((newimgs) => {
-        try {
-          const newImgsRecord: Record<string,string> = {};
-          for (var i = 0; i < tapeList.length; i++) {
-            newImgsRecord[tapeList[i]] = newimgs[i];
-          }
-          setImgs({...imgs, ...newImgsRecord});
-        } catch (e) {
-          console.log(e)
-        }
-      });
-      getTapesGifs(tapeList).then((newGifs) => {
-        try {
-          const newGifsRecord: Record<string,string> = {};
-          for (var i = 0; i < tapeList.length; i++) {
-            newGifsRecord[tapeList[i]] = newGifs[i];
-          }
-          setGifs({...gifs, ...newGifsRecord});
-        } catch (e) {
-          console.log(e)
-        }
-      });
+    if (!verificationInputs) {
+      setVerificationInputs(tapesInputs);
+    } else {
+      setVerificationInputs([...verificationInputs, ...tapesInputs]);
+    }
+
     setTapesRequestOptions({...tapesRequestOptions, 
       currentPage: tapesRequestOptions.currentPage+1, 
       fetching: false,
       atEnd: tapesInputs.length < tapesRequestOptions.pageSize
+    });
+
+
+    // get tapes Images, GIFS, and Scores
+    const tapeList = Array.from(tapes);
+    getTapesImages(tapeList).then((newimgs) => {
+      try {
+        const newImgsRecord: Record<string,string> = {};
+        for (var i = 0; i < tapeList.length; i++) {
+          newImgsRecord[tapeList[i]] = newimgs[i];
+        }
+        setImgs({...imgs, ...newImgsRecord});
+      } catch (e) {
+        console.log(e)
+      }
+    });
+    getTapesGifs(tapeList).then((newGifs) => {
+      try {
+        const newGifsRecord: Record<string,string> = {};
+        for (var i = 0; i < tapeList.length; i++) {
+          newGifsRecord[tapeList[i]] = newGifs[i];
+        }
+        setGifs({...gifs, ...newGifsRecord});
+      } catch (e) {
+        console.log(e)
+      }
+    });
+
+    getScores(tapesRequestOptions).then((scoresResponse) => {
+      let tapeId;
+      let newScores:Record<string, number> = {};
+
+      scoresResponse.forEach((newScore) => {
+        tapeId = newScore.tape_hash.substring(2)
+        if (tapeList.includes(tapeId)) {
+          newScores[tapeId] = newScore.score;
+        }
+      });
+
+      setScores({...scores, ...newScores});
     });
   }
 
@@ -193,25 +228,6 @@ export default function Tapes() {
               const timestamp = new Date(verificationInput._timestamp*1000).toLocaleDateString();
               const tapeId = getTapeId(verificationInput.tape);
               const size = formatBytes((verificationInput.tape.length -2 )/2);
-              // let gif = "";
-              // let img = "";
-              // getTapeImage(tapeId).then((newimg) => img = newimg || "");
-              // getTapeGif(tapeId).then((newGif) => gif = newGif || "");
-              if (ruleInfoMap[verificationInput.rule_id] && 
-                  [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(ruleInfoMap[verificationInput.rule_id])) > -1) {
-                    getOutputs(
-                      {
-                          tags: ["score",tapeId],
-                          type: 'notice'
-                      },
-                      {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-                    ).then((out: DecodedIndexerOutput) =>{
-                      if(out.data.length>0){
-                        scores[tapeId] = out.data[0].score;
-                        setScores(scores);
-                      }
-                    });
-              }
               
               return (
                 <Link key={index} href={`/tapes/${tapeId}`} className="relative">
@@ -234,13 +250,18 @@ export default function Tapes() {
                     <Image className="border border-black" width={256} height={256} src={"data:image/jpeg;base64,"+(imgs[tapeId] ? imgs[tapeId] : cartridgeInfoMap[verificationInput.rule_id]?.cover)} alt={"Not found"}/>
                   </div>
 
-                  {gifs[tapeId] ? <div className="w-64 h-64 grid grid-cols-1 place-content-center bg-black opacity-0 absolute inset-0 "
-                    id={"gif-"+tapeId}
-                    onMouseOver={() => showDiv("gif-"+tapeId)}
-                    onMouseOut={() => hideDiv("gif-"+tapeId)}
-                  >
-                    <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+(gifs[tapeId])} alt={"Not found"}/>
-                  </div> : <></>}
+                  {
+                    gifs[tapeId]? 
+                      <div className="w-64 h-64 grid grid-cols-1 place-content-center bg-black opacity-0 absolute inset-0 "
+                        id={"gif-"+tapeId}
+                        onMouseOver={() => showDiv("gif-"+tapeId)}
+                        onMouseOut={() => hideDiv("gif-"+tapeId)}
+                        >
+                        <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+(gifs[tapeId])} alt={"Not found"}/>
+                      </div>
+                    :
+                      <></>
+                  }
                 </Link>
               )
                
@@ -254,6 +275,8 @@ export default function Tapes() {
           }
         </div >
       </section>
+      <div ref={ref}>
+      </div>
     </main>
   )
 }
