@@ -118,16 +118,20 @@ export default function Tapes() {
     getFirstPage();
   }, [])
 
-  useEffect(() => {
-    if (!inView) return;
-    nextPage()
-  }, [inView])
+  if (inView) nextPage();
 
   async function nextPage() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
 
     setTapesRequestOptions({...tapesRequestOptions, fetching: true});
-    const res = await getTapes(tapesRequestOptions);
+    let res:DecodedIndexerOutput;
+    try {
+      res = await getTapes(tapesRequestOptions);
+    } catch (error) {
+      console.log(`Failed to fetch tapes!\n${(error as Error).message}`)
+      setTapesRequestOptions({...tapesRequestOptions, fetching: false, atEnd: true});
+      return;
+    } 
     const tapesInputs = res.data;
     
     let tapes:Set<string> = new Set();
@@ -140,63 +144,68 @@ export default function Tapes() {
       tapes.add(getTapeId(tapeInput.tape));
       if (! (cartridgeInfoMap[tapeInput.rule_id] || idToInfoMap[tapeInput.rule_id] || idToRuleInfoMap[tapeInput.rule_id]) ) {
 
-        idToRuleInfoMap[tapeInput.rule_id] = await getRuleInfo(tapeInput.rule_id.slice(2));
-        idToInfoMap[tapeInput.rule_id] = await getGameInfo(idToRuleInfoMap[tapeInput.rule_id].cartridge_id);
+        try {
+          idToRuleInfoMap[tapeInput.rule_id] = await getRuleInfo(tapeInput.rule_id.slice(2));
+          idToInfoMap[tapeInput.rule_id] = await getGameInfo(idToRuleInfoMap[tapeInput.rule_id].cartridge_id);            
+        } catch (error) {
+          console.log((error as Error).message);
+        }
       }
     }
 
     if (Object.keys(idToInfoMap).length > 0) setCartridgeInfoMap({...cartridgeInfoMap, ...idToInfoMap});
     if (Object.keys(idToRuleInfoMap).length > 0) setRuleInfoMap({...ruleInfoMap, ...idToRuleInfoMap});
 
-    if (!verificationInputs) {
-      setVerificationInputs(tapesInputs);
-    } else {
-      setVerificationInputs([...verificationInputs, ...tapesInputs]);
-    }
-
-    setTapesRequestOptions({...tapesRequestOptions, 
-      currentPage: tapesRequestOptions.currentPage+1, 
-      fetching: false,
-      atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
-    });
-
-
+    let promises:Array<Promise<any>> = [];
     // get tapes Images, GIFS, and Scores
     const tapeList = Array.from(tapes);
-    getTapesImages(tapeList).then((newimgs) => {
-      try {
-        const newImgsRecord: Record<string,string> = {};
-        for (var i = 0; i < tapeList.length; i++) {
-          newImgsRecord[tapeList[i]] = newimgs[i];
-        }
-        setImgs({...imgs, ...newImgsRecord});
-      } catch (e) {
-        console.log(e)
-      }
-    });
-    getTapesGifs(tapeList).then((newGifs) => {
-      try {
-        const newGifsRecord: Record<string,string> = {};
-        for (var i = 0; i < tapeList.length; i++) {
-          newGifsRecord[tapeList[i]] = newGifs[i];
-        }
-        setGifs({...gifs, ...newGifsRecord});
-      } catch (e) {
-        console.log(e)
-      }
-    });
+    promises.push(getTapesImages(tapeList));
+    promises.push(getTapesGifs(tapeList));
+    promises.push(getScores(tapesRequestOptions))
 
-    getScores(tapesRequestOptions).then((scoresResponse) => {
+    Promise.all(promises)
+    .then((values) => {
+      // images
+      let tapesImages:string[] = values[0];
+      const newImgsRecord: Record<string,string> = {};
+      for (var i = 0; i < tapeList.length; i++) {
+        newImgsRecord[tapeList[i]] = tapesImages[i];
+      }
+      setImgs({...imgs, ...newImgsRecord});
+
+      // GIFs
+      let tapesGifs:string[] = values[1];
+      let newGifsRecord: Record<string,string> = {};
+      for (var i = 0; i < tapeList.length; i++) {
+        newGifsRecord[tapeList[i]] = tapesGifs[i];
+      }
+      setGifs({...gifs, ...newGifsRecord});
+
+      // score
+      let tapesScores:VerificationOutput[] = values[2];
       let tapeId;
       let newScores:Record<string, number> = {};
-
-      scoresResponse.forEach((newScore) => {
+      tapesScores.forEach((newScore) => {
         tapeId = newScore.tape_hash.substring(2);
         newScores[tapeId] = newScore.score;
       });
 
       setScores({...scores, ...newScores});
-    });
+    })
+    .catch(console.log)
+    .finally(() => {
+      if (!verificationInputs) {
+        setVerificationInputs(tapesInputs);
+      } else {
+        setVerificationInputs([...verificationInputs, ...tapesInputs]);
+      }
+      
+      setTapesRequestOptions({...tapesRequestOptions, 
+        currentPage: tapesRequestOptions.currentPage+1, 
+        fetching: false,
+        atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
+      });
+    })
   }
 
 
@@ -210,8 +219,7 @@ export default function Tapes() {
 
 
   return (
-    // h-screen to allow scroll-down
-    <main className={!(tapesRequestOptions.atEnd || tapesRequestOptions.fetching)? "h-screen":""}> 
+    <main> 
       <section className="py-16 my-8 w-full flex justify-center">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {
@@ -270,7 +278,7 @@ export default function Tapes() {
           }
         </div >
       </section>
-      <div ref={ref}>
+      <div ref={ref} className="absolute bottom-0 h-2">
       </div>
     </main>
   )
