@@ -2,8 +2,10 @@
 
 import Script from "next/script"
 import { useState, useImperativeHandle, forwardRef } from "react";
+import { delay } from "../utils/util";
 
 export type RivemuRef = {
+    initialized: boolean,
 	stop: () => void;
 	fullScreen: () => void;
 	start: () => void;
@@ -28,6 +30,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     const [runtimeInitialized, setRuntimeInitialized] = useState(false);
 
 	useImperativeHandle(ref, () => ({
+        initialized: runtimeInitialized,
 		start: rivemuStart,
         stop: rivemuStop,
         fullScreen: rivemuFullscreen,
@@ -36,7 +39,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     
     // BEGIN: rivemu
     async function rivemuStart() {
-        if (!cartridge_data || cartridge_data.length == 0) return;
+        if (!cartridge_data || cartridge_data.length == 0 || !runtimeInitialized) return;
         console.log("rivemuStart");
 
         // // @ts-ignore:next-line
@@ -45,7 +48,6 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
         //     // @ts-ignore:next-line
         //     Module._main();
         // }
-        await rivemuInitialize();
         await rivemuHalt();
 
         // @ts-ignore:next-line
@@ -176,8 +178,13 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
                     objectFit: "contain"
                 }}
             />}
-            <Script src="/rivemu.js?" strategy="lazyOnload" />
-            <Script src="/initializeRivemu.js?" strategy="lazyOnload" />
+            <Script src="/rivemu.js?" strategy="afterInteractive"
+                onReady={() => {
+                    delay(200).then(() => {
+                        setRuntimeInitialized(true);
+                    })
+                }}
+            />
         </>
     )
 })

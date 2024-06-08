@@ -141,6 +141,7 @@ function RivemuPlayer(
     const [signerAddress, setSignerAddress] = useState<string|null>(wallet? wallet.accounts[0].address.toLowerCase(): null);
 
     const rivemuRef = useRef<RivemuRef>(null);
+    const ready = rivemuRef.current == null? false: rivemuRef.current.initialized;
 
     useEffect(() => {
         if (!isTape){
@@ -485,6 +486,7 @@ function RivemuPlayer(
                     <div className="relative">
                     { !playing.isPlaying?
                         <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
+                        disabled={!ready}
                         title={isTape ? "Replay": "Record"}>
                             {
                                 playing.playCounter === 0?
