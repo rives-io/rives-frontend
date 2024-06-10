@@ -108,7 +108,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     async function rivemuInitialize() {
         if (!runtimeInitialized) {
             // @ts-ignore:next-line
-            if (typeof Module == "undefined" || typeof Module._rivemu_stop == "undefined")
+            if (typeof Module == "undefined" || !Module.runtimeInitialized)
                 await waitEvent("rivemu_on_runtime_initialized");
             setRuntimeInitialized(true);
         }
@@ -176,8 +176,8 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
                     objectFit: "contain"
                 }}
             />}
-            <Script src="/rivemu.js?" strategy="lazyOnload" />
             <Script src="/initializeRivemu.js?" strategy="lazyOnload" />
+            <Script src="/rivemu.js?" strategy="lazyOnload" />
         </>
     )
 })
