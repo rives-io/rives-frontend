@@ -107,15 +107,6 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
         Module._free(incardBuf);
     }
 
-    async function rivemuInitialize() {
-        if (!runtimeInitialized) {
-            // @ts-ignore:next-line
-            if (typeof Module == "undefined" || typeof Module._rivemu_stop == "undefined")
-                await waitEvent("rivemu_on_runtime_initialized");
-            setRuntimeInitialized(true);
-        }
-    }
-
     async function rivemuHalt() {
         // @ts-ignore:next-line
         if (Module.ccall('rivemu_stop')) {
