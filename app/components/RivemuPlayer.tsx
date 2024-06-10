@@ -117,6 +117,7 @@ function RivemuPlayer(
     const {setGameplayOwner, setGameplayLog, setGifResolution, addGifFrame} = useContext(gameplayContext);
 
     const isTape = tape_id? true:false;
+    const page = typeof window !== "undefined"? window.location.href:null;
 
     // rivemu state
     const [cartridgeData, setCartridgeData] = useState<Uint8Array>();
@@ -281,6 +282,13 @@ function RivemuPlayer(
             const outcard_str = decoder.decode(outcard);
             const outcard_json = JSON.parse(outcard_str.substring(4));
             setCurrScore(scoreFunctionEvaluator.evaluate(outcard_json));
+        }
+
+        if (page && page != window.location.href) {
+            // rivemuRef will be null, call Rivemu directly
+            
+            // @ts-ignore:next-line
+            Module.ccall('rivemu_stop')
         }
     };
 
