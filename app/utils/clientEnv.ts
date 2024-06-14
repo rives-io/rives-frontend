@@ -21,5 +21,9 @@ export const envClient = envsafe({
   CONTESTS: json({
     input: process.env.NEXT_PUBLIC_CONTESTS,
     desc: "Contests json list."
-  })
+  }),
+  TAPE_CONTRACT_ADDR: str({
+    input: process.env.NEXT_PUBLIC_TAPE_CONTRACT,
+    desc: "Tape asset ETH address."
+  }),
 })
