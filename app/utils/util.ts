@@ -1,4 +1,8 @@
 import { envClient } from "./clientEnv";
+import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
+import { isHex, fromHex } from 'viem'
+import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
+import { getOutputs } from "../backend-libs/core/lib";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -183,4 +187,55 @@ export async function insertTapeImage(gameplay_id:string, gifImage:string) {
     } catch (e) {
         console.log(`Error inserting image: ${e}`)
     }
+}
+
+
+
+let chains:Record<number, Chain> = {};
+chains[base.id] = base;
+chains[mainnet.id] = mainnet;
+chains[sepolia.id] = sepolia;
+chains[polygon.id] = polygon;
+chains[polygonMumbai.id] = polygon;
+chains[anvil.id] = anvil;
+
+export function getChain(chainId:number):Chain;
+export function getChain(chainId:string):Chain;
+export function getChain(chainId:number|string) {
+    if (typeof chainId === "string") {
+        if (!isHex(chainId)) return null;
+        chainId = fromHex(chainId, "number");
+    }
+
+    const chain = chains[chainId];
+    if (!chain) return null;
+
+    return chain;
+}
+
+
+
+export interface TapesRequest {
+    currentPage:number,
+    pageSize:number,
+    atEnd:boolean,
+    fetching:boolean,
+    orderBy?:string,  
+    cartridge?:string // can be used to filter by cartridge
+}
+
+export async function getTapes(options:TapesRequest) {
+    const res:DecodedIndexerOutput = await getOutputs(
+      {
+          tags: ["tape"],
+          type: 'input',
+          page: options.currentPage,
+          page_size: options.pageSize,
+          order_by: "timestamp",
+          order_dir: "desc"
+      },
+      {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    );
+  
+    return res;
 }

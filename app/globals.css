@@ -38,6 +38,13 @@ body {
   font-style: italic;
   size-adjust: 125%;
 }
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
+* {
+  font-family: 'Iosevka Web', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,6 +54,7 @@ body {
     --foreground-rgb: 0,0,0;
     --foreground-rgb-muted: rgba(241, 245, 249, 0.6);
     --background-start-rgb: 36, 36, 36;
+    --background: #2e2e30;
     --background-end-rgb: 105, 105, 105;
     --background-end-rgba0: rgba(100, 100, 100, 0.4);
     --highlight-text-start-hex: #ed479a;
@@ -69,17 +77,128 @@ html {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background-color: rgb(var(--background-start-rgb));
+  /* color: rgb(var(--foreground-rgb)); */
+  color: white;
+  /* background-color: rgb(var(--background-start-rgb)); */
+  background-color: var(--background);
 }
 
 .rainbow-background {
   background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,154,0,1) 10%, rgba(208,222,33,1) 20%, rgba(79,220,74,1) 30%, rgba(63,218,216,1) 40%, rgba(47,201,226,1) 50%, rgba(28,127,238,1) 60%, rgba(95,21,242,1) 70%, rgba(186,12,248,1) 80%, rgba(251,7,217,1) 90%);
 }
 
+.crop-logo {
+  height: 100%;
+  clip-path: polygon(50% 100%, 100% 100%, 100% 100%);
+}
+
+
+.pixel-corners,
+.pixel-corners--wrapper {
+  clip-path: polygon(0px calc(100% - 16px),
+    8px calc(100% - 16px),
+    8px calc(100% - 8px),
+    16px calc(100% - 8px),
+    16px 100%,
+    calc(100% - 16px) 100%,
+    calc(100% - 16px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 16px),
+    100% calc(100% - 16px),
+    100% 16px,
+    calc(100% - 8px) 16px,
+    calc(100% - 8px) 8px,
+    calc(100% - 16px) 8px,
+    calc(100% - 16px) 0px,
+    16px 0px,
+    16px 8px,
+    8px 8px,
+    8px 16px,
+    0px 16px);
+  position: relative;
+}
+.pixel-corners {
+  border: 6px solid transparent;
+}
+.pixel-corners--wrapper {
+  width: fit-content;
+  height: fit-content;
+}
+.pixel-corners--wrapper .pixel-corners {
+  display: block;
+  clip-path: polygon(8px 16px,
+    16px 16px,
+    16px 8px,
+    calc(100% - 16px) 8px,
+    calc(100% - 16px) 16px,
+    calc(100% - 8px) 16px,
+    calc(100% - 8px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 8px),
+    16px calc(100% - 8px),
+    16px calc(100% - 16px),
+    8px calc(100% - 16px));
+}
+.pixel-corners::after,
+.pixel-corners--wrapper::after {
+  content: "";
+  position: absolute;
+  clip-path: polygon(0px calc(100% - 16px),
+    8px calc(100% - 16px),
+    8px calc(100% - 8px),
+    16px calc(100% - 8px),
+    16px 100%,
+    calc(100% - 16px) 100%,
+    calc(100% - 16px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 16px),
+    100% calc(100% - 16px),
+    100% 16px,
+    calc(100% - 8px) 16px,
+    calc(100% - 8px) 8px,
+    calc(100% - 16px) 8px,
+    calc(100% - 16px) 0px,
+    16px 0px,
+    16px 8px,
+    8px 8px,
+    8px 16px,
+    0px 16px,
+    0px 50%,
+    8px 50%,
+    8px 16px,
+    16px 16px,
+    16px 8px,
+    calc(100% - 16px) 8px,
+    calc(100% - 16px) 16px,
+    calc(100% - 8px) 16px,
+    calc(100% - 8px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 8px),
+    16px calc(100% - 8px),
+    16px calc(100% - 16px),
+    8px calc(100% - 16px),
+    8px 50%,
+    0px 50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #241f31;
+  display: block;
+  pointer-events: none;
+}
+.pixel-corners::after {
+  margin: -8px;
+}
+
+
 @layer utilities {
   .bg-rives-purple {
     @apply bg-[var(--highlight-text-end-hex)]
+  }
+
+  .text-rives-purple {
+    @apply text-[var(--highlight-text-end-hex)]
   }
 
   .first-section {
@@ -173,11 +292,11 @@ body {
   }
 
   .header {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap absolute top-0 z-10;
+    @apply w-full h-16 bg-black flex absolute top-0 z-10;
   }
 
   .footer {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap justify-evenly  items-center absolute bottom-0;
+    @apply w-full h-16 bg-black flex flex-wrap justify-evenly items-center absolute bottom-0;
   }
 
   .link-active {
@@ -185,7 +304,7 @@ body {
   }
 
   .navbar-item {
-    @apply px-6 hover:bg-[rgb(var(--background-start-rgb))] hover:text-white;
+    @apply px-6 hover:bg-[rgb(var(--background-start-rgb))];
   }
 
   .btn {

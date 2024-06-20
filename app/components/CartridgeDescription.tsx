@@ -3,7 +3,6 @@
 
 import { useContext } from 'react';
 import { selectedCartridgeContext } from '../cartridges/selectedCartridgeProvider';
-import { fontPressStart2P } from '../utils/font';
 
 function CartridgeDescription() {
     const {selectedCartridge} = useContext(selectedCartridgeContext);
@@ -18,7 +17,7 @@ function CartridgeDescription() {
             <span>{selectedCartridge.info?.summary}</span>
 
             <h2 className='text-lg mt-4'>Description</h2>
-            <pre className={fontPressStart2P.className} style={{whiteSpace: "pre-wrap"}}>
+            <pre style={{whiteSpace: "pre-wrap"}}>
                 {selectedCartridge.info?.description}
             </pre>
         </div>
