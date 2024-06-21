@@ -7,7 +7,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useConnectWallet } from "@web3-onboard/react";
 import { Contract, ContractReceipt, ethers, BigNumber, PayableOverrides } from "ethers";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, getOutputs } from "../backend-libs/core/lib";
+import { VerificationOutput, VerifyPayload, getOutputs } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { Input } from '@mui/base/Input';
 import tapeAbiFile from "@/app/contracts/Tape.json"
@@ -68,6 +68,18 @@ const getTapeVerificationOutput = async (tapeId:string):Promise<VerificationOutp
     return out[0];
 }
 
+const getTapeCreator = async (tapeId:string):Promise<string> => {
+    const replayLogs:Array<VerifyPayload> = (await getOutputs(
+        {
+            tags: ["tape",tapeId],
+            type: 'input'
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    )).data;
+    if (replayLogs.length === 0) throw new Error(`Tape ${tapeId} not found!`);
+    return replayLogs[0]._msgSender;
+}
+
 function TapeAssetManager({tape_id}:{tape_id:string}) {
     // state
     const [{ wallet }, connect] = useConnectWallet();
@@ -75,6 +87,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     const [erc20ContractAddress,setErc20Address] = useState<string>();
     const [erc20Contract,setErc20] = useState<Contract>();
     const [signerAddress,setSignerAddress] = useState<String>();
+    const [tapeCreator,setTapeCreator] = useState<String>();
     const [buyPrice,setBuyPrice] = useState<BigNumber>();
     const [sellPrice,setSellPrice] = useState<BigNumber>();
     const [amountOwned,setAmountOwned] = useState<BigNumber>();
@@ -88,6 +101,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     const [reload,setReload] = useState<number>(0);
     const [decimals,setDecimals] = useState<number>(6);
     const [symbol,setSymbol] = useState<string>("");
+    const [tapeExists,setTapeExists] = useState<boolean>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -122,6 +136,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     useEffect(() => {
         if (tape_id) {
             getTapeVerificationOutput(tape_id).then((out) => setTapeOutput(out))
+            getTapeCreator(tape_id).then((out) => setTapeCreator(out))
         }
     }, [])
 
@@ -132,44 +147,50 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             setSellPrice(undefined);
             setErc20(undefined);
             setErc20Address(undefined);
+            setTapeExists(undefined);
             return;
         }
         const curSigner = new ethers.providers.Web3Provider(wallet.provider, 'any').getSigner();
-        tapeContract.getCurrentBuyPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
-            // const {total,fees,finalPrice} = data;
-            setBuyPrice(data[0]);
-        });
-        tapeContract.tapeBonds(`0x${tape_id}`).then((bond:TapeBond) => {
-            setValidated(bond.tapeOutputData.slice(2).length > 0)
-
-            if (bond.currentSupply.gt(0)) {
-                tapeContract.getCurrentSellPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
-                    setSellPrice(data[0]);
+        tapeContract.exists(`0x${tape_id}`).then((exists:boolean) => {
+            setTapeExists(exists);
+            if (exists) {
+                tapeContract.getCurrentBuyPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
+                    // const {total,fees,finalPrice} = data;
+                    setBuyPrice(data[0]);
                 });
+                tapeContract.tapeBonds(`0x${tape_id}`).then((bond:TapeBond) => {
+                    setValidated(bond.tapeOutputData.slice(2).length > 0)
 
-                setErc20Address(bond.currencyToken);
+                    if (bond.currentSupply.gt(0)) {
+                        tapeContract.getCurrentSellPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
+                            setSellPrice(data[0]);
+                        });
 
-                if (bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                    const curErc20Contract = new ethers.Contract(bond.currencyToken,erc20abi,curSigner);
-                    curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                        if (code == '0x') {
-                            console.log("Couldn't get erc20 contract")
-                            return;
+                        setErc20Address(bond.currencyToken);
+
+                        if (bond.currencyToken != "0x0000000000000000000000000000000000000000") {
+                            const curErc20Contract = new ethers.Contract(bond.currencyToken,erc20abi,curSigner);
+                            curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
+                                if (code == '0x') {
+                                    console.log("Couldn't get erc20 contract")
+                                    return;
+                                }
+                                setErc20(curErc20Contract);
+                            });
                         }
-                        setErc20(curErc20Contract);
-                    });
-                }
-            } else {
-                tapeContract.currencyTokenAddress().then((data:string) => {
-                    setErc20Address(data);
-                    if (bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                        const curErc20Contract = new ethers.Contract(data,erc20abi,curSigner);
-                        curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                            if (code == '0x') {
-                                console.log("Couldn't get erc20 contract")
-                                return;
+                    } else {
+                        tapeContract.currencyTokenAddress().then((data:string) => {
+                            setErc20Address(data);
+                            if (bond.currencyToken != "0x0000000000000000000000000000000000000000") {
+                                const curErc20Contract = new ethers.Contract(data,erc20abi,curSigner);
+                                curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
+                                    if (code == '0x') {
+                                        console.log("Couldn't get erc20 contract")
+                                        return;
+                                    }
+                                    setErc20(curErc20Contract);
+                                });
                             }
-                            setErc20(curErc20Contract);
                         });
                     }
                 });
@@ -363,6 +384,32 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
         }
     }
 
+    async function activate() {
+        if (!wallet) {
+            setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true});
+            return;
+        }
+        if (!tapeContract) {
+            setErrorFeedback({message:"No contract", severity: "warning", dismissible: true});
+            return;
+        }
+        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
+        try{
+            const tx = await tapeContract.setTapeParams(`0x${tape_id}`);
+            const txReceipt = await tx.wait(1);
+            setReload(reload+1);
+            closeModal();
+            setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
+        } catch (error) {
+            console.log(error)
+            setModalState({...modalState, state: MODAL_STATE.SELL});
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+        }
+    }
+
     function changeModalInput(value:string, state: MODAL_STATE) {
         if (!tapeContract || !value) return;
         const val = parseInt(value);
@@ -534,15 +581,27 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                 </Dialog>
             </Transition>
             <div className="grid grid-cols-3 justify-items-center">
+                { tapeExists ? <>
                 <button className="btn mt-2 text-[10px] shadow" onClick={() => {openModal(MODAL_STATE.BUY)}} disabled={!buyPrice}>
                     Buy {buyPrice ? `${ethers.utils.formatUnits(buyPrice,decimals)} ${symbol}` : ""}
                 </button>
                 <button title={amountOwned?.gt(0) ? "" : "No balance"} className="btn mt-2 text-[10px] shadow" onClick={() => {openModal(MODAL_STATE.SELL)}} disabled={!sellPrice || !amountOwned?.gt(0) }>
                     Sell {sellPrice ? `${ethers.utils.formatUnits(sellPrice,decimals)} ${symbol}` : ""}
                 </button>
-                <button title={validated ? "Validated" : tapeOutput?._proof ? "" : "No proof yet"} className="btn mt-2 text-[10px] shadow" onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
-                    {validated ? "Validated" : "Validate"} {tapeOutput?._proof ? "" : "(No proof yet)"}
-                </button>
+                {tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} className="btn mt-2 text-[10px] shadow" onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
+                    {validated ? "Claimed" : "Claim"} {tapeOutput?._proof ? "" : "(No proof yet)"}
+                </button> : <></>}
+                </> :
+                <> <div></div><div></div>
+                {tapeCreator && tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                    <button title={"Activate"} className="btn mt-2 text-[10px] shadow" onClick={activate} disabled={tapeExists}>
+                        Activate
+                    </button>
+                : 
+                    <></>
+                }
+                </>
+                }
             </div>
         </>
     )
