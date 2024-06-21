@@ -107,8 +107,9 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
     const [oldRule, setOldRule] = useState<string>();
 
     // user
-    const [{ wallet }] = useConnectWallet();
-    const userAddress = wallet? wallet.accounts[0].address.toLocaleLowerCase(): null;
+    //const [{ wallet }] = useConnectWallet();
+    //const userAddress = wallet? wallet.accounts[0].address.toLocaleLowerCase(): null;
+    const userAddress = null;
 
 
     const reloadScores = async (page: number) => {

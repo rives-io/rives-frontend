@@ -92,103 +92,9 @@ body {
   clip-path: polygon(50% 100%, 100% 100%, 100% 100%);
 }
 
-
-.pixel-corners,
-.pixel-corners--wrapper {
-  clip-path: polygon(0px calc(100% - 16px),
-    8px calc(100% - 16px),
-    8px calc(100% - 8px),
-    16px calc(100% - 8px),
-    16px 100%,
-    calc(100% - 16px) 100%,
-    calc(100% - 16px) calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 16px),
-    100% calc(100% - 16px),
-    100% 16px,
-    calc(100% - 8px) 16px,
-    calc(100% - 8px) 8px,
-    calc(100% - 16px) 8px,
-    calc(100% - 16px) 0px,
-    16px 0px,
-    16px 8px,
-    8px 8px,
-    8px 16px,
-    0px 16px);
-  position: relative;
-}
-.pixel-corners {
+.cartridgeBorder { 
   border: 6px solid transparent;
-}
-.pixel-corners--wrapper {
-  width: fit-content;
-  height: fit-content;
-}
-.pixel-corners--wrapper .pixel-corners {
-  display: block;
-  clip-path: polygon(8px 16px,
-    16px 16px,
-    16px 8px,
-    calc(100% - 16px) 8px,
-    calc(100% - 16px) 16px,
-    calc(100% - 8px) 16px,
-    calc(100% - 8px) calc(100% - 16px),
-    calc(100% - 16px) calc(100% - 16px),
-    calc(100% - 16px) calc(100% - 8px),
-    16px calc(100% - 8px),
-    16px calc(100% - 16px),
-    8px calc(100% - 16px));
-}
-.pixel-corners::after,
-.pixel-corners--wrapper::after {
-  content: "";
-  position: absolute;
-  clip-path: polygon(0px calc(100% - 16px),
-    8px calc(100% - 16px),
-    8px calc(100% - 8px),
-    16px calc(100% - 8px),
-    16px 100%,
-    calc(100% - 16px) 100%,
-    calc(100% - 16px) calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 16px),
-    100% calc(100% - 16px),
-    100% 16px,
-    calc(100% - 8px) 16px,
-    calc(100% - 8px) 8px,
-    calc(100% - 16px) 8px,
-    calc(100% - 16px) 0px,
-    16px 0px,
-    16px 8px,
-    8px 8px,
-    8px 16px,
-    0px 16px,
-    0px 50%,
-    8px 50%,
-    8px 16px,
-    16px 16px,
-    16px 8px,
-    calc(100% - 16px) 8px,
-    calc(100% - 16px) 16px,
-    calc(100% - 8px) 16px,
-    calc(100% - 8px) calc(100% - 16px),
-    calc(100% - 16px) calc(100% - 16px),
-    calc(100% - 16px) calc(100% - 8px),
-    16px calc(100% - 8px),
-    16px calc(100% - 16px),
-    8px calc(100% - 16px),
-    8px 50%,
-    0px 50%);
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #241f31;
-  display: block;
-  pointer-events: none;
-}
-.pixel-corners::after {
-  margin: -8px;
+  border-image: url(../public/cartridge_border.png) 20 fill / 30px / 4px;
 }
 
 
@@ -199,6 +105,10 @@ body {
 
   .text-rives-purple {
     @apply text-[var(--highlight-text-end-hex)]
+  }
+
+  main {
+    @apply !pb-[96px] !pt-[96px];
   }
 
   .first-section {
@@ -344,6 +254,11 @@ body {
   height: 360px;
 }
 
+.cartridgePageCover {
+  width: 512px;
+  height: 512px;
+}
+
 /* consider height to see Score max-height 768 +64  */
 @media screen and (max-height: 832px)  {
   .gameplay-screen {
@@ -352,6 +267,10 @@ body {
   }
   .screen-controls {
     width: 512px;
+  }
+  .cartridgePageCover {
+    max-width: 384px;
+    max-height: 384px;
   }
 }
 
@@ -362,6 +281,10 @@ body {
   }
   .screen-controls {
     width: 512px;
+  }
+  .cartridgePageCover {
+    max-width: 384px;
+    max-height: 384px;
   }
 }
 
@@ -374,6 +297,10 @@ body {
   .screen-controls {
     width: 256px;
   }
+  .cartridgePageCover {
+    max-width: 256px;
+    max-height: 256px;
+  }
 }
 
 @media screen and (max-width: 512px)  {
@@ -383,6 +310,10 @@ body {
   }
   .screen-controls {
     width: 256px;
+  }
+  .cartridgePageCover {
+    max-width: 256px;
+    max-height: 256px;
   }
 }
 

@@ -61,8 +61,7 @@ export default async function Home() {
   const contestsColors:Record<number, string> = {0: "#53fcd8", 1: "#f99776", 2: "#8b5cf6"};
 
   return (
-    <main className='pb-16 !pt-[64px]'>
-      
+    <main>
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
           <h1 className={`text-5xl ${monogram.className}`}>Latest Cartridges</h1>          
