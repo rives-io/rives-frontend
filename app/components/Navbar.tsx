@@ -14,10 +14,9 @@ import { monogram } from '../utils/monogramExtendedFont';
 function Navbar() {
     const pathname = usePathname();
     const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl ${monogram.className}`}>Connect</span>);
-    const {ready, authenticated, login, logout, user} = usePrivy();
+    const {ready, authenticated, login, logout, user, linkTwitter} = usePrivy();
     // Disable login when Privy is not ready or the user is already authenticated
     const disableLogin = !ready || (ready && authenticated);
-    console.log(ready)
 
 
     useEffect(() => {

@@ -22,7 +22,7 @@ import Rivemu, { RivemuRef } from "./Rivemu";
 import { RuleInfo } from "../backend-libs/core/ifaces";
 import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
 import Image from "next/image";
-import rivesLogo from '../../public/rives64px.png';
+import rivesLogo from '../../public/logo.png';
 
 
 export interface TapeInfo {
