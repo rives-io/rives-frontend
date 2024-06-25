@@ -1,7 +1,8 @@
 import CartridgeCard from "./components/CartridgeCard";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import TapeCard from "./components/TapeCard";
-import { VerifyPayload, rules } from "./backend-libs/core/lib";
+import { rules } from "./backend-libs/core/lib";
+import { VerifyPayload } from "./backend-libs/core/ifaces";
 import Link from "next/link";
 import { monogram } from "./utils/monogramExtendedFont";
 import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
@@ -26,11 +27,10 @@ async function getLatestsCartridges() {
 async function getLatestsTapes() {
   const res = (await getTapes(
     {
-      atEnd: false,
       currentPage: 1,
       pageSize: 3,
-      fetching: false,
-      orderBy: "desc"
+      orderBy: "timestamp",
+      orderDir: "desc"
     }
   ));
 
@@ -86,7 +86,7 @@ export default async function Home() {
         <div className="flex flex-wrap gap-4 w-full lg:w-[80%]">
           {
             tapes.map((tape, index) => {
-              return <TapeCard key={index} tapeInput={tape} />
+              return <TapeCard key={index} tapeInput={JSON.stringify(tape)} />
             })
           }
         </div>

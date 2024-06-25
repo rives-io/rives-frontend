@@ -7,21 +7,12 @@ import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { getTapesGifs, getTapesImages } from "../utils/util";
+import { TapesRequest, getTapes, getTapesGifs, getTapesImages } from "../utils/util";
 import Image from "next/image";
 import Link from "next/link";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { useInView } from "react-intersection-observer";
-
-interface TapesRequest {
-  currentPage:number,
-  pageSize:number,
-  atEnd:boolean,
-  fetching:boolean,
-  orderBy?:string,  
-  cartridge?:string // can be used to filter by cartridge
-}
 
 const DEFAULT_PAGE_SIZE = 12
 
@@ -29,21 +20,7 @@ function getTapeId(tapeHex: string): string {
   return sha256(ethers.utils.arrayify(tapeHex));
 }
 
-async function getTapes(options:TapesRequest) {
-  const res:DecodedIndexerOutput = await getOutputs(
-    {
-        tags: ["tape"],
-        type: 'input',
-        page: options.currentPage,
-        page_size: options.pageSize,
-        order_by: "timestamp",
-        order_dir: "desc"
-    },
-    {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-  );
 
-  return res;
-}
 
 async function getScores(options:TapesRequest) {
   const res:DecodedIndexerOutput = await getOutputs(
@@ -96,13 +73,18 @@ function loadingFallback() {
   )
 }
 
+interface TapesPagination extends TapesRequest {
+  atEnd: boolean,
+  fetching: boolean
+}
+
 export default function Tapes() {
   const [verificationInputs, setVerificationInputs] = useState<Array<VerifyPayload>|null>(null);
   const [gifs, setGifs] = useState<Record<string,string>>({});
   const [imgs, setImgs] = useState<Record<string,string>>({});
   const [cartridgeInfoMap, setCartridgeInfoMap] = useState<Record<string, CartridgeInfo>>({});
   const [ruleInfoMap, setRuleInfoMap] = useState<Record<string, RuleInfo>>({});
-  const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesRequest>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false});
+  const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesPagination>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false, orderBy: "timestamp", orderDir: "desc"});
   const [scores, setScores] = useState<Record<string, number|undefined>>({});
 
   const { ref, inView, entry } = useInView({

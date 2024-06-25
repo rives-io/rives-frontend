@@ -3,6 +3,7 @@ import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'vi
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getOutputs } from "../backend-libs/core/lib";
+import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -217,23 +218,30 @@ export function getChain(chainId:number|string) {
 
 export interface TapesRequest {
     currentPage:number,
-    pageSize:number,
-    atEnd:boolean,
-    fetching:boolean,
-    orderBy?:string,  
-    cartridge?:string // can be used to filter by cartridge
+    pageSize:number
+    orderBy?:string,
+    orderDir?:string,
+    cartridgeId?:string, // can be used to filter by cartridge
+    msg_sender?:string
 }
 
 export async function getTapes(options:TapesRequest) {
+    let req_options:IndexerPayload = {
+        page: options.currentPage,
+        page_size: options.pageSize,
+        type: "input",
+        tags: options.cartridgeId? ["tape", options.cartridgeId]: ["tape"],
+    }
+
+    if (options.orderBy) {
+        req_options.order_by = options.orderBy;
+        if (options.orderDir) req_options.order_dir = options.orderDir
+    }
+    if (options.msg_sender) req_options.msg_sender = options.msg_sender
+
+
     const res:DecodedIndexerOutput = await getOutputs(
-      {
-          tags: ["tape"],
-          type: 'input',
-          page: options.currentPage,
-          page_size: options.pageSize,
-          order_by: "timestamp",
-          order_dir: "desc"
-      },
+      req_options,
       {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     );
   

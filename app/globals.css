@@ -238,6 +238,14 @@ body {
   .vertical-option-tabs-header {
     @apply flex flex-col space-y-1 bg-gray-400 bg-opacity-40 p-1;
   }
+
+  .profile-navigation-item {
+    @apply p-4 bg-black text-white hover:profile-navigation-item-selected;
+  }
+
+  .profile-navigation-item-selected {
+    @apply bg-[#403f47] text-black;
+  }
 }
 
 .gameplay-screen {

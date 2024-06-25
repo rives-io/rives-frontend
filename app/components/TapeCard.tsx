@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link";
 import Image from "next/image";
 import { VerifyPayload } from "../backend-libs/core/lib";
@@ -5,15 +7,28 @@ import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo.png';
 import { getTapeImage } from "../utils/util";
+import { useState } from "react";
+import rivesCheck from "@/public/rives_check.png";
 
-export default async function TapeCard({tapeInput}:{tapeInput:VerifyPayload}) {
+export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload}) {
 
-    const user = tapeInput._msgSender;
+    let tape:VerifyPayload;
+    if (typeof tapeInput == "string") {
+        tape = JSON.parse(tapeInput);
+    } else {
+        tape = tapeInput;
+    }
+    
+
+    const user = tape._msgSender;
     const player = `${user.slice(0, 6)}...${user.substring(user.length-4,user.length)}`;
-    const timestamp = new Date(tapeInput._timestamp*1000).toLocaleDateString();
-    const tapeId = sha256(ethers.utils.arrayify((tapeInput.tape)));
+    const timestamp = new Date(tape._timestamp*1000).toLocaleDateString();
+    const tapeId = sha256(ethers.utils.arrayify((tape.tape)));
+    const [gifImage, setGifImage] = useState<string|null>("");
 
-    const gifImage = await getTapeImage(tapeId);
+    if (gifImage?.length == 0) {
+        getTapeImage(tapeId).then((gif) => setGifImage(gif));
+    }
 
     return (
         <Link href={tapeId} className="flex flex-col px-4 items-center border-2 bg-[#403f47] border-gray-700 hover:scale-110 w-44 h-56">
@@ -30,7 +45,7 @@ export default async function TapeCard({tapeInput}:{tapeInput:VerifyPayload}) {
             <div className="w-32 h-32 grid grid-cols-1 my-2 place-content-center bg-black">
                 <Image
                     width={128} height={128}
-                    src={"data:image/jpeg;base64," + gifImage}
+                    src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
                     alt={"Not found"}
                 />
             </div>

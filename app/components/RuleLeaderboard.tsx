@@ -9,7 +9,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { useConnectWallet } from '@web3-onboard/react';
 import { DecodedIndexerOutput } from '../backend-libs/cartesapp/lib';
-import { getUsersByAddress } from '../utils/privyApi';
+import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
 import rivesCheck from "@/public/rives_check.png";
 
@@ -105,10 +105,6 @@ function tapesBoardFallback() {
 }
 
 
-interface User {
-    username:string,
-    picture_url:string
-}
 
 function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:{
     cartridge_id:string, rule: string | undefined, get_verification_outputs: boolean}) {
@@ -165,35 +161,9 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
             })
 
             getUsersByAddress(Array.from(addresses)).then((res:string) => {
-                const users = JSON.parse(res).data;
+                const users:Record<string, User> = JSON.parse(res);
 
-                let user;
-                let userMap:Record<string, User> = {};
-                for (let i = 0; i < users.length; i++) {
-                    user = users[i];
-
-                    if (user["linked_accounts"].length != 2) continue;
-
-                    let wallet_account;
-                    let twitter_account;
-
-                    if (user["linked_accounts"][0].type == "wallet") {
-                        wallet_account = user["linked_accounts"][0];
-                        twitter_account = user["linked_accounts"][1];
-                    } else if (user["linked_accounts"][0].type == "twitter_oauth") {
-                        twitter_account = user["linked_accounts"][0];
-                        wallet_account = user["linked_accounts"][1];
-                    }
-
-                    if (! (wallet_account && twitter_account)) continue;
-
-                    userMap[wallet_account.address.toLowerCase()] = {
-                        username: twitter_account.name,
-                        picture_url: twitter_account.profile_picture_url
-                    }
-                }
-
-                setAddressUserMap({...addressUserMap, ...userMap});
+                setAddressUserMap({...addressUserMap, ...users});
                 setTapePayloads(scores);
             });
 
@@ -274,7 +244,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
                                         :
                                             <td className='flex items-center gap-2'>
                                                 <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='Nop' />
-                                                <span title={sender}>{user.username}</span>
+                                                <span title={sender}>{user.name}</span>
                                             </td>
                                     }
 

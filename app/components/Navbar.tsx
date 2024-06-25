@@ -14,9 +14,11 @@ import { monogram } from '../utils/monogramExtendedFont';
 function Navbar() {
     const pathname = usePathname();
     const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl ${monogram.className}`}>Connect</span>);
-    const {ready, authenticated, login, logout, user, linkTwitter} = usePrivy();
+    const {ready, authenticated, login, logout, user} = usePrivy();
     // Disable login when Privy is not ready or the user is already authenticated
     const disableLogin = !ready || (ready && authenticated);
+
+    const onMyProfile = (ready && authenticated) && pathname.startsWith("/profile") && user?.wallet?.address.toLowerCase() == pathname.split("/")[2]?.toLowerCase();
 
 
     useEffect(() => {
@@ -25,40 +27,13 @@ function Navbar() {
             return;
         }
 
-        // if ((ready && authenticated) && !user.twitter) {
-        //     linkTwitter();
-        // }
         const userAddress = user.wallet?.address;
 
         if (!userAddress) return;
 
-        if (!user.twitter) {
-            setConnectButtonTxt(
-                <>
-                    <span className={`text-4xl ${monogram.className}`}>Disconnect</span>
-                    <span className='text-[10px] opacity-50'>
-                        {userAddress.slice(0, 6)}...{userAddress.slice(userAddress.length-4)}
-                    </span>
-                </>
-            )
-        } else {
-            setConnectButtonTxt(
-                <>
-                    <span className='text-[10px] opacity-50'>
-                        {user.twitter.username}
-                    </span>
-                    <span className={`text-4xl ${monogram.className}`}>Disconnect</span>
-                    {
-                        userAddress?
-                            <span className='text-[10px] opacity-50'>
-                                {userAddress.slice(0, 6)}...{userAddress.slice(userAddress.length-4)}
-                            </span>
-                        :
-                            <></>
-                    }
-                </>
-            )
-        }
+        setConnectButtonTxt(
+            <Link href={`/profile/${userAddress}`} className={`text-4xl ${monogram.className}`}>Profile</Link>
+        );
     }, [user])
 
     return (
@@ -91,9 +66,9 @@ function Navbar() {
             </Link>
 
             <div className='hidden lg:flex flex-1 justify-end h-full'>
-                <button className='navbar-item'
+                <button className={`navbar-item ${onMyProfile? "lg:link-active" : "" }`}
                     disabled={!ready}
-                    onClick={disableLogin?logout:login}
+                    onClick={!disableLogin?login:undefined}
                     title={user?.wallet?.address}
                 >
                     <div className='flex flex-col justify-center h-full'>
@@ -152,7 +127,7 @@ function Navbar() {
                                     className={`${active ? 'bg-rives-purple text-white' : 'text-black'
                                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`} 
                                     disabled={!ready}
-                                    onClick={disableLogin?logout:login}
+                                    onClick={!disableLogin?login:undefined}
                                     title={user?.wallet?.address}
                                     >
                                         <div className='flex flex-col justify-center h-full'>
