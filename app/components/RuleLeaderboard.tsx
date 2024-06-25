@@ -7,11 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { sha256 } from "js-sha256";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import { useConnectWallet } from '@web3-onboard/react';
 import { DecodedIndexerOutput } from '../backend-libs/cartesapp/lib';
 import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
 import rivesCheck from "@/public/rives_check.png";
+import { usePrivy } from '@privy-io/react-auth';
 
 const DEFAULT_PAGE_SIZE = 10;
 let total_pages = 1;
@@ -118,9 +118,8 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
     const [oldRule, setOldRule] = useState<string>();
 
     // user
-    //const [{ wallet }] = useConnectWallet();
-    //const userAddress = wallet? wallet.accounts[0].address.toLocaleLowerCase(): null;
-    const userAddress = null;
+    const {user, ready, authenticated} = usePrivy();
+    const userAddress = (ready && authenticated) && user?.wallet?.address? user?.wallet?.address.toLowerCase(): null;
 
 
     const reloadScores = async (page: number) => {

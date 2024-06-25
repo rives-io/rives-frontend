@@ -4,7 +4,6 @@
 import { CartridgeInfo as Cartridge, GetRulesPayload, RuleInfo } from '../backend-libs/core/ifaces';
 import { rules } from '../backend-libs/core/lib';
 import Image from "next/image";
-import { monogram } from '../utils/monogramExtendedFont';
 import { Menu, Tab } from '@headlessui/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -16,6 +15,9 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
     const [rulesInfo, setRulesInfo] = useState<RuleInfo[]>();
     const [selectedRule, setSelectedRule] = useState<RuleInfo>();
+
+    const status = !selectedRule? null:getContestStatus(selectedRule);
+    const contestIsOpen = (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
     useEffect(() => {
         const inputPayload: GetRulesPayload = {
@@ -78,7 +80,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
 
             <div className='w-full md:w-2/3 flex flex-col'>
                 <h1 className={`pixelated-font text-5xl`}>Description</h1>
-                <pre style={{whiteSpace: "pre-wrap"}}>
+                <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web'}}>
                     {cartridge.info?.description}
                 </pre>
             </div>
@@ -111,9 +113,9 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                         </Menu.Items>
                     </Menu>
 
-                    <Link aria-disabled={!selectedRule} tabIndex={!selectedRule? -1:undefined} 
+                    <Link aria-disabled={!selectedRule || !contestIsOpen} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
                     href={`play/rule/${selectedRule?.id}`} 
-                    className={`${!selectedRule? "pointer-events-none" : ""} p-3 bg-rives-purple hover:scale-110`}>
+                    className={`${!selectedRule || !contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110`}>
                         Play
                     </Link>
                     

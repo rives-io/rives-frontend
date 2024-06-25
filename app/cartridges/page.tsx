@@ -1,5 +1,4 @@
 import CartridgesList from "../components/CartridgesList";
-import CartridgeInfo from "../components/CartridgeInfo";
 import { envClient } from "../utils/clientEnv";
 import { CartridgeInfo as Cartridge } from '../backend-libs/core/ifaces';
 import { cartridgeInfo } from "@/app/backend-libs/core/lib";
@@ -25,8 +24,6 @@ export default async function Cartridges({searchParams}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
 				<CartridgesList />
 			</div>
-
-			<CartridgeInfo />
       </main>
     )
   }

@@ -31,7 +31,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload}) {
     }
 
     return (
-        <Link href={tapeId} className="flex flex-col px-4 items-center border-2 bg-rives-gray border-gray-700 hover:scale-110 w-44 h-56">
+        <Link href={`/tapes/${tapeId}`} className="flex flex-col px-4 items-center border-2 bg-rives-gray border-gray-700 hover:scale-110 w-44 h-56">
             <div className='w-28 h-8 '>
                 <Image
                     src={rivesLogo}

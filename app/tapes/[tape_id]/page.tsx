@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
 
 export default async function Tape({ params }: { params: { tape_id: string } }) {
     return (
-        <main className="flex items-center justify-center my-20">
+        <main className="flex items-center justify-center">
             <RivemuPlayer tape_id={params.tape_id}/>
         </main>
     )

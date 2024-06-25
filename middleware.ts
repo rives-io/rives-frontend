@@ -8,13 +8,13 @@ export const config = {
 }
 
 export async function middleware(request: NextRequest) {
-    const session = await getSession();
-    const pathname = request.nextUrl.pathname
+    // const session = await getSession();
+    // const pathname = request.nextUrl.pathname
   
-    // Redirect to login page if not authenticated
-    if (!session && pathname != "/login" ) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+    // // Redirect to login page if not authenticated
+    // if (!session && pathname != "/login" ) {
+    //   return NextResponse.redirect(new URL('/login', request.url));
+    // }
 
     return NextResponse.next();
 }

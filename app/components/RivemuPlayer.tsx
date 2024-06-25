@@ -3,7 +3,6 @@
 import { Parser } from "expr-eval";
 import { ethers } from "ethers";
 import { useContext, useState, useEffect, useRef } from "react";
-import { useConnectWallet } from '@web3-onboard/react';
 
 import RestartIcon from '@mui/icons-material/RestartAlt';
 import StopIcon from '@mui/icons-material/Stop';
@@ -23,6 +22,7 @@ import { RuleInfo } from "../backend-libs/core/ifaces";
 import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
+import { usePrivy } from "@privy-io/react-auth";
 
 
 export interface TapeInfo {
@@ -138,23 +138,23 @@ function RivemuPlayer(
     const [restarting, setRestarting] = useState(false);
 
     // signer
-    const [{ wallet }] = useConnectWallet();
-    const [signerAddress, setSignerAddress] = useState<string|null>(wallet? wallet.accounts[0].address.toLowerCase(): null);
+    const {user, ready} = usePrivy();
+    const [signerAddress, setSignerAddress] = useState<string|null>(user && user.wallet? user.wallet.address.toLowerCase(): null);
 
     const rivemuRef = useRef<RivemuRef>(null);
 
     useEffect(() => {
-        if (!isTape){
-            if (!wallet) {
+        if (!isTape && ready){
+            if (!user || !user.wallet) {
                 setSignerAddress(null);
                 if (!isTape && rule_id) setEntropy("entropy");
             }
             else {
-                setSignerAddress(wallet.accounts[0].address.toLowerCase());
-                if (rule_id) setEntropy(generateEntropy(wallet.accounts[0].address.toLowerCase(), rule_id));
+                setSignerAddress(user.wallet.address.toLowerCase());
+                if (rule_id) setEntropy(generateEntropy(user.wallet.address.toLowerCase(), rule_id));
             }
         }
-    },[wallet]);
+    },[user]);
 
     useEffect(() => {
         if (rule_id) {
