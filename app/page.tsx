@@ -4,7 +4,6 @@ import TapeCard from "./components/TapeCard";
 import { rules } from "./backend-libs/core/lib";
 import { VerifyPayload } from "./backend-libs/core/ifaces";
 import Link from "next/link";
-import { monogram } from "./utils/monogramExtendedFont";
 import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
 import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
@@ -64,7 +63,7 @@ export default async function Home() {
     <main>
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
-          <h1 className={`text-5xl ${monogram.className}`}>Latest Cartridges</h1>          
+          <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
         </div>
 
         <div className="flex flex-wrap gap-4 w-full lg:w-[80%]">
@@ -80,7 +79,7 @@ export default async function Home() {
 
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
-          <h1 className={`text-5xl ${monogram.className}`}>Latest Tapes</h1>
+          <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
         </div>
 
         <div className="flex flex-wrap gap-4 w-full lg:w-[80%]">
@@ -96,7 +95,7 @@ export default async function Home() {
 
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
-          <h1 className={`text-5xl ${monogram.className}`}>Contests Live</h1>
+          <h1 className={`text-4xl pixelated-font`}>Contests Live</h1>
         </div>
 
         {
@@ -130,19 +129,19 @@ export default async function Home() {
 
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
-          <h1 className={`text-5xl ${monogram.className}`}>Stats</h1>
+          <h1 className={`text-4xl pixelated-font`}>Stats</h1>
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-center w-full lg:w-[80%]'>
 
-          <div className='p-8 bg-[#403f47] flex flex-col'>
-            <span className={`text-5xl ${monogram.className}`}>Number of Cartridges</span>
-            <span className={`text-7xl ${monogram.className}`}>{total_cartridges}</span>
+          <div className='p-8 bg-rives-gray flex flex-col'>
+            <span className={`text-3xl pixelated-font`}>Number of Cartridges</span>
+            <span className={`text-5xl pixelated-font`}>{total_cartridges}</span>
           </div>
 
-          <div className='p-8 bg-[#403f47] flex flex-col'>
-            <span className={`text-5xl ${monogram.className}`}>Number of Tapes</span>
-            <span className={`text-7xl ${monogram.className}`}>{total_tapes}</span>
+          <div className='p-8 bg-rives-gray flex flex-col'>
+            <span className={`text-3xl pixelated-font`}>Number of Tapes</span>
+            <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
           </div>
         </div>
 

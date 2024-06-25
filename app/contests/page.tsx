@@ -1,9 +1,8 @@
 import { envClient } from "@/app/utils/clientEnv";
 import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, rules } from "../backend-libs/core/lib";
-import { Contest, ContestStatus, getContestStatus, getContestStatusMessage } from "../utils/common";
-import Link from "next/link";
-import Image from "next/image";
+import { Contest, ContestStatus, getContestStatus } from "../utils/common";
+import ContestCard from "../components/ContestCard";
 
 interface RuleWithMetadata extends RuleInfo, Contest {}
 
@@ -61,47 +60,16 @@ export default async function Contests() {
     }
   }
 
-  // const currDate = new Date().getTime()/1000; // divide by 1000 to convert from miliseconds to seconds
-
 
   return (
     <main>
-      <section className="py-16 my-8 w-full flex justify-center">
+      <section className="w-full flex justify-center">
         <div className="flex flex-col space-y-8 w-[95%] sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
               return (
-                <Link key={index} href={`/contests/${contest.id}`}
-                  className="bg-gray-400 flex items-center space-x-2 p-4 border-2 border-transparent hover:border-white"
-                >
-    
-                  <Image alt={"Cover " + cartridgeInfoMap[contest.cartridge_id].name}
-                    id="canvas-cover"
-                    width={120}
-                    height={120}
-                    style={{
-                        imageRendering: "pixelated",
-                    }}
-                    src={cartridgeInfoMap[contest.cartridge_id].cover? `data:image/png;base64,${cartridgeInfoMap[contest.cartridge_id].cover}`:"/logo.png"}
-                  />
-                  
-                  <div className="flex flex-col items-center lg:flex-row lg:space-x-2 lg:grow">
-                    <span className="text-xl md:text-2xl lg:w-[60%]">{contest.name}</span>
-                    
-                    <div className="flex flex-col text-xs md:text-base self-start lg:w-[40%]">
-                      <div className="flex ">
-                        <span>Prize:</span>
-                        <span className="ms-3 md:ms-4">{contest.prize}</span>
-                      </div>
-
-                      <div className="flex flex-wrap">
-                        <span>Status:</span>
-                        <span>{getContestStatusMessage(getContestStatus(contest))}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <ContestCard key={index} contest={contest} cartridgeCover={cartridgeInfoMap[contest.cartridge_id].cover} />
               )
             })
           }

@@ -11,8 +11,8 @@ import Link from "next/link";
 export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
 
     return (
-        // <Link href={`cartridges?cartridge_id=${cartridge.id}`} className="w-48 h-fit pb-3 px-1 flex flex-col pixel-corners bg-[#403f47] hover:scale-110">
-        <Link href={`cartridges?cartridge_id=${cartridge.id}`} className="cartridgeBorder rounded-full w-48 h-fit pb-1 px-1 flex flex-col bg-[#403f47] hover:scale-110">
+        // <Link href={`cartridges?cartridge_id=${cartridge.id}`} className="w-48 h-fit pb-3 px-1 flex flex-col pixel-corners bg-rives-gray hover:scale-110">
+        <Link href={`cartridges?cartridge_id=${cartridge.id}`} className="cartridgeBorder rounded-full w-48 h-fit pb-1 px-1 flex flex-col bg-rives-gray hover:scale-110">
 
             <div className="flex">
                 <div className='w-28 h-8 '>
@@ -43,12 +43,12 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
 
             <div className="bg-[#35343c] flex h-12 w-full">
                 <div className="flex flex-col p-1">
-                    <span className="truncate">{cartridge.name}</span>
+                    <span className="pixelated-font truncate">{cartridge.name}</span>
                     {
                         cartridge.authors.length == 0?
                             <></>
                         :
-                            <span className="text-sm truncate">By: <span className="text-rives-purple">{cartridge.authors[0]}</span></span>
+                            <span className="pixelated-font text-sm truncate">By: <span className="text-rives-purple">{cartridge.authors[0]}</span></span>
                     }
                 </div>
             </div>

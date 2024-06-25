@@ -37,7 +37,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
             <div className='w-full md:w-2/3 flex flex-col gap-2'>
                 <div className='flex flex-wrap gap-4'>
                     <div className='flex flex-col'>
-                        <h1 className={`${monogram.className} text-5xl`}>{cartridge.name}</h1>
+                        <h1 className={`pixelated-font text-5xl`}>{cartridge.name}</h1>
                         <span>{cartridge.authors.length>0?cartridge.authors[0]:""}</span>
                     </div>
 
@@ -53,22 +53,22 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                 </div>
 
                 <div className='grid grid-cols-2 md:grid-cols-4 text-center gap-2'>
-                    <div className='p-4 flex flex-col bg-[#403f47]'>
+                    <div className='p-4 flex flex-col bg-rives-gray'>
                         <span>Total Cartridges</span>
                         <span className='mt-auto'>1.1k</span>
                     </div>
 
-                    <div className='p-4 flex flex-col bg-[#403f47]'>
+                    <div className='p-4 flex flex-col bg-rives-gray'>
                         <span>Tapes Created</span>
                         <span className='mt-auto'>10k</span>
                     </div>
 
-                    <div className='p-4 flex flex-col bg-[#403f47]'>
+                    <div className='p-4 flex flex-col bg-rives-gray'>
                         <span>Marketcap</span>
                         <span className='mt-auto'>USD 5k</span>
                     </div>
 
-                    <div className='p-4 flex flex-col bg-[#403f47]'>
+                    <div className='p-4 flex flex-col bg-rives-gray'>
                         <span>Total Owners</span>
                         <span className='mt-auto'>100</span>
                     </div>
@@ -77,7 +77,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
 
 
             <div className='w-full md:w-2/3 flex flex-col'>
-                <h1 className={`${monogram.className} text-5xl`}>Description</h1>
+                <h1 className={`pixelated-font text-5xl`}>Description</h1>
                 <pre style={{whiteSpace: "pre-wrap"}}>
                     {cartridge.info?.description}
                 </pre>
@@ -85,7 +85,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
 
             <div className='w-full md:w-2/3 flex flex-col gap-2'>
                 <div className='flex gap-4 justify-center md:justify-start'>
-                    <Menu as="div" className="p-3 bg-[#403f47]">
+                    <Menu as="div" className="p-3 bg-rives-gray">
                         <Menu.Button className="flex justify-center hover:text-rives-purple">
                             {selectedRule?.name} <ArrowDropDownIcon/>
                         </Menu.Button>

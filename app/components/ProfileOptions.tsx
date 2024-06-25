@@ -9,7 +9,7 @@ import Link from "next/link";
 
 
 export default function ProfileOptions({address, twitterInfo}:{address:string, twitterInfo:User}) {
-    const {ready, authenticated, login, logout, user, linkTwitter} = usePrivy();
+    const {ready, authenticated, logout, user, linkTwitter} = usePrivy();
     const formated_addr = address.substring(0,6)+"..."+address.substring(address.length-4,address.length);
     
 
@@ -56,7 +56,7 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
 
                         {
                             ready && authenticated && user?.wallet?.address.toLowerCase() == address.toLowerCase()?
-                                <button disabled={!ready} className="bg-black p-2 hover:text-black hover:bg-[#403f47]" onClick={logout}>Disconnect</button>
+                                <button disabled={!ready} className="bg-black p-2 hover:text-black hover:bg-rives-gray" onClick={logout}>Disconnect</button>
                             :
                                 <></>
                         }      

@@ -3,18 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from 'react'
-//import { useConnectWallet, useSetChain } from '@web3-onboard/react';
 import rivesLogo from '@/public/logo.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Menu } from '@headlessui/react'
 import { usePrivy } from '@privy-io/react-auth';
 import Image from 'next/image';
-import { monogram } from '../utils/monogramExtendedFont';
 
 function Navbar() {
     const pathname = usePathname();
-    const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl ${monogram.className}`}>Connect</span>);
-    const {ready, authenticated, login, logout, user} = usePrivy();
+    const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl pixelated-font`}>Connect</span>);
+    const {ready, authenticated, login, user} = usePrivy();
     // Disable login when Privy is not ready or the user is already authenticated
     const disableLogin = !ready || (ready && authenticated);
 
@@ -23,7 +21,7 @@ function Navbar() {
 
     useEffect(() => {
         if (!user) {
-            setConnectButtonTxt(<span className={`text-4xl ${monogram.className}`}>Connect</span>);
+            setConnectButtonTxt(<span className={`text-sm lg:text-xl pixelated-font`}>Connect</span>);
             return;
         }
 
@@ -32,7 +30,7 @@ function Navbar() {
         if (!userAddress) return;
 
         setConnectButtonTxt(
-            <Link href={`/profile/${userAddress}`} className={`text-4xl ${monogram.className}`}>Profile</Link>
+            <Link href={`/profile/${userAddress}`} className={`text-sm lg:text-xl pixelated-font`}>Profile</Link>
         );
     }, [user])
 
@@ -50,19 +48,19 @@ function Navbar() {
             </Link>
 
             <Link href={"/cartridges"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "lg:link-active" : "" }`}>
-                <span className={`text-4xl ${monogram.className}`}>Cartridges</span>
+                <span className={`text-xl pixelated-font`}>Cartridges</span>
             </Link>
 
             <Link href={"/contests"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "lg:link-active" : "" }`}>
-            <span className={`text-4xl ${monogram.className}`}>Contests</span>
+            <span className={`text-xl pixelated-font`}>Contests</span>
             </Link>
 
             <Link href={"/tapes"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "lg:link-active" : "" }`}>
-                <span className={`text-4xl ${monogram.className}`}>Tapes</span>
+                <span className={`text-xl pixelated-font`}>Tapes</span>
             </Link>
 
             <Link href={"/upload-cartridges"}className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/upload-cartridges") ? "lg:link-active" : "" }`}>
-                <span className={`text-4xl ${monogram.className}`} style={{lineHeight: "1.5rem"}} >Upload Cartridges</span>
+                <span className={`text-xl pixelated-font`} style={{lineHeight: "1.5rem"}} >Upload Cartridges</span>
             </Link>
 
             <div className='hidden lg:flex flex-1 justify-end h-full'>
@@ -86,7 +84,7 @@ function Navbar() {
                                 <Link 
                                 href={"/cartridges"} 
                                 className={`${pathname === "/cartridges" || active? 'bg-rives-purple text-white' : 'text-black' 
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Cartridges
                                 </Link>
                             )}
@@ -99,7 +97,7 @@ function Navbar() {
                                 <Link 
                                 href={"/contests"} 
                                 className={`${pathname === "/contests" || active ? 'bg-rives-purple text-white' : 'text-black'
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Contests
                                 </Link>
                             )}
@@ -112,7 +110,7 @@ function Navbar() {
                                 <Link 
                                 href={"/tapes"} 
                                 className={`${pathname === "/tapes" || active ? 'bg-rives-purple text-white' : 'text-black'
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Tapes
                                 </Link>
                             )}

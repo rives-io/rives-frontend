@@ -75,7 +75,7 @@ export default async function Contest({ params }: { params: { contest_id: string
 
   return (
       <main className="flex justify-center h-svh">
-        <section className="py-16 my-8 w-full flex flex-col space-y-8 max-w-5xl h-2/3">
+        <section className="w-full flex flex-col space-y-8 max-w-5xl h-2/3">
           <div className="bg-gray-400 grid grid-cols-9 gap-2 justify-between p-4">
             
             <div className="flex col-span-1 justify-center items-center">

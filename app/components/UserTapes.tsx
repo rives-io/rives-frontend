@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getTapes } from "../utils/util";
 import { VerifyPayload } from "../backend-libs/core/lib";
-import { monogram } from "../utils/monogramExtendedFont";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
@@ -91,7 +90,7 @@ export default function UserTapes({address}:{address:string}) {
         <div>
             <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
-                        <h1 className={`text-5xl ${monogram.className}`}>Tapes Created</h1>
+                        <h1 className={`text-2xl pixelated-font`}>Tapes Created</h1>
                 </div>
 
                 {
@@ -133,7 +132,7 @@ export default function UserTapes({address}:{address:string}) {
 
             <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
-                    <h1 className={`text-5xl ${monogram.className}`}>Tapes Collected</h1>
+                    <h1 className={`text-2xl pixelated-font`}>Tapes Collected</h1>
                 </div>
 
                 <div className="flex flex-wrap gap-4">

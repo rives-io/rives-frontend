@@ -26,17 +26,13 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
-@font-face {
-  font-family: 'monogram';
-  src: url("https://menez.io/css/font/monogram-extended.ttf") format('truetype');
-  font-style: normal;
-  size-adjust: 125%;
-}
-@font-face {
-  font-family: 'monogram';
-  src: url("https://menez.io/css/font/monogram-extended-italic.ttf") format('truetype');
-  font-style: italic;
-  size-adjust: 125%;
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+
+.pixelated-font{
+  text-transform: uppercase;
+  letter-spacing: -0.125em;
+  font-weight: normal;
+  font-family: 'Silkscreen'
 }
 
 @import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
@@ -67,9 +63,6 @@ body {
   }
 }
 
-/* * {
-  font-family: "monogram";
-} */
 
 html {
   position: relative;
@@ -101,6 +94,10 @@ body {
 @layer utilities {
   .bg-rives-purple {
     @apply bg-[var(--highlight-text-end-hex)]
+  }
+
+  .bg-rives-gray {
+    @apply bg-[#403f47];
   }
 
   .text-rives-purple {

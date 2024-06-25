@@ -3,6 +3,7 @@
 
 import { Tab } from "@headlessui/react";
 import UserTapes from "./UserTapes";
+import UserContests from "./UserContests";
 
 
 export default function ProfileNavigation({address}:{address:string}) {
@@ -49,7 +50,7 @@ export default function ProfileNavigation({address}:{address:string}) {
                 </Tab.Panel>
 
                 <Tab.Panel className="">
-                    Show User's Contests
+                    <UserContests address={address} />
                 </Tab.Panel>
             </Tab.Panels>
         </Tab.Group>   
