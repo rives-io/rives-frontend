@@ -11,7 +11,7 @@ import { ContractReceipt, ethers } from "ethers";
 import { VerifyPayload } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification } from "../backend-libs/core/lib";
-import { Dialog, Transition } from '@headlessui/react'
+import { Dialog, Transition } from '@headlessui/react';
 import Image from "next/image";
 import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";

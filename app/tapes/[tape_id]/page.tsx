@@ -1,4 +1,5 @@
 import RivemuPlayer from '@/app/components/RivemuPlayer';
+import TapeAssetManager from '@/app/components/TapeAssetManager';
 import { envClient } from '@/app/utils/clientEnv';
 
 
@@ -29,7 +30,9 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
 export default async function Tape({ params }: { params: { tape_id: string } }) {
     return (
         <main className="flex items-center justify-center">
+        {/* <main className="flex grid grid-cols-1 justify-items-center justify-center my-20"> */}
             <RivemuPlayer tape_id={params.tape_id}/>
+            <TapeAssetManager tape_id={params.tape_id}/>
         </main>
     )
 }
