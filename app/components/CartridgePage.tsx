@@ -11,6 +11,8 @@ import { envClient } from '../utils/clientEnv';
 import RuleLeaderboard from './RuleLeaderboard';
 import { ContestStatus, getContestStatus } from '../utils/common';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CartridgeContests from './CartridgeContests';
+import CartridgeTapes from './CartridgeTapes';
 
 export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
     const [rulesInfo, setRulesInfo] = useState<RuleInfo[]>();
@@ -127,13 +129,13 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                             <Tab
                                 className={({selected}) => {return selected?"underline":""}}
                                 >
-                                    <span className='hover:underline'>Leaderboard</span>
+                                    <span className='text-2xl pixelated-font hover:underline'>Leaderboard</span>
                             </Tab>
 
                             <Tab
                                 className={({selected}) => {return selected?"underline":""}}
                                 >
-                                    <span className='hover:underline'>Tapes</span>
+                                    <span className='text-2xl pixelated-font hover:underline'>Tapes</span>
                             </Tab>
                         </Tab.List>
 
@@ -145,10 +147,10 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                             </Tab.Panel>
 
                             <Tab.Panel className="">
-                                Show Tapes
+                                <CartridgeTapes cartridgeId={cartridge.id} ruleId={selectedRule?.id} />
                             </Tab.Panel>
                         </Tab.Panels>
-                    </Tab.Group>                    
+                    </Tab.Group>
                 </div>
             </div>
 
@@ -159,13 +161,13 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                             <Tab
                                 className={({selected}) => {return selected?"underline":""}}
                                 >
-                                    <span className='hover:underline'>Activity</span>
+                                    <span className='text-2xl pixelated-font hover:underline'>Activity</span>
                             </Tab>
 
                             <Tab
                                 className={({selected}) => {return selected?"underline":""}}
                                 >
-                                    <span className='hover:underline'>Contests</span>
+                                    <span className='text-2xl pixelated-font hover:underline'>Contests</span>
                             </Tab>
                         </Tab.List>
 
@@ -175,7 +177,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                             </Tab.Panel>
 
                             <Tab.Panel className="">
-                                Show Contests
+                                <CartridgeContests cartridgeId={cartridge.id} cartridgeCover={cartridge.cover} />
                             </Tab.Panel>
                         </Tab.Panels>
                     </Tab.Group>

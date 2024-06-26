@@ -53,11 +53,11 @@ export default function UserTapes({address}:{address:string}) {
     }
 
     const nextCreatedTapesPage = () => {
-        setTapesCollectedPageToLoad(tapesCreatedPageToLoad+1);
+        setTapesCreatedPageToLoad(tapesCreatedPageToLoad+1);
     }
 
     const prevCreatedTapesPage = () => {
-        setTapesCollectedPageToLoad(tapesCreatedPageToLoad-1);
+        setTapesCreatedPageToLoad(tapesCreatedPageToLoad-1);
     }
 
     const TapesCollectedByProfile = async () => {
@@ -98,7 +98,7 @@ export default function UserTapes({address}:{address:string}) {
                         <Loading msg="Loading Created Tapes" />
                     :
                         <>
-                            <div className="flex flex-wrap gap-4">
+                            <div className="flex flex-wrap gap-4 justify-evenly">
                                 {
                                     tapesCreated[tapesCreatedPage.curr-1]?.map((tape, index) => {
                                         return (
@@ -114,13 +114,13 @@ export default function UserTapes({address}:{address:string}) {
                                     <></>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
-                                        <button disabled={tapesCreatedPage.curr == 1} onClick={nextCreatedTapesPage} className={`border border-transparent ${tapesCreatedPage.curr != 1? "hover:border-black":""}`}>
+                                        <button disabled={tapesCreatedPage.curr == 1} onClick={prevCreatedTapesPage} className={`border border-transparent ${tapesCreatedPage.curr != 1? "hover:border-black":""}`}>
                                             <NavigateBeforeIcon />
                                         </button>
                                         <span>
                                             {tapesCreatedPage.curr} of {totalTapesCreatedPages}
                                         </span>
-                                        <button disabled={tapesCreatedPage.atEnd} onClick={prevCreatedTapesPage} className={`border border-transparent ${!tapesCreatedPage.atEnd? "hover:border-black":""}`}>
+                                        <button disabled={tapesCreatedPage.atEnd} onClick={nextCreatedTapesPage} className={`border border-transparent ${!tapesCreatedPage.atEnd? "hover:border-black":""}`}>
                                             <NavigateNextIcon />                
                                         </button>
                                     </div>
@@ -151,13 +151,13 @@ export default function UserTapes({address}:{address:string}) {
                         <></>
                     :
                         <div className='flex justify-center items-center space-x-1'>
-                            <button disabled={tapesCollectedPage.curr == 1} onClick={nextCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>
+                            <button disabled={tapesCollectedPage.curr == 1} onClick={prevCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>
                                 <NavigateBeforeIcon />
                             </button>
                             <span>
                                 {tapesCollectedPage.curr} of {totalTapesCollectedPages}
                             </span>
-                            <button disabled={tapesCollectedPage.atEnd} onClick={prevCollectedTapesPage} className={`border border-transparent ${!tapesCollectedPage.atEnd? "hover:border-black":""}`}>
+                            <button disabled={tapesCollectedPage.atEnd} onClick={nextCollectedTapesPage} className={`border border-transparent ${!tapesCollectedPage.atEnd? "hover:border-black":""}`}>
                                 <NavigateNextIcon />                
                             </button>
                         </div>

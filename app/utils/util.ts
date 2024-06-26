@@ -222,15 +222,20 @@ export interface TapesRequest {
     orderBy?:string,
     orderDir?:string,
     cartridgeId?:string, // can be used to filter by cartridge
-    msg_sender?:string
+    msg_sender?:string,
+    ruleId?:string
 }
 
 export async function getTapes(options:TapesRequest) {
+    let tags:Array<string> = ["tape"];
+    if (options.cartridgeId) tags.push(options.cartridgeId);
+    if (options.ruleId) tags.push(options.ruleId);
+
     let req_options:IndexerPayload = {
         page: options.currentPage,
         page_size: options.pageSize,
         type: "input",
-        tags: options.cartridgeId? ["tape", options.cartridgeId]: ["tape"],
+        tags: tags,
     }
 
     if (options.orderBy) {
