@@ -86,8 +86,13 @@ body {
 }
 
 .cartridgeBorder { 
-  border: 6px solid transparent;
-  border-image: url(../public/cartridge_border.png) 20 fill / 30px / 4px;
+  border: 16px solid transparent;
+  /* border-image: url(../public/cartridge_border.png) 20 fill / 30px / 4px; */
+  border-image-source: url(../public/cartridge_border.png);
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-image-width: 1;
+  border-image-slice: 32 fill;
 }
 
 

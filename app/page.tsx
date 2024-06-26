@@ -60,13 +60,13 @@ export default async function Home() {
   const contestsColors:Record<number, string> = {0: "#53fcd8", 1: "#f99776", 2: "#8b5cf6"};
 
   return (
-    <main>
+    <main className="px-4 md:px-0">
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
           <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
         </div>
 
-        <div className="flex flex-wrap gap-4 w-full lg:w-[80%]">
+        <div className="flex flex-wrap gap-6 w-full lg:w-[80%] ms-4">
           {
             cartridges.map((cartridge, index) => {
               return <CartridgeCard key={index} cartridge={cartridge} />
