@@ -26,4 +26,8 @@ export const envClient = envsafe({
     input: process.env.NEXT_PUBLIC_TAPE_CONTRACT,
     desc: "Tape asset ETH address."
   }),
+  CARTRIDGE_CONTRACT_ADDR: str({
+    input: process.env.NEXT_PUBLIC_CARTRIDGE_CONTRACT,
+    desc: "Tape asset ETH address."
+  }),
 })

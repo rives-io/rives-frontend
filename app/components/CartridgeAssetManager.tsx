@@ -7,14 +7,14 @@ import { useEffect, useState, Fragment } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { Contract, ContractReceipt, ethers, BigNumber, PayableOverrides } from "ethers";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayload, getOutputs } from "../backend-libs/core/lib";
+import { VerificationOutput, VerifyPayload, cartridgeInfo, getOutputs, CartridgeInfo } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { Input } from '@mui/base/Input';
-import tapeAbiFile from "@/app/contracts/Tape.json"
+import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 
-const tapeAbi: any = tapeAbiFile;
+const cartridgeAbi: any = cartridgeAbiFile;
 
 const erc20abi = [
     // Read-Only Functions
@@ -41,55 +41,45 @@ enum MODAL_STATE {
     SUBMITTED
 }
 
-// interface TapeBond {
-//     cartridgeOwner:     string,
-//     currencyBalance:    BigNumber,
-//     currencyToken:      string,
-//     currentPrice:       BigNumber,
-//     currentSupply:      BigNumber,
-//     feeModel:           string,
-//     tapeCreator:        string,
-//     tapeOutputData:     string,
-//     totalBurned:        BigNumber,
-//     totalMinted:        BigNumber,
-//     unclaimedBurnFees:        BigNumber,
-//     unclaimedMintFees:        BigNumber
+
+// const getCartridgeInsetOutput = async (cartridgeId:string):Promise<CartridgeInserted|undefined> => {
+//     const out:Array<VerificationOutput> = (await getOutputs(
+//         {
+//             tags: ["cartridge",cartridgeId],
+//             type: 'notice'
+//         },
+//         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+//     )).data;
+//     if (out.length == 0) return undefined;
+//     return out[0];
 // }
 
-const getTapeVerificationOutput = async (tapeId:string):Promise<VerificationOutput|undefined> => {
-    const out:Array<VerificationOutput> = (await getOutputs(
+const getCartridgeOwner = async (cartridgeId:string):Promise<string> => {
+
+    const out: CartridgeInfo = await cartridgeInfo(
         {
-            tags: ["score",tapeId],
-            type: 'notice'
+            id:cartridgeId
         },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    )).data;
-    if (out.length == 0) return undefined;
-    return out[0];
+        {
+            decode:true,
+            decodeModel:"CartridgeInfo",
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
+        }
+    );
+    
+    return out.user_address;
 }
 
-const getTapeCreator = async (tapeId:string):Promise<string> => {
-    const replayLogs:Array<VerifyPayload> = (await getOutputs(
-        {
-            tags: ["tape",tapeId],
-            type: 'input'
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    )).data;
-    if (replayLogs.length === 0) throw new Error(`Tape ${tapeId} not found!`);
-    return replayLogs[0]._msgSender;
-}
-
-function TapeAssetManager({tape_id}:{tape_id:string}) {
+function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
     // state
     const {user, ready, connectWallet} = usePrivy();
     const {wallets} = useWallets();
-    const [tapeContract,setTapeContract] = useState<Contract>();
+    const [cartridgeContract,setCartridgeContract] = useState<Contract>();
     const [erc20ContractAddress,setErc20Address] = useState<string>();
     const [erc20Contract,setErc20] = useState<Contract>();
     const [signerAddress,setSignerAddress] = useState<String>();
     const [signer,setSigner] = useState<ethers.providers.JsonRpcSigner>();
-    const [tapeCreator,setTapeCreator] = useState<String>();
+    const [cartridgeOwner,setCartridgeOwner] = useState<String>();
     const [buyPrice,setBuyPrice] = useState<BigNumber>();
     const [sellPrice,setSellPrice] = useState<BigNumber>();
     const [amountOwned,setAmountOwned] = useState<BigNumber>();
@@ -99,11 +89,11 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     const [modalPreviewPrice,setModalPreviewPrice] = useState<BigNumber>();
     const [modalSlippage,setModalSlippage] = useState<number>(0);
     const [validated,setValidated] = useState<boolean>();
-    const [tapeOutput,setTapeOutput] = useState<VerificationOutput>();
+    const [cartridgeOutput,setCartridgeOutput] = useState<VerificationOutput>();
     const [reload,setReload] = useState<number>(0);
     const [decimals,setDecimals] = useState<number>(6);
     const [symbol,setSymbol] = useState<string>("");
-    const [tapeExists,setTapeExists] = useState<boolean>();
+    const [cartridgeExists,setCartridgeExists] = useState<boolean>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -112,14 +102,14 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     // use effects
     useEffect(() => {
         if (ready && !user) {
-            setTapeContract(undefined);
+            setCartridgeContract(undefined);
             setSignerAddress(undefined);
             setBaseBalance(undefined);
             return;
         }
         const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setTapeContract(undefined);
+            setCartridgeContract(undefined);
             setSignerAddress(undefined);
             setBaseBalance(undefined);
             return;
@@ -133,46 +123,47 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                 setBaseBalance(data);
             });
     
-            const curContract = new ethers.Contract(envClient.TAPE_CONTRACT_ADDR,tapeAbi.abi,curSigner);
+            const curContract = new ethers.Contract(envClient.CARTRIDGE_CONTRACT_ADDR,cartridgeAbi.abi,curSigner);
             curContract.provider.getCode(curContract.address).then((code) => {
                 if (code == '0x') {
-                    console.log("Couldn't get tape contract")
+                    console.log("Couldn't get cartridge contract")
                     return;
                 }
-                setTapeContract(curContract);
+                setCartridgeContract(curContract);
             });
         });
     }, [ready,user,wallets])
 
     useEffect(() => {
-        if (tape_id) {
-            getTapeVerificationOutput(tape_id).then((out) => setTapeOutput(out))
-            getTapeCreator(tape_id).then((out) => setTapeCreator(out))
+        if (cartridge_id) {
+            // getCartridgeInsetOutput(cartridge_id).then((out) => setCartridgeOutput(out))
+            getCartridgeOwner(cartridge_id).then((out) => setCartridgeOwner(out))
         }
     }, [])
 
     useEffect(() => {
-        if (!tapeContract || !signer) {
+        if (!cartridgeContract || !signer) {
             setBuyPrice(undefined);
             setValidated(undefined)
             setSellPrice(undefined);
             setErc20(undefined);
             setErc20Address(undefined);
-            setTapeExists(undefined);
+            setCartridgeExists(undefined);
             return;
         }
-        tapeContract.exists(`0x${tape_id}`).then((exists:boolean) => {
-            setTapeExists(exists);
+        cartridgeContract.exists(`0x${cartridge_id}`).then((exists:boolean) => {
+            setCartridgeExists(exists);
             if (exists) {
-                tapeContract.getCurrentBuyPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
+                cartridgeContract.getCurrentBuyPrice(`0x${cartridge_id}`,1).then((data:BigNumber[]) => {
                     // const {total,fees,finalPrice} = data;
                     setBuyPrice(data[0]);
                 });
-                tapeContract.tapeBonds(`0x${tape_id}`).then((bond:any) => {
-                    setValidated(bond.tapeOutputData.slice(2).length > 0)
+                cartridgeContract.cartridgeBonds(`0x${cartridge_id}`).then((bond:any) => {
+                    console.log("bond",bond)
+                    setValidated(bond.eventData.slice(2).length > 0)
 
                     if (bond.bond.currentSupply.gt(0)) {
-                        tapeContract.getCurrentSellPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
+                        cartridgeContract.getCurrentSellPrice(`0x${cartridge_id}`,1).then((data:BigNumber[]) => {
                             setSellPrice(data[0]);
                         });
 
@@ -189,7 +180,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                             });
                         }
                     } else {
-                        tapeContract.currencyTokenAddress().then((data:string) => {
+                        cartridgeContract.currencyTokenAddress().then((data:string) => {
                             setErc20Address(data);
                             if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
                                 const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
@@ -207,17 +198,17 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             }
         });
         
-    }, [tapeContract,signer,reload])
+    }, [cartridgeContract,signer,reload])
 
     useEffect(() => {
-        if (!tapeContract || !signerAddress) {
+        if (!cartridgeContract || !signerAddress) {
             setAmountOwned(undefined);
             return;
         }
-        tapeContract.balanceOf(signerAddress,`0x${tape_id}`).then((amount:BigNumber) => {
+        cartridgeContract.balanceOf(signerAddress,`0x${cartridge_id}`).then((amount:BigNumber) => {
             setAmountOwned(amount);
         });
-    }, [tapeContract,signerAddress,reload])
+    }, [cartridgeContract,signerAddress,reload])
 
     useEffect(() => {
         if (!erc20ContractAddress || !signerAddress) {
@@ -273,12 +264,12 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
         changeModalInput("1",state);
     }
 
-    async function buyTape() {
+    async function buyCartridge() {
         if (!signer) {
             setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!tapeContract) {
+        if (!cartridgeContract) {
             setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
@@ -307,16 +298,16 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                     setErrorFeedback({message:"No erc20 contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
                     return;
                 }
-                const allowance: BigNumber = await erc20Contract.allowance(signerAddress,tapeContract.address);
+                const allowance: BigNumber = await erc20Contract.allowance(signerAddress,cartridgeContract.address);
                 if (allowance.lt(slippage)) {
-                    const approveTx = await erc20Contract.approve(tapeContract.address,slippage.sub(allowance));
+                    const approveTx = await erc20Contract.approve(cartridgeContract.address,slippage.sub(allowance));
                     const approveTxReceipt = await approveTx.wait(1);
                 }
             } else {
                 options.value = BigNumber.from(slippage);
             }
 
-            const tx = await tapeContract.buyTapes(`0x${tape_id}`,amount,slippage,options);
+            const tx = await cartridgeContract.buyCartridges(`0x${cartridge_id}`,amount,slippage,options);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             closeModal();
@@ -331,12 +322,12 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
         }
     }
 
-    async function sellTape() {
+    async function sellCartridge() {
         if (!signer) {
             setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!tapeContract) {
+        if (!cartridgeContract) {
             setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
@@ -349,7 +340,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                 return;
             }
 
-            const tx = await tapeContract.sellTapes(`0x${tape_id}`,amount,slippage);
+            const tx = await cartridgeContract.sellCartridges(`0x${cartridge_id}`,amount,slippage);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             closeModal();
@@ -369,17 +360,17 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!tapeContract) {
+        if (!cartridgeContract) {
             setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!tapeOutput?._proof) {
+        if (!cartridgeOutput?._proof) {
             setErrorFeedback({message:"No proofs yet", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await tapeContract.validateTape(envClient.DAPP_ADDR,`0x${tape_id}`,tapeOutput?._payload,tapeOutput?._proof);
+            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,cartridgeOutput?._payload,cartridgeOutput?._proof);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             closeModal();
@@ -399,13 +390,13 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!tapeContract) {
+        if (!cartridgeContract) {
             setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await tapeContract.setTapeParams(`0x${tape_id}`);
+            const tx = await cartridgeContract.setCartridgeParams(`0x${cartridge_id}`);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             closeModal();
@@ -421,7 +412,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     }
 
     function changeModalInput(value:string, state: MODAL_STATE) {
-        if (!tapeContract || !value) return;
+        if (!cartridgeContract || !value) return;
         const val = parseInt(value);
         setModalValue(val);
         if (val < 1) {
@@ -429,12 +420,12 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             return;
         }
         if (state == MODAL_STATE.BUY) {
-            tapeContract.getCurrentBuyPrice(`0x${tape_id}`,value).then((data:BigNumber[]) => {
+            cartridgeContract.getCurrentBuyPrice(`0x${cartridge_id}`,value).then((data:BigNumber[]) => {
                 setModalPreviewPrice(data[0]);
             });
         } else if (state == MODAL_STATE.SELL) {
             if (amountOwned?.lt(val)) return;
-            tapeContract.getCurrentSellPrice(`0x${tape_id}`,value).then((data:BigNumber[]) => {
+            cartridgeContract.getCurrentSellPrice(`0x${cartridge_id}`,value).then((data:BigNumber[]) => {
                 setModalPreviewPrice(data[0]);
             });
         }
@@ -454,11 +445,11 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                        Buy Tape
+                        Buy Cartridge
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
-                        <span className="place-self-start">Number of Tapes {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
-                        <Input className="text-black" aria-label="Tapes" placeholder="Tapes to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} />
+                        <span className="place-self-start">Number of Cartridges {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
+                        <Input className="text-black" aria-label="Cartridges" placeholder="Cartridges to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} />
                         <span className="place-self-start">Slippage (%)</span>
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
                     </div>
@@ -474,7 +465,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                         <button
                         className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
                         type="button"
-                        onClick={buyTape}
+                        onClick={buyCartridge}
                         disabled={modalValue == undefined || modalValue < 1}
                         >
                             Buy {modalPreviewPrice ? `${ethers.utils.formatUnits(modalPreviewPrice,decimals)} ${symbol}` : ""}
@@ -486,11 +477,11 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                        Sell Tape
+                        Sell Cartridge
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
-                        <span className="place-self-start">Number of Tapes {modalValue && amountOwned?.lt(modalValue) ? "(Not enough tapes owned)" : ""}</span>
-                        <Input className="text-black" aria-label="Tapes" placeholder="Tapes to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.SELL)} />
+                        <span className="place-self-start">Number of Cartridges {modalValue && amountOwned?.lt(modalValue) ? "(Not enough cartridges owned)" : ""}</span>
+                        <Input className="text-black" aria-label="Cartridges" placeholder="Cartridges to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.SELL)} />
                         <span className="place-self-start">Slippage (%)</span>
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
                     </div>
@@ -506,7 +497,7 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                         <button
                         className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
                         type="button"
-                        onClick={sellTape}
+                        onClick={sellCartridge}
                         disabled={modalValue != undefined && amountOwned?.lt(modalValue)}
                         >
                             Sell {modalPreviewPrice ? `${ethers.utils.formatUnits(modalPreviewPrice,decimals)} ${symbol}` : ""}
@@ -594,12 +585,12 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
             </Transition>
             {/* <div className="grid grid-cols-3 justify-items-center"> */}
             <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
-                { tapeExists ? <>
-                {tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? 
-                <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} 
+                { cartridgeExists ? <>
+                {cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                <button title={validated ? "Claimed" : cartridgeOutput?._proof ? "" : "No proof yet"} 
                     className='bg-[#4e99e0] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
-                    onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
-                {validated ? "Claimed" : "Claim"} {tapeOutput?._proof ? "" : "(No proof)"}
+                    onClick={validate} disabled={validated || validated == undefined || !(cartridgeOutput?._proof)}>
+                {validated ? "Claimed" : "Claim"} {cartridgeOutput?._proof ? "" : "(No proof)"}
                 </button> : <></>}
                 <button title={amountOwned?.gt(0) ? "" : "No balance"} 
                         className='bg-[#e04ec3] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
@@ -613,10 +604,10 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
                 </button>
                 </> :
                 <> <div></div><div></div>
-                {tapeCreator && tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {cartridgeOwner && cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() ? 
                     <button title={"Activate"} 
                             className='bg-[#4e99e0] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
-                            onClick={activate} disabled={tapeExists}>
+                            onClick={activate} disabled={cartridgeExists}>
                         Activate
                     </button>
                 : 
@@ -629,4 +620,4 @@ function TapeAssetManager({tape_id}:{tape_id:string}) {
     )
 }
 
-export default TapeAssetManager;
+export default CartridgeAssetManager;
