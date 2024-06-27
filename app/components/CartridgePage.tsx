@@ -13,6 +13,7 @@ import { ContestStatus, getContestStatus } from '../utils/common';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
+import CartridgeAssetManager from './CartridgeAssetManager';
 
 export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
     const [rulesInfo, setRulesInfo] = useState<RuleInfo[]>();
@@ -45,7 +46,7 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                         <span>{cartridge.authors.length>0?cartridge.authors[0]:""}</span>
                     </div>
 
-                    <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
+                    {/* <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
                         <button className='bg-[#e04ec3] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
                             ${0.09} Sell
                         </button>
@@ -53,7 +54,8 @@ export default function CartridgePage({cartridge}:{cartridge:Cartridge}) {
                         <button className='bg-[#53fcd8] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
                             ${0.1} Buy
                         </button>
-                    </div>
+                    </div> */}
+                    <CartridgeAssetManager cartridge_id={cartridge.id} />
                 </div>
 
                 <div className='grid grid-cols-2 md:grid-cols-4 text-center gap-2'>
