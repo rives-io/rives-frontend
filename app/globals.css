@@ -32,7 +32,11 @@ body {
   text-transform: uppercase;
   letter-spacing: -0.125em;
   font-weight: normal;
-  font-family: 'Silkscreen'
+  font-family: 'Silkscreen';
+}
+
+.pixelated-font::first-letter {
+  margin-left: -0.12em;
 }
 
 @import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
@@ -87,12 +91,20 @@ body {
 
 .cartridgeBorder { 
   border: 16px solid transparent;
-  /* border-image: url(../public/cartridge_border.png) 20 fill / 30px / 4px; */
   border-image-source: url(../public/cartridge_border.png);
   border-image-outset: 0;
   border-image-repeat: stretch;
   border-image-width: 1;
   border-image-slice: 32 fill;
+}
+
+.tapeBorder {
+  border: 42px solid transparent;
+  border-image-source: url(../public/tape_border.png);
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-image-width: 1;
+  border-image-slice: 84 fill;
 }
 
 

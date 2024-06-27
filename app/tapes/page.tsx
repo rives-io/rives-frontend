@@ -7,12 +7,11 @@ import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { TapesRequest, getTapes, getTapesGifs, getTapesImages } from "../utils/util";
-import Image from "next/image";
-import Link from "next/link";
+import { TapesRequest, getTapes } from "../utils/util";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { useInView } from "react-intersection-observer";
+import TapeCard from "../components/TapeCard";
+import Loading from "../components/Loading";
 
 const DEFAULT_PAGE_SIZE = 12
 
@@ -50,29 +49,6 @@ async function getGameInfo(cartridge_id:string) {
   return cartridgeWithInfo;
 }
 
-function showDiv(id:string) {
-  document.getElementById(id)?.classList.remove("opacity-0");
-}
-
-function hideDiv(id:string) {
-  document.getElementById(id)?.classList.add("opacity-0");
-}
-
-function loadingFallback() {
-  const arr = Array.from(Array(DEFAULT_PAGE_SIZE).keys());
-  return (
-    <>
-      {
-        arr.map((val, index) => {
-          return (
-            <div key={index} className="w-64 h-64 grid grid-cols-1 place-content-center bg-black animate-pulse"></div>
-          )
-        })
-      }
-    </>
-  )
-}
-
 interface TapesPagination extends TapesRequest {
   atEnd: boolean,
   fetching: boolean
@@ -87,10 +63,10 @@ export default function Tapes() {
   const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesPagination>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false, orderBy: "timestamp", orderDir: "desc"});
   const [scores, setScores] = useState<Record<string, number|undefined>>({});
 
-  const { ref, inView, entry } = useInView({
-    /* Optional options */
-    threshold: 0,
-  });
+  // const { ref, inView, entry } = useInView({
+  //   /* Optional options */
+  //   threshold: 0,
+  // });
 
   useEffect(() => {
     const getFirstPage = async () => {
@@ -100,7 +76,7 @@ export default function Tapes() {
     getFirstPage();
   }, [])
 
-  if (inView) nextPage();
+  // if (inView) nextPage();
 
   async function nextPage() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
@@ -116,79 +92,93 @@ export default function Tapes() {
     } 
     const tapesInputs = res.data;
     
-    let tapes:Set<string> = new Set();
-    let idToInfoMap:Record<string, CartridgeInfo> = {};
-    let idToRuleInfoMap:Record<string, RuleInfo> = {};
+    // let tapes:Set<string> = new Set();
+    // let idToInfoMap:Record<string, CartridgeInfo> = {};
+    // let idToRuleInfoMap:Record<string, RuleInfo> = {};
 
-    for (let i = 0; i < tapesInputs.length; i++) {
-      const tapeInput: VerifyPayload = tapesInputs[i];
+    // for (let i = 0; i < tapesInputs.length; i++) {
+    //   const tapeInput: VerifyPayload = tapesInputs[i];
 
-      tapes.add(getTapeId(tapeInput.tape));
-      if (! (cartridgeInfoMap[tapeInput.rule_id] || idToInfoMap[tapeInput.rule_id] || idToRuleInfoMap[tapeInput.rule_id]) ) {
+    //   tapes.add(getTapeId(tapeInput.tape));
+    //   if (! (cartridgeInfoMap[tapeInput.rule_id] || idToInfoMap[tapeInput.rule_id] || idToRuleInfoMap[tapeInput.rule_id]) ) {
 
-        try {
-          idToRuleInfoMap[tapeInput.rule_id] = await getRuleInfo(tapeInput.rule_id.slice(2));
-          idToInfoMap[tapeInput.rule_id] = await getGameInfo(idToRuleInfoMap[tapeInput.rule_id].cartridge_id);            
-        } catch (error) {
-          console.log((error as Error).message);
-        }
-      }
-    }
+    //     try {
+    //       idToRuleInfoMap[tapeInput.rule_id] = await getRuleInfo(tapeInput.rule_id.slice(2));
+    //       idToInfoMap[tapeInput.rule_id] = await getGameInfo(idToRuleInfoMap[tapeInput.rule_id].cartridge_id);            
+    //     } catch (error) {
+    //       console.log((error as Error).message);
+    //     }
+    //   }
+    // }
 
-    if (Object.keys(idToInfoMap).length > 0) setCartridgeInfoMap({...cartridgeInfoMap, ...idToInfoMap});
-    if (Object.keys(idToRuleInfoMap).length > 0) setRuleInfoMap({...ruleInfoMap, ...idToRuleInfoMap});
+    // if (Object.keys(idToInfoMap).length > 0) setCartridgeInfoMap({...cartridgeInfoMap, ...idToInfoMap});
+    // if (Object.keys(idToRuleInfoMap).length > 0) setRuleInfoMap({...ruleInfoMap, ...idToRuleInfoMap});
 
-    let promises:Array<Promise<any>> = [];
+    // let promises:Array<Promise<any>> = [];
     // get tapes Images, GIFS, and Scores
-    const tapeList = Array.from(tapes);
-    promises.push(getTapesImages(tapeList));
-    promises.push(getTapesGifs(tapeList));
-    promises.push(getScores(tapesRequestOptions))
+    // const tapeList = Array.from(tapes);
+    // promises.push(getTapesImages(tapeList));
+    // promises.push(getTapesGifs(tapeList));
+    // promises.push(getScores(tapesRequestOptions))
 
-    Promise.all(promises)
-    .then((values) => {
-      // images
-      let tapesImages:string[] = values[0];
-      const newImgsRecord: Record<string,string> = {};
-      for (var i = 0; i < tapeList.length; i++) {
-        newImgsRecord[tapeList[i]] = tapesImages[i];
-      }
-      setImgs({...imgs, ...newImgsRecord});
+    // Promise.all(promises)
+    // .then((values) => {
+    //   // images
+    //   let tapesImages:string[] = values[0];
+    //   const newImgsRecord: Record<string,string> = {};
+    //   for (var i = 0; i < tapeList.length; i++) {
+    //     newImgsRecord[tapeList[i]] = tapesImages[i];
+    //   }
+    //   setImgs({...imgs, ...newImgsRecord});
 
-      // GIFs
-      let tapesGifs:string[] = values[1];
-      let newGifsRecord: Record<string,string> = {};
-      for (var i = 0; i < tapeList.length; i++) {
-        newGifsRecord[tapeList[i]] = tapesGifs[i];
-      }
-      setGifs({...gifs, ...newGifsRecord});
+    //   // GIFs
+    //   let tapesGifs:string[] = values[1];
+    //   let newGifsRecord: Record<string,string> = {};
+    //   for (var i = 0; i < tapeList.length; i++) {
+    //     newGifsRecord[tapeList[i]] = tapesGifs[i];
+    //   }
+    //   setGifs({...gifs, ...newGifsRecord});
 
-      // score
-      let tapesScores:VerificationOutput[] = values[2];
-      let tapeId;
-      let newScores:Record<string, number> = {};
-      tapesScores.forEach((newScore) => {
-        tapeId = newScore.tape_hash.substring(2);
-        newScores[tapeId] = newScore.score;
-      });
+    //   // score
+    //   let tapesScores:VerificationOutput[] = values[2];
+    //   let tapeId;
+    //   let newScores:Record<string, number> = {};
+    //   tapesScores.forEach((newScore) => {
+    //     tapeId = newScore.tape_hash.substring(2);
+    //     newScores[tapeId] = newScore.score;
+    //   });
 
-      setScores({...scores, ...newScores});
-    })
-    .catch(console.log)
-    .finally(() => {
-      if (!verificationInputs) {
-        setVerificationInputs(tapesInputs);
-      } else {
-        setVerificationInputs([...verificationInputs, ...tapesInputs]);
-      }
+    //   setScores({...scores, ...newScores});
+    // })
+  //   .catch(console.log)
+  //   .finally(() => {
+  //     if (!verificationInputs) {
+  //       setVerificationInputs(tapesInputs);
+  //     } else {
+  //       setVerificationInputs([...verificationInputs, ...tapesInputs]);
+  //     }
       
-      setTapesRequestOptions({...tapesRequestOptions, 
-        currentPage: tapesRequestOptions.currentPage+1, 
-        fetching: false,
-        atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
-      });
-    })
+  //     setTapesRequestOptions({...tapesRequestOptions, 
+  //       currentPage: tapesRequestOptions.currentPage+1, 
+  //       fetching: false,
+  //       atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
+  //     });
+  //   })
+
+    if (!verificationInputs) {
+      setVerificationInputs(tapesInputs);
+    } else {
+      setVerificationInputs([...verificationInputs, ...tapesInputs]);
+    }
+    
+    setTapesRequestOptions({...tapesRequestOptions, 
+      currentPage: tapesRequestOptions.currentPage+1, 
+      fetching: false,
+      atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
+    });
+
   }
+
 
 
   if (verificationInputs?.length == 0) {
@@ -215,53 +205,46 @@ export default function Tapes() {
               const size = formatBytes((verificationInput.tape.length -2 )/2);
               
               return (
-                <Link key={index} href={`/tapes/${tapeId}`} className="relative">
-                  <div 
-                    className="absolute w-64 h-64 text-white"
-                  >
-                    <div className="text-center p-2 h-fit bg-black bg-opacity-50 flex flex-col">
-                      <span className="text-sm">{cartridgeName}</span>
-                      {scores[tapeId] ? <span className="text-xs">Score: {scores[tapeId]?.toString()}</span> : <></>}
-                    </div>
-
-                    <div className="absolute bottom-0 text-center w-64 p-2 text-[8px] h-fit bg-black bg-opacity-50 flex flex-col">
-                      <span>Mode: {ruleName}</span><br />
-                      <span>{player} on {timestamp}</span>
-                      <span>Size {size}</span>
-                    </div>
-                  </div>
-
-                  <div className="w-64 h-64 grid grid-cols-1 place-content-center bg-black">
-                    <Image className="border border-black" width={256} height={256} src={"data:image/jpeg;base64,"+(imgs[tapeId] ? imgs[tapeId] : cartridgeInfoMap[verificationInput.rule_id]?.cover)} alt={"Not found"}/>
-                  </div>
-
-                  {
-                    gifs[tapeId]? 
-                      <div className="w-64 h-64 grid grid-cols-1 place-content-center bg-black opacity-0 absolute inset-0 "
-                        id={"gif-"+tapeId}
-                        onMouseOver={() => showDiv("gif-"+tapeId)}
-                        onMouseOut={() => hideDiv("gif-"+tapeId)}
-                        >
-                        <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+(gifs[tapeId])} alt={"Not found"}/>
-                      </div>
-                    :
-                      <></>
-                  }
-                </Link>
+                <TapeCard key={index} tapeInput={verificationInput} />
               )
                
             })
           }
           {
             tapesRequestOptions.fetching?
-              loadingFallback()
+              <div className="col-span-full">
+                <Loading msg={"Loading Tapes"} />
+              </div>
             :
               <></>
           }
-        </div >
+
+          {
+            tapesRequestOptions.atEnd?
+              <></>
+            :
+              <div className="col-span-full flex justify-center">
+                <button className="bg-rives-purple p-3 text-center md:w-1/2 hover:scale-110"
+                onClick={nextPage}
+                disabled={tapesRequestOptions.fetching}
+                >
+                  {
+                    tapesRequestOptions.fetching?
+                      <div className="flex justify-center">
+                        <div className='w-8 h-8 border-2 rounded-full border-current border-r-transparent animate-spin'></div>
+                      </div>
+                    :
+                      <span className="pixelated-font">
+                        Show More
+                      </span>
+                  }
+                </button>
+              </div>
+
+          }
+
+        </div >  
       </section>
-      <div ref={ref} className="absolute bottom-0 h-2">
-      </div>
     </main>
   )
 }

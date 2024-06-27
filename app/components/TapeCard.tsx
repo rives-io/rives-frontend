@@ -6,7 +6,7 @@ import { VerifyPayload } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo.png';
-import { getTapeImage } from "../utils/util";
+import { getTapeGif, getTapeImage } from "../utils/util";
 import { useState } from "react";
 import rivesCheck from "@/public/rives_check.png";
 
@@ -25,36 +25,63 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload}) {
     const timestamp = new Date(tape._timestamp*1000).toLocaleDateString();
     const tapeId = sha256(ethers.utils.arrayify((tape.tape)));
     const [gifImage, setGifImage] = useState<string|null>("");
+    const [gif, setGif] = useState<string|null>("");
+
+    const [displayGif, setDisplayGif] = useState(false);
+    const onMouseEnter = () => setDisplayGif(true);
+    const onMouseLeave = () => setDisplayGif(false);
 
     if (gifImage?.length == 0) {
-        getTapeImage(tapeId).then((gif) => setGifImage(gif));
+        getTapeImage(tapeId).then((gifImage) => setGifImage(gifImage));
+    }
+
+    if (gif?.length == 0) {
+        getTapeGif(tapeId).then((gif) => setGif(gif));
     }
 
     return (
-        <Link href={`/tapes/${tapeId}`} className="flex flex-col px-4 items-center border-2 bg-rives-gray border-gray-700 hover:scale-110 w-44 h-56">
-            <div className='w-28 h-8 '>
+        <Link href={`/tapes/${tapeId}`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className="tapeBorder flex flex-col items-center w-44 h-60 hover:scale-110">
+            <div className='w-20 h-8'>
                 <Image
                     src={rivesLogo}
                     layout="fit"
                     quality={100}
                     alt='rives logo'
-                    className="-mt-4"
+                    className="-mt-12 -ms-11"
                 />
             </div>
 
-            <div className="w-32 h-32 grid grid-cols-1 my-2 place-content-center bg-black">
-                <Image
-                    width={128} height={128}
-                    src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
-                    alt={"Not found"}
-                />
+            <div className="w-fill -mt-3 -me-2 mb-1 flex justify-center">
+                <div className="w-[156px] h-[156px] relative">
+                    {
+                        displayGif && gif && gif.length > 0?
+                            <Image fill
+                                style={{objectFit: "cover"}}
+                                src={"data:image/gif;base64," + gif}
+                                alt={"Not found"}
+                            />
+                        :
+                            <Image fill
+                                style={{objectFit: "cover"}}
+                                src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
+                                alt={"Not found"}
+                            />
+                
+                    }
+                </div>
             </div>
 
-            <div className="flex flex-col self-start w-full">
-                <span className="truncate">{tapeId}</span>
-                <span className="text-sm truncate">
-                    By: <span className="text-rives-purple">{player}</span>
-                </span>
+            <div className="w-44 px-2 -me-2">
+                <div className="flex flex-col">
+                    <span className="pixelated-font text-sm truncate">{tapeId}</span>
+                    <span className="pixelated-font text-xs truncate">
+                        By: <span className="pixelated-font text-rives-purple">{player}</span>
+                    </span>
+                </div>
+
             </div>
         </Link>
     )

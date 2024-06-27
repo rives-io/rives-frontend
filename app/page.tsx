@@ -66,7 +66,7 @@ export default async function Home() {
           <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
         </div>
 
-        <div className="flex flex-wrap gap-6 w-full lg:w-[80%] ms-4">
+        <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
           {
             cartridges.map((cartridge, index) => {
               return <CartridgeCard key={index} cartridge={cartridge} />
@@ -82,7 +82,7 @@ export default async function Home() {
           <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
         </div>
 
-        <div className="flex flex-wrap gap-4 w-full lg:w-[80%]">
+        <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
           {
             tapes.map((tape, index) => {
               return <TapeCard key={index} tapeInput={JSON.stringify(tape)} />
