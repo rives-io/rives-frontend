@@ -4,6 +4,7 @@ import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getOutputs } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
+import { encrypt } from "@/lib";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -70,6 +71,7 @@ export async function getTapesGifs(tapes:Array<string>):Promise<Array<string>> {
 }
 
 export async function insertTapeGif(gameplay_id:string, gifImage:string) {
+    const payload = await encrypt({"gameplay_id": gameplay_id, "gif": gifImage});
     try {
         await fetch(
             `${envClient.GIF_SERVER_URL}/insert-gif`,
@@ -78,49 +80,12 @@ export async function insertTapeGif(gameplay_id:string, gifImage:string) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    "gameplay_id": gameplay_id,
-                    "gif": gifImage
-                })
+                body: payload
             }
         )
     } catch (e) {
         console.log(`Error inserting gif: ${e}`)
     }
-}
-
-export async function useCode(payload:string) {
-    const response = await fetch(
-        `${envClient.GIF_SERVER_URL}/useCode`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                "codeSession": payload
-            })
-        }
-    )
-
-    return await response.json();
-}
-
-export async function validateCode(payload:string) {
-    const response = await fetch(
-        `${envClient.GIF_SERVER_URL}/validateCode`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                "codeSession": payload
-            })
-        }
-    )
-
-    return await response.json();
 }
 
 export async function getTapeImage(tape_id:string):Promise<string|null> {
@@ -171,6 +136,7 @@ export async function getTapesImages(tapes:Array<string>):Promise<Array<string>>
 }
 
 export async function insertTapeImage(gameplay_id:string, gifImage:string) {
+    const payload = await encrypt({"gameplay_id": gameplay_id, "image": gifImage});
     try {
         await fetch(
             `${envClient.GIF_SERVER_URL}/insert-image`,
@@ -179,10 +145,7 @@ export async function insertTapeImage(gameplay_id:string, gifImage:string) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    "gameplay_id": gameplay_id,
-                    "image": gifImage
-                })
+                body: payload
             }
         )
     } catch (e) {
