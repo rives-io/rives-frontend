@@ -53,7 +53,7 @@ export default async function Contests() {
     if (!cartridgeInfoMap[contests[i].cartridge_id]) {
       const cartridge:CartridgeInfo = await cartridgeInfo(
         {id:contests[i].cartridge_id},
-        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"}
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
       );
 
       cartridgeInfoMap[cartridge.id] = cartridge;

@@ -5,7 +5,7 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { insertTapeGif, insertTapeImage } from "../utils/util";
+import { insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
 import { sha256 } from "js-sha256";
 import { ContractReceipt, ethers } from "ethers";
 import { VerifyPayload } from "../backend-libs/core/ifaces";
@@ -22,6 +22,8 @@ import { CartridgeInfo as Cartridge } from "../backend-libs/core/ifaces";
 import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
+import TapeCard from "./TapeCard";
+import Link from "next/link";
 
 
 enum MODAL_STATE {
@@ -87,6 +89,8 @@ function GameplaySubmitter() {
     const {user, ready, connectWallet} = usePrivy();
     const {wallets} = useWallets();
     
+    const tapeId = gameplay? calculateTapeId(gameplay.log):"";
+    const [tapeTitle, setTapeTitle] = useState("");
     const [tapeURL, setTapeURL] = useState("");
     const [gifImg, setGifImg] = useState("");
     const [img, setImg] = useState("");
@@ -102,6 +106,10 @@ function GameplaySubmitter() {
   
     function openModal() {
         setModalState({...modalState, isOpen: true})
+    }
+
+    function onTapeTitleChange(e: React.FormEvent<HTMLInputElement>) {
+        setTapeTitle(e.currentTarget.value);
     }
 
     useEffect(() => {
@@ -169,7 +177,7 @@ function GameplaySubmitter() {
         }
 
         // get cartridgeInfo asynchronously
-        cartridgeInfo({id:gameplay.cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"})
+        cartridgeInfo({id:gameplay.cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
         .then(setGameInfo);
 
         // submit the gameplay
@@ -193,13 +201,16 @@ function GameplaySubmitter() {
             return;
         }
 
-        const gameplay_id = calculateTapeId(gameplay.log);
+        //const gameplay_id = calculateTapeId(gameplay.log);
         try {
             if (img && img.length > 0) {
-                await insertTapeImage(gameplay_id, img);
+                await insertTapeImage(tapeId, img);
             }
             if (gifImg && gifImg.length > 0) {
-                await insertTapeGif(gameplay_id, gifImg);
+                await insertTapeGif(tapeId, gifImg);
+            }
+            if (tapeTitle.length > 0) {
+                await insertTapeName(tapeId, tapeTitle);
             }
         } catch (error) {
             console.log(error)
@@ -208,7 +219,7 @@ function GameplaySubmitter() {
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
         }
         if (typeof window !== "undefined") {
-            setTapeURL(`${window.location.origin}/tapes/${gameplay_id}`);
+            setTapeURL(`${window.location.origin}/tapes/${tapeId}`);
         }
         
         setModalState({...modalState, state: MODAL_STATE.SUBMITTED});
@@ -221,11 +232,18 @@ function GameplaySubmitter() {
         if (modalState.state == MODAL_STATE.SUBMIT) {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
                         Submit your Gameplay
                     </Dialog.Title>
+
+                    <div className="mt-4 flex space-x-2">
+                        <label className="pixelated-font">Title: </label>
+                        <input onChange={onTapeTitleChange} type="text" maxLength={20} className="pixelated-font p-1 text-black" placeholder="Awesome Tape" value={tapeTitle} />
+                    </div>
+
                     <div className="mt-4 text-center">
-                        <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/>
+                        {/* <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/> */}
+                        <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player}} />
                     </div>
     
                     <div className="flex pb-2 mt-4">
@@ -249,7 +267,7 @@ function GameplaySubmitter() {
         } else if (modalState.state == MODAL_STATE.SUBMITTING) {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 pixelated-font">
                         Submitting Gameplay
                     </Dialog.Title>
         
@@ -262,15 +280,21 @@ function GameplaySubmitter() {
         } else {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 pixelated-font">
                         Gameplay Submitted!
                     </Dialog.Title>
 
                     <div className="mt-4 text-center">
-                        <button className="place-self-center" title='Tape' onClick={() => window.open(`${tapeURL}`, "_blank", "noopener,noreferrer")}>
-                            <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/>
-                        </button>
+                        {
+                            !gameplay?
+                                <></>
+                            :
+                                <button onClick={() => window.open(tapeURL,"_self")}>
+                                    <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player}} />
+                                </button>
+                        }
                     </div>
+
                     <div className="mt-4 flex flex-col space-y-2">
                         <TwitterShareButton
                         url={tapeURL}

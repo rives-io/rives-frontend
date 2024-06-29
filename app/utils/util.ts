@@ -154,6 +154,47 @@ export async function insertTapeImage(gameplay_id:string, gifImage:string) {
 }
 
 
+export async function getTapeName(tape_id:string):Promise<string|null> {
+    try {
+        const response = await fetch(`${envClient.GIF_SERVER_URL}/names`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify([tape_id])
+            }
+        );
+
+        if (!response.ok) return null;
+
+        const imgs = await response.json();
+
+        return imgs[0];
+    } catch (e) {
+        console.log(`Error fetching image: ${e}`)
+        return null;
+    }
+}
+
+
+export async function insertTapeName(gameplay_id:string, name:string) {
+    const payload = await encrypt({"gameplay_id": gameplay_id, "name": name});
+    try {
+        await fetch(
+            `${envClient.GIF_SERVER_URL}/insert-name`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: payload
+            }
+        )
+    } catch (e) {
+        console.log(`Error inserting image: ${e}`)
+    }
+}
 
 let chains:Record<number, Chain> = {};
 chains[base.id] = base;

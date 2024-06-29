@@ -23,7 +23,7 @@ interface CartridgesRequest {
 const getCartridges = cache(async (cartridgesRequestOptions:CartridgesRequest) => {
 	const cartridges: any[] = (await cartridgerequest(
         {...cartridgesRequestOptions, get_cover: true },
-        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"})
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
     ).data;
 
     return cartridges;

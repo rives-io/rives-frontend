@@ -12,7 +12,7 @@ export default async function Cartridges({searchParams}
 	let requestedCartridge:Cartridge|null = null;
 	
 	if (requestedCartridgeId && typeof requestedCartridgeId == "string") {
-		requestedCartridge = await cartridgeInfo({id:requestedCartridgeId}, {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL, cache:"force-cache"});
+		requestedCartridge = await cartridgeInfo({id:requestedCartridgeId}, {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
 	}
 
 	if (requestedCartridge) {

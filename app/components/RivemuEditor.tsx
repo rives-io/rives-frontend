@@ -72,8 +72,7 @@ const getCartridgeData = async (cartridgeId:string):Promise<Uint8Array> => {
         {
             decode:true,
             decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -107,8 +106,7 @@ const getRules = async (cartridge_id:string):Promise<RuleInfo[]> => {
         {
             decode:true,
             decodeModel:"RulesOutput",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -212,7 +210,6 @@ function RivemuEditor() {
                 decode:true,
                 decodeModel:"RuleTagsOutput",
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
             }
         ).then( (out:RuleTagsOutput) => {
             setRuleCartridgeTags(out.tags);
@@ -437,8 +434,7 @@ function RivemuEditor() {
             {id:sha256(cartridgeData)},
             {
                 decode:true,
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
         console.log(out)
@@ -487,8 +483,7 @@ function RivemuEditor() {
         const out: CartridgeInfo = await cartridgeInfo(
             {id:cartridgeId},
             {
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
 
@@ -509,8 +504,7 @@ function RivemuEditor() {
             {
                 decode:true,
                 decodeModel:"RulesOutput",
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
 

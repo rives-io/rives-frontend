@@ -39,12 +39,12 @@ async function getScores(options:TapesRequest) {
 }
 
 async function getRuleInfo(rule_id:string) {
-  const rulesOutput: RulesOutput = (await rules({id:rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true,cache:"force-cache"}));
+  const rulesOutput: RulesOutput = (await rules({id:rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}));
   return rulesOutput.data[0];
 }
 
 async function getGameInfo(cartridge_id:string) {
-  const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"});
+  const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
 
   return cartridgeWithInfo;
 }

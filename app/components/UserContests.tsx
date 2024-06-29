@@ -57,7 +57,7 @@ export default function UserContests({address}:{address:string}) {
                 if (!participatedContestsCartridges[contest.cartridge_id]) {
                     const cartridge:CartridgeInfo = await cartridgeInfo(
                         {id:contests[i].cartridge_id},
-                        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"}
+                        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
                     );
                 
                     participatedContestsCartridges[cartridge.id] = cartridge;

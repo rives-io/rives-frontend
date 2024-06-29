@@ -30,7 +30,7 @@ const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
 }
 
 async function getGameInfo(cartridge_id:string) {
-  const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"});
+  const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
 
   return cartridgeWithInfo;
 }

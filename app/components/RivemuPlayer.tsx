@@ -42,8 +42,7 @@ const getCartridgeData = async (cartridgeId:string) => {
         {
             decode:true,
             decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -77,8 +76,7 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
         {
             decode:true,
             decodeModel:"RulesOutput",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     

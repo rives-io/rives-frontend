@@ -5,6 +5,7 @@ import RivemuPlayer from '@/app/components/RivemuPlayer';
 import TapeAssetManager from '@/app/components/TapeAssetManager';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
+import { getTapeName } from '@/app/utils/util';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -50,7 +51,12 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     res = await rules({id: tape.rule_id.substring(2)}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const contest:RuleInfo = res.data[0];
 
-    const tapeCartridge:CartridgeInfo = await cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
+    const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
+    const tapeNamePromise = getTapeName(params.tape_id);
+    
+    let tapeCartridge:CartridgeInfo;
+    let tapeName:string|null;
+    [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
 
 
     return (
@@ -60,16 +66,23 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                 <TapeAssetManager tape_id={params.tape_id}/>
             </div>
 
-            <div className='w-full md:w-2/3 flex flex-col gap-2'>
+            <div className='w-full md:w-2/3 flex flex-col gap-4'>
                 <div className='flex flex-wrap gap-4'>
-                    <div className='flex flex-col w-full'>
-                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`}>{params.tape_id.substring(0, 20)}</h1>
+                    <div className='flex flex-col w-fit'>
+                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`}>
+                            {
+                                tapeName?
+                                    tapeName
+                                :
+                                    params.tape_id.substring(0, 20)
+                            }
+                        </h1>
                         <span className='text-sm md:text-base truncate'>
                         {
                             !user?
                                 tape._msgSender
                             :
-                                <Link href={`profile/${tape._msgSender}`} className='flex items-center gap-2'>
+                                <Link href={`/profile/${tape._msgSender}`} className='flex items-center gap-2 w-fit hover:underline'>
                                     <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='Nop' />
                                     <span title={tape._msgSender}>{user.name}</span>
                                 </Link>
