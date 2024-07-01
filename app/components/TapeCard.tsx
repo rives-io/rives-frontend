@@ -9,13 +9,16 @@ import rivesLogo from '@/public/logo.png';
 import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
 import rivesCheck from "@/public/rives_check.png";
+import { Twitter } from "@privy-io/react-auth";
+import { User, getUsersByAddress } from "../utils/privyApi";
 
 interface TapePreview {
     title:string,
     address:string,
     tapeId:string,
     gif:string,
-    gifImage:string
+    gifImage:string,
+    twitterInfo?:Twitter
 }
 
 export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|TapePreview}) {
@@ -27,25 +30,32 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
         tape = tapeInput;
     }
 
-    let user:string;
+    let userAddress:string;
     //const timestamp = new Date(tape._timestamp*1000).toLocaleDateString();
     let tapeId:string;
     let tapeTitle:string|null = null;
     let initialGifImageValue = "";
     let initialGifValue = "";
+    let userName:string|null = null;
 
     if (tape.gif) {
-        tapeId = (tape as TapePreview).tapeId;
-        user = (tape as TapePreview).address;
-        initialGifImageValue = (tape as TapePreview).gifImage;
-        initialGifValue = (tape as TapePreview).gif;
-        tapeTitle = (tape as TapePreview).title;
+        tape = (tape as TapePreview);
+        tapeId = tape.tapeId;
+        userAddress = tape.address.toLowerCase();
+        initialGifImageValue = tape.gifImage;
+        initialGifValue = tape.gif;
+        tapeTitle = tape.title;
+        
+        if (tape.twitterInfo) {
+            userName = tape.twitterInfo.name;
+        }
     } else {
-        user = (tape as VerifyPayload)._msgSender;
+        userAddress = (tape as VerifyPayload)._msgSender.toLowerCase();
         tapeId = sha256(ethers.utils.arrayify(((tape as VerifyPayload).tape)));
     }
 
-    const player = `${user.slice(0, 6)}...${user.substring(user.length-4,user.length)}`;
+    const player = `${userAddress.slice(0, 6)}...${userAddress.substring(userAddress.length-4,userAddress.length)}`;
+    const [playerName, setPlayerName] = useState<string|null>(userName);
     const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? tapeId:tapeTitle);
     const [gifImage, setGifImage] = useState<string|null>(initialGifImageValue);
     const [gif, setGif] = useState<string|null>(initialGifValue);
@@ -53,30 +63,38 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
     const [displayGif, setDisplayGif] = useState(false);
     const onMouseEnter = () => setDisplayGif(true);
     const onMouseLeave = () => setDisplayGif(false);
-
-    // if (tapeTitle === null) {
-    //     // fetch tape title if no title set tapeId as title
-    //     getTapeName(tapeId).then((tapeName) => {
-    //         if (tapeName) {
-    //             setTitle(tapeName);
-    //         }
-    //     });
-    // }
     
-    if (gifImage?.length == 0) {
-        getTapeImage(tapeId).then((gifImage) => setGifImage(gifImage));
-    }
-
-    if (gif?.length == 0) {
-        getTapeGif(tapeId).then((gif) => setGif(gif));
-    }
-
     useEffect(() => {
         if ((tape as TapePreview).title) setTitle((tape as TapePreview).title);
-        else getTapeName(tapeId).then((tapeName) => {
-            if (tapeName) setTitle(tapeName);
-        })
     }, [tape])
+
+    useEffect(() => {
+        if (!playerName) {
+            getUsersByAddress([userAddress]).then((userMapString) => {
+                const userMap:Record<string,User> = JSON.parse(userMapString);
+                const user = userMap[userAddress];
+    
+                if (user) {
+                    setPlayerName(user.name);
+                }
+            });
+        }
+
+        if (!(tape as TapePreview).title) {
+            getTapeName(tapeId).then((tapeName) => {
+                if (tapeName) setTitle(tapeName);
+            });
+        }
+
+        if (gifImage?.length == 0) {
+            getTapeImage(tapeId).then((gifImage) => setGifImage(gifImage));
+        }
+    
+        if (gif?.length == 0) {
+            getTapeGif(tapeId).then((gif) => setGif(gif));
+        }
+    
+    }, [])
 
 
     return (
@@ -123,7 +141,15 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
                         <span className="pixelated-font text-xs truncate">
-                            By: <span className="pixelated-font text-rives-purple">{player}</span>
+                            By: <button onClick={() => window.open(`/profile/${userAddress}`,"_self")}
+                                className="pixelated-font text-rives-purple hover:underline">
+                                    {
+                                        playerName?
+                                            playerName
+                                        :
+                                            player
+                                    }
+                            </button>
                         </span>
                     </div>
 

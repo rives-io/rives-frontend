@@ -97,7 +97,7 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
                     </div>
                 :
                     <>
-                        <div className="flex flex-wrap gap-4 justify-evenly">
+                        <div className="flex flex-wrap gap-4 justify-evenly md:justify-center">
                             {
                                 tapes[tapesPage.curr-1]?.map((tape, index) => {
                                     return (

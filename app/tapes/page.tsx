@@ -220,7 +220,7 @@ export default function Tapes() {
           }
 
           {
-            tapesRequestOptions.atEnd?
+            !verificationInputs || tapesRequestOptions.atEnd || tapesRequestOptions.fetching?
               <></>
             :
               <div className="col-span-full flex justify-center">

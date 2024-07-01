@@ -21,7 +21,8 @@ export async function getUsersByAddress(addressList:Array<string>) {
         },
         body: JSON.stringify({
             'walletAddresses': addressList
-        })
+        }),
+        next: {revalidate: 300}
     });
     
     const users = await res.json();
@@ -33,6 +34,8 @@ export async function getUsersByAddress(addressList:Array<string>) {
 function buildUserAddressMap(users:Array<any>) {
     let user;
     let userMap:Record<string, User> = {};
+
+    if (!users) return userMap;
 
     for (let i = 0; i < users.length; i++) {
         user = users[i];

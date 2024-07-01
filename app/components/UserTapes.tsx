@@ -98,7 +98,7 @@ export default function UserTapes({address}:{address:string}) {
                         <Loading msg="Loading Created Tapes" />
                     :
                         <>
-                            <div className="flex flex-wrap gap-4 justify-evenly">
+                            <div className="flex flex-wrap gap-4 justify-evenly md:justify-start">
                                 {
                                     tapesCreated[tapesCreatedPage.curr-1]?.map((tape, index) => {
                                         return (
@@ -111,7 +111,7 @@ export default function UserTapes({address}:{address:string}) {
 
                             {
                                 tapesCreated.length == 0 || tapesCreated[0].length == 0?
-                                    <></>
+                                    <div className="text-center pixelated-font">No Tapes Created</div>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
                                         <button disabled={tapesCreatedPage.curr == 1} onClick={prevCreatedTapesPage} className={`border border-transparent ${tapesCreatedPage.curr != 1? "hover:border-black":""}`}>
@@ -148,7 +148,7 @@ export default function UserTapes({address}:{address:string}) {
 
                 {
                     tapesCollect.length == 0 || tapesCollect[0].length == 0?
-                        <></>
+                        <div className="text-center pixelated-font">No Tapes Collected</div>
                     :
                         <div className='flex justify-center items-center space-x-1'>
                             <button disabled={tapesCollectedPage.curr == 1} onClick={prevCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>

@@ -6,18 +6,34 @@ import Image from "next/image";
 import { CartridgeInfo } from "../backend-libs/core/ifaces"
 import rivesLogo from '@/public/logo.png';
 import Link from "next/link";
+import { User, getUsersByAddress } from "../utils/privyApi";
+import { useEffect, useState } from "react";
 
 
 export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
+    const cartridge_creator = cartridge.user_address;
+    const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
+
+    const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
+
+    useEffect(() => {
+        getUsersByAddress([cartridge.user_address]).then((userMapString) => {
+            const userMap:Record<string,User> = JSON.parse(userMapString);
+            const user = userMap[cartridge.user_address.toLowerCase()];
+
+            if (user) {
+                setTwitterInfo(user);
+            }
+        });
+    }, [])
 
     return (
-        <Link href={`cartridges?cartridge_id=${cartridge.id}`} className="cartridgeBorder rounded-full w-44 h-60 flex flex-col bg-rives-gray hover:scale-110">
+        <Link href={`/cartridges/${cartridge.id}`} className="cartridgeBorder rounded-full w-44 h-60 flex flex-col bg-rives-gray hover:scale-110">
 
             <div className="flex">
                 <div className='w-20 h-8'>
                     <Image
                         src={rivesLogo}
-                        layout="fit"
                         quality={100}
                         alt='rives logo'
                         className="-mt-6 -ms-4"
@@ -40,23 +56,22 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
                         src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}
                     />
                 </div>
-
-                {/* <div className="w-40 h-40">
-                    <img style={{objectFit: "cover", width: 160, height: 160}}
-                        src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}
-                    />
-                </div> */}
             </div>
 
             <div className="flex h-10 w-fill -mx-2 ">
-                <div className="flex flex-col p-[2px] h-10">
+                <div className="flex flex-col p-[2px] h-10 w-full">
                     <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
-                    {
-                        cartridge.authors.length == 0?
-                            <></>
-                        :
-                            <span className="pixelated-font text-xs truncate">By: <span className="text-rives-purple">{cartridge.authors[0]}</span></span>
-                    }
+                    <span className="pixelated-font text-xs truncate">
+                        By: <button onClick={() => window.open(`/profile/${cartridge.user_address}`,"_self")}
+                            className="pixelated-font text-rives-purple hover:underline">
+                                {
+                                    !twitterInfo?
+                                        formatedCreatorAddr
+                                    :
+                                        twitterInfo.name
+                                }
+                            </button>
+                    </span>
                 </div>
             </div>
         </Link>

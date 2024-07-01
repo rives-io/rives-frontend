@@ -231,7 +231,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
 
                             return (
                                 <tr key={index} onClick={() => window.open(`/tapes/${tapeId}`, "_blank", "noopener,noreferrer")}
-                                className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-gray-500":""}`}
+                                className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-rives-gray":""}`}
                                 style={{cursor: "pointer"}}
                                 >
                                     {

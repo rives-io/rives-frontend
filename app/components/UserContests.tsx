@@ -87,16 +87,19 @@ export default function UserContests({address}:{address:string}) {
                         <Loading msg="Loading Contests" />
                     </div>
                 :
-                    <div className="grid grid-cols-1 gap-4">
-                        {
-                            userContests.map((contest, index) => {
-                                return (
-                                    <ContestCard key={index} contest={contest} cartridgeCover={cartridgeInfoMap[contest.cartridge_id].cover} />
-                                )
-                            })
-                        }
+                    userContests.length == 0?
+                        <div className="text-center pixelated-font">No Contests</div>
+                    :
+                        <div className="grid grid-cols-1 gap-4">
+                            {
+                                userContests.map((contest, index) => {
+                                    return (
+                                        <ContestCard key={index} contest={contest} cartridgeCover={cartridgeInfoMap[contest.cartridge_id].cover} />
+                                    )
+                                })
+                            }
 
-                    </div>
+                        </div>
             }
         </div>
     )

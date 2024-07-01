@@ -13,7 +13,7 @@ let total_tapes:number;
 
 async function getLatestsCartridges() {
   const res = (await cartridgesRequest(
-    {page: 1, page_size: 3, get_cover: true },
+    {page: 1, page_size: 4, get_cover: true },
     {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
   );
 
@@ -27,7 +27,7 @@ async function getLatestsTapes() {
   const res = (await getTapes(
     {
       currentPage: 1,
-      pageSize: 3,
+      pageSize: 4,
       orderBy: "timestamp",
       orderDir: "desc"
     }
@@ -100,7 +100,7 @@ export default async function Home() {
 
         {
             contests.length == 0?
-              <></>
+              <div className="text-center pixelated-font">No Contests Running</div>
             :
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-center w-full lg:w-[80%] text-black'>
               {

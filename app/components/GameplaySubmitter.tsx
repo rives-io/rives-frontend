@@ -243,7 +243,7 @@ function GameplaySubmitter() {
 
                     <div className="mt-4 text-center">
                         {/* <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/> */}
-                        <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player}} />
+                        <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
                     </div>
     
                     <div className="flex pb-2 mt-4">
@@ -290,7 +290,7 @@ function GameplaySubmitter() {
                                 <></>
                             :
                                 <button onClick={() => window.open(tapeURL,"_self")}>
-                                    <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player}} />
+                                    <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
                                 </button>
                         }
                     </div>

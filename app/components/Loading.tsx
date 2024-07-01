@@ -7,7 +7,7 @@ export default function Loading({msg}:{msg:string}) {
 
         <div className="w-full h-full flex flex-col items-center text-white">
             <Image width={384} height={216} className="animate-bounce" src={rivesLogo} alt='RiVES logo'/>
-            <span className="-mt-20">{msg}</span>
+            {/* <span className="-mt-20">{msg}</span> */}
         </div>
     )
 }
