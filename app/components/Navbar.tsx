@@ -40,7 +40,6 @@ function Navbar() {
                 <div className='w-28 h-16'>
                     <Image
                         src={rivesLogo}
-                        layout="fit"
                         quality={100}
                         alt='rives logo'
                     />

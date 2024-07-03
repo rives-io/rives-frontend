@@ -122,7 +122,7 @@ body {
   }
 
   main {
-    @apply !pb-[96px] !pt-[96px];
+    @apply !pb-[164px] !pt-[96px];
   }
 
   .first-section {
@@ -220,7 +220,7 @@ body {
   }
 
   .footer {
-    @apply w-full h-16 bg-black flex flex-wrap justify-evenly items-center absolute bottom-0;
+    @apply w-full h-fit p-2 bg-black absolute bottom-0;
   }
 
   .link-active {

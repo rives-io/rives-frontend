@@ -32,7 +32,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                         <div>
                             <span className='pixelated-font me-2'>By:</span>
                             <Link href={`/profile/${cartridge.user_address}`}
-                            className='hover:underline text-rives-purple pixelated-font'
+                            className='hover:underline text-rives-purple pixelated-font break-all'
                             >
                                 {cartridge.user_address}
                             </Link>

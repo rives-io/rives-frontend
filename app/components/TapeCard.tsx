@@ -110,7 +110,6 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                 <div className='w-20 h-8'>
                     <Image
                         src={rivesLogo}
-                        layout="fit"
                         quality={100}
                         alt='rives logo'
                         className="-mt-12 -ms-11"

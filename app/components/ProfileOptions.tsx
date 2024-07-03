@@ -39,31 +39,28 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
                         </div>
                     </div>
                 :
-                    <>
-                        <div className="flex items-center gap-4">
-                            <img width={72} height={72} src={twitterInfo.picture_url.replace("_normal", "_bigger")} className='rounded-full' alt='Nop' />
-                            <div className="flex flex-col gap-2">
-                                <div className="flex flex-col">
-                                    <span>{twitterInfo.name}</span>
-                                    <span title={address} className="text-xs">{formated_addr}</span>
-                                </div>
-                                <Link href={`https://twitter.com/${twitterInfo.username}`} rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>
-                                    <XIcon/> <span className='hover:underline'>{twitterInfo.username}</span>
-                                </Link>
-
+                    <div className="flex items-center gap-4">
+                        <img width={72} height={72} src={twitterInfo.picture_url.replace("_normal", "_bigger")} className='rounded-full' alt='Nop' />
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-col">
+                                <span>{twitterInfo.name}</span>
+                                <span title={address} className="text-xs">{formated_addr}</span>
                             </div>
+                            <Link href={`https://twitter.com/${twitterInfo.username}`} rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>
+                                <XIcon/> <span className='hover:underline'>{twitterInfo.username}</span>
+                            </Link>
+
                         </div>
-
-                        {
-                            ready && authenticated && user?.wallet?.address.toLowerCase() == address.toLowerCase()?
-                                <button disabled={!ready} className="bg-black p-2 hover:text-black hover:bg-rives-gray" onClick={logout}>Disconnect</button>
-                            :
-                                <></>
-                        }      
-                    </>
-
-
+                    </div>
             }
+
+            {
+                ready && authenticated && user?.wallet?.address.toLowerCase() == address.toLowerCase()?
+                    <button disabled={!ready} className="bg-black p-2 hover:text-black hover:bg-rives-gray" onClick={logout}>Disconnect</button>
+                :
+                    <></>
+            }   
+
         </div>
     )
 }
