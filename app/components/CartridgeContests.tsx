@@ -7,12 +7,13 @@ import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
 import { Contest } from "../utils/common";
 import ContestCard, { ContestCardInfo } from "./ContestCard";
+import { CartridgeInfo } from "../backend-libs/core/ifaces";
 
 const knowContests = envClient.CONTESTS as Record<string,Contest>;
 const contestsIds = Object.keys(knowContests);
 
 
-export default function CartridgeContests({cartridgeId, cartridgeCover}:{cartridgeId:string, cartridgeCover?:string}) {    
+export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:string, cartridge:CartridgeInfo}) {    
     const [cartridgeContests, setCartridgeContests] = useState<Array<ContestCardInfo>>([]);
     
     const [contestsLoading, setContestsLoading] = useState(false);
@@ -42,11 +43,11 @@ export default function CartridgeContests({cartridgeId, cartridgeCover}:{cartrid
                         <Loading msg="Loading Contests" />
                     </div>
                 :
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-wrap gap-4">
                         {
                             cartridgeContests.map((contest, index) => {
                                 return (
-                                    <ContestCard key={index} contest={contest} cartridgeCover={cartridgeCover} />
+                                    <ContestCard key={index} contest={contest} cartridge={cartridge} />
                                 )
                             })
                         }

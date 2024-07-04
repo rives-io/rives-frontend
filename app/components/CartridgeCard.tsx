@@ -4,15 +4,20 @@
 
 import Image from "next/image";
 import { CartridgeInfo } from "../backend-libs/core/ifaces"
-import rivesLogo from '@/public/logo.png';
+import rivesLogo from '@/public/logo_cutted.png';
 import Link from "next/link";
 import { User, getUsersByAddress } from "../utils/privyApi";
 import { useEffect, useState } from "react";
 
 
-export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
+export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInfo, small?:boolean}) {
     const cartridge_creator = cartridge.user_address;
     const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
+
+    
+    const cartridgeSize = small? "w-36 h-52":"w-44 h-60";
+    const cartridgeLogoSize = small? "w-12 ":"w-16"
+    const cartridgeCoverSize = small? "w-32 h-32":"w-40 h-40";
 
     const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
 
@@ -28,20 +33,23 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
     }, [])
 
     return (
-        <Link href={`/cartridges/${cartridge.id}`} className="cartridgeBorder rounded-full w-44 h-60 flex flex-col bg-rives-gray hover:scale-110">
+        <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col bg-rives-gray hover:scale-110`}>
 
-            <div className="flex">
-                <div className='w-20 h-8'>
-                    <Image
+            <div className="flex items-stretch">
+                <div className='w-fit h-8'>
+                    <div className={`${cartridgeLogoSize} h-4 relative`}>
+                    <Image fill
                         src={rivesLogo}
                         quality={100}
                         alt='rives logo'
-                        className="-mt-6 -ms-4"
+                        className="-mt-2 -ms-2"
                     />
+
+                    </div>
                 </div>
 
-                <div className="flex flex-1 justify-center text-wrap -me-2">
-                    <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-[6px]">
+                <div className="flex flex-1 justify-end text-wrap -me-2">
+                    <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-2">
                         0.03 ETH
                     </div>
                     
@@ -50,7 +58,7 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
             </div>
 
             <div className="w-fill -mt-[16px] -mx-2  justify-center">
-                <div className="w-40 h-40 grid grid-cols-1 place-content-center bg-black relative">
+                <div className={`${cartridgeCoverSize} grid grid-cols-1 place-content-center bg-black relative`}>
                     <Image fill
                         style={{objectFit: "cover"}}
                         src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}

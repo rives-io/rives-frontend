@@ -1,7 +1,7 @@
 import { envClient } from "@/app/utils/clientEnv";
 import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, rules } from "../backend-libs/core/lib";
-import { Contest, ContestStatus, getContestStatus } from "../utils/common";
+import { Contest, getContestStatus } from "../utils/common";
 import ContestCard from "../components/ContestCard";
 
 interface RuleWithMetadata extends RuleInfo, Contest {}
@@ -64,12 +64,12 @@ export default async function Contests() {
   return (
     <main>
       <section className="w-full flex justify-center">
-        <div className="flex flex-col space-y-8 w-[95%] sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
+        <div className="flex flex-wrap gap-4 w-[95%] sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
               return (
-                <ContestCard key={index} contest={contest} cartridgeCover={cartridgeInfoMap[contest.cartridge_id].cover} />
+                <ContestCard key={index} contest={contest} cartridge={cartridgeInfoMap[contest.cartridge_id]} />
               )
             })
           }

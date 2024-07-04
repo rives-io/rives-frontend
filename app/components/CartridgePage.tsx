@@ -173,7 +173,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Tab.Panel>
 
                             <Tab.Panel className="">
-                                <CartridgeContests cartridgeId={cartridge.id} cartridgeCover={cartridge.cover} />
+                                <CartridgeContests cartridgeId={cartridge.id} cartridge={cartridge} />
                             </Tab.Panel>
                         </Tab.Panels>
                     </Tab.Group>

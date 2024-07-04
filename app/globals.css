@@ -125,12 +125,8 @@ body {
     @apply !pb-[164px] !pt-[96px];
   }
 
-  .first-section {
-    @apply mx-auto pb-16 !pt-[126px] px-8 flex flex-col items-center;
-  }
-
-  .second-section {
-    @apply pb-16 !pt-[64px] flex flex-col sm:mb-16;
+  .container {
+    @apply w-full md:w-2/3 px-4 md:px-0;
   }
 
   .custom-scrollbar {
@@ -240,10 +236,6 @@ body {
     opacity: 70%;
     cursor: not-allowed;
   }
-
-  /* .gameplay-screen {
-    @apply w-[640px] h-[480px] md:w-[720px] md:h-[540px] lg:w-[960px] lg:h-[720px];
-  } */
 
   .gameplay-section {
     @apply gameplay-screen fixed z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
