@@ -21,7 +21,7 @@ function Navbar() {
 
     useEffect(() => {
         if (!user) {
-            setConnectButtonTxt(<span className={`text-sm lg:text-xl pixelated-font`}>Connect</span>);
+            setConnectButtonTxt(<span className={`text-sm md:text-xl pixelated-font`}>Connect</span>);
             return;
         }
 
@@ -30,13 +30,13 @@ function Navbar() {
         if (!userAddress) return;
 
         setConnectButtonTxt(
-            <Link href={`/profile/${userAddress}`} className={`text-sm lg:text-xl pixelated-font`}>Profile</Link>
+            <Link href={`/profile/${userAddress}`} className={`text-sm md:text-xl pixelated-font`}>Profile</Link>
         );
     }, [user])
 
     return (
         <header className='header'>
-            <Link href={"/"} className={`min-w-24 grid grid-cols-1 items-center navbar-item ${pathname === "/" ? "lg:link-active" : "" }`}>
+            <Link href={"/"} className={`min-w-24 grid grid-cols-1 items-center navbar-item ${pathname === "/" ? "md:link-active" : "" }`}>
                 <div className='w-28 h-16'>
                     <Image
                         src={rivesLogo}
@@ -46,24 +46,20 @@ function Navbar() {
                 </div>
             </Link>
 
-            <Link href={"/cartridges"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "lg:link-active" : "" }`}>
+            <Link href={"/cartridges"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "md:link-active" : "" }`}>
                 <span className={`text-xl pixelated-font`}>Cartridges</span>
             </Link>
 
-            <Link href={"/contests"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "lg:link-active" : "" }`}>
+            <Link href={"/contests"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "md:link-active" : "" }`}>
             <span className={`text-xl pixelated-font`}>Contests</span>
             </Link>
 
-            <Link href={"/tapes"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "lg:link-active" : "" }`}>
+            <Link href={"/tapes"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "md:link-active" : "" }`}>
                 <span className={`text-xl pixelated-font`}>Tapes</span>
             </Link>
 
-            <Link href={"/upload-cartridges"}className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/upload-cartridges") ? "lg:link-active" : "" }`}>
-                <span className={`text-xl pixelated-font`} style={{lineHeight: "1.5rem"}} >Upload Cartridges</span>
-            </Link>
-
-            <div className='hidden lg:flex flex-1 justify-end h-full'>
-                <button className={`navbar-item ${onMyProfile? "lg:link-active" : "" }`}
+            <div className='hidden md:flex flex-1 justify-end h-full'>
+                <button className={`navbar-item ${onMyProfile? "md:link-active" : "" }`}
                     disabled={!ready}
                     onClick={!disableLogin?login:undefined}
                     title={user?.wallet?.address}
@@ -74,7 +70,7 @@ function Navbar() {
                 </button>
             </div>
 
-            <Menu as="div" className="lg:hidden navbar-item ms-auto">
+            <Menu as="div" className="md:hidden navbar-item ms-auto">
                 <Menu.Button className="h-full flex flex-col justify-center"><MenuIcon className='text-5xl' /></Menu.Button>
                 <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                     <div className="px-1 py-1 ">

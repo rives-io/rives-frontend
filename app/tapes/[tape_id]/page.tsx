@@ -115,7 +115,9 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
                 </div>
 
-                <ContestCard contest={{...contest, prize: ""}} cartridgeCover={tapeCartridge.cover} />
+                <div className='flex justify-center'>
+                    <ContestCard contest={{...contest, prize: ""}} cartridge={tapeCartridge} />
+                </div>
             </div>
         </main>
     )

@@ -59,13 +59,16 @@ function tapesBoardFallback() {
             <table className="w-full text-left">
                 <thead className="text-xsuppercase">
                     <tr>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col">
+                            #
+                        </th>
+                        <th scope="col">
                             User
                         </th>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col">
                             Timestamp
                         </th>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col">
                             Score
                         </th>
                     </tr>
@@ -205,13 +208,16 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
             <table className="w-full text-left">
                 <thead className="text-xsuppercase">
                     <tr>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col" className="">
+                            #
+                        </th>
+                        <th scope="col" className="">
                             User
                         </th>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col" className="">
                             Timestamp
                         </th>
-                        <th scope="col" className="px-2 py-3">
+                        <th scope="col" className="">
                             Score
                         </th>
                     </tr>
@@ -230,15 +236,18 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
                             const user = addressUserMap[sender.toLowerCase()];
 
                             return (
-                                <tr key={index} onClick={() => window.open(`/tapes/${tapeId}`, "_blank", "noopener,noreferrer")}
+                                <tr key={index} onClick={() => window.open(`/tapes/${tapeId}`, "_self")}
                                 className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-rives-gray":""}`}
                                 style={{cursor: "pointer"}}
                                 >
+                                    <td className=''>
+                                        {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
+                                    </td>
                                     {
                                         !user?
                                             <td className='flex items-center gap-2'>
                                                 <Image width={48} height={48} src={rivesCheck} className='rounded-full' alt='Nop' />
-                                                <span title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
+                                                <span className='break-all' title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
                                             </td>
                                         :
                                             <td className='flex items-center gap-2'>
@@ -247,10 +256,10 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
                                             </td>
                                     }
 
-                                    <td title={tapeDate.toLocaleString()} className="px-2 py-2">
+                                    <td title={tapeDate.toLocaleString()} className="">
                                         {tapeDate.toLocaleDateString()} {tapeDate.toLocaleTimeString()}
                                     </td>
-                                    <td>{score}</td>
+                                    <td className=''>{score}</td>
                                 </tr>
                             );
                         })
