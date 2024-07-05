@@ -70,7 +70,24 @@ const getCartridgeOwner = async (cartridgeId:string):Promise<string> => {
     return out.user_address;
 }
 
-function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
+// wo for current version
+const getTapeVerificationOutput = async (cartridgeId:string):Promise<VerificationOutput|undefined> => {
+    const out:Array<VerificationOutput> = (await getOutputs(
+        {
+            tags: ["score",cartridgeId],
+            type: 'notice',
+            page: 1,
+            page_size: 1,
+            order_by: "timestamp",
+            order_dir: "asc"
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    )).data;
+    if (out.length == 0) return undefined;
+    return out[0];
+}
+
+function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onChange():void}) {
     // state
     const {user, ready, connectWallet} = usePrivy();
     const {wallets} = useWallets();
@@ -94,6 +111,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
     const [decimals,setDecimals] = useState<number>(6);
     const [symbol,setSymbol] = useState<string>("");
     const [cartridgeExists,setCartridgeExists] = useState<boolean>();
+    const [tapeOutput,setTapeOutput] = useState<VerificationOutput>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -138,6 +156,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
         if (cartridge_id) {
             // getCartridgeInsetOutput(cartridge_id).then((out) => setCartridgeOutput(out))
             getCartridgeOwner(cartridge_id).then((out) => setCartridgeOwner(out))
+            getTapeVerificationOutput(cartridge_id).then((out) => setTapeOutput(out))
         }
     }, [])
 
@@ -159,7 +178,6 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
                     setBuyPrice(data[0]);
                 });
                 cartridgeContract.cartridgeBonds(`0x${cartridge_id}`).then((bond:any) => {
-                    console.log("bond",bond)
                     setValidated(bond.eventData.slice(2).length > 0)
 
                     if (bond.bond.currentSupply.gt(0)) {
@@ -310,6 +328,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
             const tx = await cartridgeContract.buyCartridges(`0x${cartridge_id}`,amount,slippage,options);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
+            onChange();
             closeModal();
             setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
@@ -343,6 +362,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
             const tx = await cartridgeContract.sellCartridges(`0x${cartridge_id}`,amount,slippage);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
+            onChange();
             closeModal();
             setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
@@ -364,15 +384,18 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
             setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
-        if (!cartridgeOutput?._proof) {
+        // TODO: revert to cartridgeOutput._proof
+        if (!tapeOutput?._proof) {
             setErrorFeedback({message:"No proofs yet", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,cartridgeOutput?._payload,cartridgeOutput?._proof);
+            // TODO: revert to cartridgeOutput._proof and payload
+            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,tapeOutput?._payload,tapeOutput?._proof);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
+            onChange();
             closeModal();
             setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
@@ -399,6 +422,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
             const tx = await cartridgeContract.setCartridgeParams(`0x${cartridge_id}`);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
+            onChange();
             closeModal();
             setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
@@ -456,19 +480,19 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
     
                     <div className="flex pb-2 mt-4">
                         <button
-                        className={`bg-red-500 text-white font-bold uppercase text-sm px-6 py-2 border border-red-500 hover:text-red-500 hover:bg-transparent`}
+                        className={`dialog-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
                             Cancel
                         </button>
                         <button
-                        className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
                         type="button"
                         onClick={buyCartridge}
                         disabled={modalValue == undefined || modalValue < 1}
                         >
-                            Buy {modalPreviewPrice ? `${ethers.utils.formatUnits(modalPreviewPrice,decimals)} ${symbol}` : ""}
+                            Buy {modalPreviewPrice ? `${parseFloat(ethers.utils.formatUnits(modalPreviewPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
                         </button>
                     </div>
                 </>
@@ -480,7 +504,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
                         Sell Cartridge
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
-                        <span className="place-self-start">Number of Cartridges {modalValue && amountOwned?.lt(modalValue) ? "(Not enough cartridges owned)" : ""}</span>
+                        <span className="place-self-start">Number of Cartridges</span>
                         <Input className="text-black" aria-label="Cartridges" placeholder="Cartridges to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.SELL)} />
                         <span className="place-self-start">Slippage (%)</span>
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
@@ -488,19 +512,20 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
     
                     <div className="flex pb-2 mt-4">
                         <button
-                        className={`bg-red-500 text-white font-bold uppercase text-sm px-6 py-2 border border-red-500 hover:text-red-500 hover:bg-transparent`}
+                        className={`dialog-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
                             Cancel
                         </button>
                         <button
-                        className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
+                        title={modalValue != undefined && amountOwned?.gte(modalValue) ? "" : "No balance"} 
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
                         type="button"
                         onClick={sellCartridge}
-                        disabled={modalValue != undefined && amountOwned?.lt(modalValue)}
+                        disabled={modalValue != undefined && (modalValue < 1 || amountOwned?.lt(modalValue))}
                         >
-                            Sell {modalPreviewPrice ? `${ethers.utils.formatUnits(modalPreviewPrice,decimals)} ${symbol}` : ""}
+                            Sell {modalPreviewPrice ? `${parseFloat(ethers.utils.formatUnits(modalPreviewPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
                         </button>
                     </div>
                 </>
@@ -529,7 +554,7 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
                     </div> */}
                     <div className="mt-4 flex flex-col space-y-2">
                             
-                        <button className="bg-emerald-500 text-white p-3 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent"
+                        <button className="dialog-btn bg-emerald-400 text-black"
                         onClick={closeModal}
                         >
                             Ok
@@ -586,27 +611,28 @@ function CartridgeAssetManager({cartridge_id}:{cartridge_id:string}) {
             {/* <div className="grid grid-cols-3 justify-items-center"> */}
             <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
                 { cartridgeExists ? <>
-                {cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() ? 
-                <button title={validated ? "Claimed" : cartridgeOutput?._proof ? "" : "No proof yet"} 
-                    className='bg-[#4e99e0] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
-                    onClick={validate} disabled={validated || validated == undefined || !(cartridgeOutput?._proof)}>
-                {validated ? "Claimed" : "Claim"} {cartridgeOutput?._proof ? "" : "(No proof)"}
+                {cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                // TODO: revert to cartridgeOutput._proof
+                <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} 
+                    className='bg-[#4e99e0] assets-btn zoom-btn' 
+                    onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
+                {validated ? "Claimed" : "Claim"}
                 </button> : <></>}
                 <button title={amountOwned?.gt(0) ? "" : "No balance"} 
-                        className='bg-[#e04ec3] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
+                        className='bg-[#e04ec3] assets-btn zoom-btn' 
                         onClick={() => {openModal(MODAL_STATE.SELL)}} disabled={!sellPrice || !amountOwned?.gt(0) }>
-                    Sell {sellPrice ? `${ethers.utils.formatUnits(sellPrice,decimals)} ${symbol}` : ""} {amountOwned?.gt(0) ? "" : "(No balance)"}
+                    Sell {sellPrice ? `${parseFloat(ethers.utils.formatUnits(sellPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
                 </button>
                 <button 
-                        className='bg-[#53fcd8] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
+                        className='bg-[#53fcd8] assets-btn zoom-btn' 
                         onClick={() => {openModal(MODAL_STATE.BUY)}} disabled={!buyPrice}>
-                    Buy {buyPrice ? `${ethers.utils.formatUnits(buyPrice,decimals)} ${symbol}` : ""} 
+                    Buy {buyPrice ? `${parseFloat(ethers.utils.formatUnits(buyPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""} 
                 </button>
                 </> :
                 <> <div></div><div></div>
-                {cartridgeOwner && cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
                     <button title={"Activate"} 
-                            className='bg-[#4e99e0] p-2 text-center font-bold w-48 h-10 hover:scale-105' 
+                            className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={cartridgeExists}>
                         Activate
                     </button>

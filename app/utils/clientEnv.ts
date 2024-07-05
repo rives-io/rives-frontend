@@ -28,6 +28,10 @@ export const envClient = envsafe({
   }),
   CARTRIDGE_CONTRACT_ADDR: str({
     input: process.env.NEXT_PUBLIC_CARTRIDGE_CONTRACT,
-    desc: "Tape asset ETH address."
+    desc: "Cartridge asset ETH address."
+  }),
+  OPERATOR_ADDR: str({
+    input: process.env.NEXT_PUBLIC_OPERATOR_ADDR,
+    desc: "Operator ETH address."
   }),
 })

@@ -241,6 +241,17 @@ body {
     cursor: not-allowed;
   }
 
+  .zoom-btn {
+    @apply text-center hover:scale-105 disabled:cursor-not-allowed disabled:scale-100 disabled:opacity-70;
+  }
+
+  .assets-btn {
+    @apply p-2 font-bold w-48 h-10;
+  }
+
+  .dialog-btn {
+    @apply font-bold uppercase text-sm px-6 py-2 ml-1;
+  }
   /* .gameplay-screen {
     @apply w-[640px] h-[480px] md:w-[720px] md:h-[540px] lg:w-[960px] lg:h-[720px];
   } */

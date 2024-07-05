@@ -2,7 +2,7 @@ import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
 import { cartridgeInfo, getOutputs, rules, VerifyPayload } from '@/app/backend-libs/core/lib';
 import ContestCard from '@/app/components/ContestCard';
 import RivemuPlayer from '@/app/components/RivemuPlayer';
-import TapeAssetManager from '@/app/components/TapeAssetManager';
+import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
 import { getTapeName } from '@/app/utils/util';
@@ -58,18 +58,14 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     let tapeName:string|null;
     [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
 
-
     return (
         <main className="grid grid-cols-1 justify-items-center justify-center w-full gap-4 px-4 md:px-0 ">
             <RivemuPlayer tape_id={params.tape_id}/>
-            <div className='flex flex-wrap gap-4'>
-                <TapeAssetManager tape_id={params.tape_id}/>
-            </div>
 
             <div className='w-full md:w-2/3 flex flex-col gap-4'>
                 <div className='flex flex-wrap gap-4'>
                     <div className='flex flex-col w-fit'>
-                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`}>
+                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`} title={tape.tape_id}>
                             {
                                 tapeName?
                                     tapeName
@@ -91,7 +87,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                         <span>Cartrige: {tapeCartridge.name}</span>
                     </div>
 
-                    <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
+                    {/* <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
                         <button className='bg-[#e04ec3] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
                             ${0.09} Sell
                         </button>
@@ -99,25 +95,10 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                         <button className='bg-[#53fcd8] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
                             ${0.1} Buy
                         </button>
-                    </div>
+                    </div> */}
                 </div>
+                <TapeAssetsAndStats tape_id={params.tape_id} />
 
-                <div className='grid grid-cols-2 md:grid-cols-3 text-center gap-2'>
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Total Minted</span>
-                        <span className='mt-auto'>1.1k</span>
-                    </div>
-
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Marketcap</span>
-                        <span className='mt-auto'>USD 5k</span>
-                    </div>
-
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Total Owners</span>
-                        <span className='mt-auto'>100</span>
-                    </div>
-                </div>
 
                 <div>
                     <div>

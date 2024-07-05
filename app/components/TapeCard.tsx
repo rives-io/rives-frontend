@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import rivesCheck from "@/public/rives_check.png";
 import { Twitter } from "@privy-io/react-auth";
 import { User, getUsersByAddress } from "../utils/privyApi";
+import { BondInfo, getTapeBondInfo } from "../utils/assets";
 
 interface TapePreview {
     title:string,
@@ -59,13 +60,15 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
     const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? tapeId:tapeTitle);
     const [gifImage, setGifImage] = useState<string|null>(initialGifImageValue);
     const [gif, setGif] = useState<string|null>(initialGifValue);
+    const [currentPrice,setCurrentPrice] = useState<string>();
 
     const [displayGif, setDisplayGif] = useState(false);
     const onMouseEnter = () => setDisplayGif(true);
     const onMouseLeave = () => setDisplayGif(false);
     
     useEffect(() => {
-        if ((tape as TapePreview).title) setTitle((tape as TapePreview).title);
+        const tapePreview = tape as TapePreview;
+        if (tapePreview && !title) setTitle(tapePreview.title === null || tapePreview.title === undefined || tapePreview.title.length == 0 ? tapeId : tapePreview.title);
     }, [tape])
 
     useEffect(() => {
@@ -79,7 +82,6 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                 }
             });
         }
-
         if (!(tape as TapePreview).title) {
             getTapeName(tapeId).then((tapeName) => {
                 if (tapeName) setTitle(tapeName);
@@ -92,6 +94,13 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
     
         if (gif?.length == 0) {
             getTapeGif(tapeId).then((gif) => setGif(gif));
+        }
+
+        if (tapeId) {
+            getTapeBondInfo(tapeId).then((bond: BondInfo|null) => {
+                if (bond)
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+            });
         }
     
     }, [])
@@ -114,6 +123,9 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                         alt='rives logo'
                         className="-mt-12 -ms-11"
                     />
+                    {currentPrice ? <div className="h-fit w-16 px-1 bg-rives-purple text-black text-xs -mt-[28px] ms-12">
+                        {currentPrice}
+                    </div> : <></>}
                 </div>
 
                 <div className="w-fill -mt-3 -me-2 mb-1 flex justify-center">
@@ -135,6 +147,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                         }
                     </div>
                 </div>
+                    
 
                 <div className="w-44 px-2 -me-2">
                     <div className="flex flex-col items-start">

@@ -8,6 +8,8 @@ import rivesLogo from '@/public/logo.png';
 import Link from "next/link";
 import { User, getUsersByAddress } from "../utils/privyApi";
 import { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import { BondInfo, getCartridgeBondInfo } from "../utils/assets";
 
 
 export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
@@ -15,6 +17,7 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
     const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
 
     const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
+    const [currentPrice,setCurrentPrice] = useState<string>();
 
     useEffect(() => {
         getUsersByAddress([cartridge.user_address]).then((userMapString) => {
@@ -25,6 +28,13 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
                 setTwitterInfo(user);
             }
         });
+
+        if (cartridge.id) {
+            getCartridgeBondInfo(cartridge.id).then((bond: BondInfo|null) => {
+                if (bond)
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+            });
+        }
     }, [])
 
     return (
@@ -40,12 +50,12 @@ export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
                     />
                 </div>
 
-                <div className="flex flex-1 justify-center text-wrap -me-2">
+                {currentPrice ? <div className="flex flex-1 justify-center text-wrap -me-2">
                     <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-[6px]">
-                        0.03 ETH
+                        {currentPrice}
                     </div>
                     
-                </div>
+                </div> : <></>}
 
             </div>
 

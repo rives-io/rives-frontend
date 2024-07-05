@@ -12,12 +12,15 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
 import CartridgeAssetManager from './CartridgeAssetManager';
+import CartridgeStats from './CartridgeStats';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
 
     const status = !selectedRule? null:getContestStatus(selectedRule);
     const contestIsOpen = (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
+
+    const [reload, setReload] = useState(0);
 
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
@@ -48,30 +51,9 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             ${0.1} Buy
                         </button>
                     </div> */}
-                    <CartridgeAssetManager cartridge_id={cartridge.id} />
+                    <CartridgeAssetManager cartridge_id={cartridge.id} onChange={() => setReload(reload+1)}/>
                 </div>
-
-                <div className='grid grid-cols-2 md:grid-cols-4 text-center gap-2'>
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Total Cartridges</span>
-                        <span className='mt-auto'>1.1k</span>
-                    </div>
-
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Tapes Created</span>
-                        <span className='mt-auto'>10k</span>
-                    </div>
-
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Marketcap</span>
-                        <span className='mt-auto'>USD 5k</span>
-                    </div>
-
-                    <div className='p-4 flex flex-col bg-rives-gray'>
-                        <span>Total Owners</span>
-                        <span className='mt-auto'>100</span>
-                    </div>
-                </div>
+                <CartridgeStats cartridge_id={cartridge.id} reload={reload}/>
             </div>
 
 
@@ -112,7 +94,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                     </Menu>
 
                     <Link aria-disabled={!selectedRule || !contestIsOpen} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
-                    href={`play/rule/${selectedRule?.id}`} 
+                    href={`/play/rule/${selectedRule?.id}`} 
                     className={`${!selectedRule || !contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
                         Play
                     </Link>

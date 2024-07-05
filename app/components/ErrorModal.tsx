@@ -69,12 +69,12 @@ export default function ErrorModal({error}:{error:ERROR_FEEDBACK}) {
                                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
                                         {
                                             error.severity == "error"?
-                                                <ErrorIcon className={`text-${color}-500 text-5xl`}/>
+                                                <ErrorIcon className={`text-${color}-400 text-5xl`}/>
                                             :
                                                 error.severity == "warning"?
-                                                    <WarningIcon className={`text-${color}-500 text-5xl`} />
+                                                    <WarningIcon className={`text-${color}-400 text-5xl`} />
                                                 :
-                                                    <ReportIcon className={`text-${color}-500 text-5xl`} />
+                                                    <ReportIcon className={`text-${color}-400 text-5xl`} />
                                         }
                                         
                                     </Dialog.Title>
@@ -85,7 +85,8 @@ export default function ErrorModal({error}:{error:ERROR_FEEDBACK}) {
                                     {
                                         error.dismissible?
                                             <button 
-                                            className={`mt-4 bg-${color}-500 text-white p-3 border border-${color}-500 hover:text-${color}-500 hover:bg-transparent`}
+                                            // className={`mt-4 bg-${color}-500 text-white p-3 border border-${color}-500 hover:text-${color}-500 hover:bg-transparent`}
+                                            className={`mt-4 bg-${color}-400 text-black p-3 font-bold`}
                                             onClick={error.dissmissFunction}
                                             >
                                                 OK

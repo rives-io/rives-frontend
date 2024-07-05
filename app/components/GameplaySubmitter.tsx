@@ -248,14 +248,14 @@ function GameplaySubmitter() {
     
                     <div className="flex pb-2 mt-4">
                         <button
-                        className={`bg-red-500 text-white font-bold uppercase text-sm px-6 py-2 border border-red-500 hover:text-red-500 hover:bg-transparent`}
+                        className={`dialog-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
                             Cancel
                         </button>
                         <button
-                        className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
                         type="button"
                         onClick={submitLog}
                         >
@@ -313,7 +313,7 @@ function GameplaySubmitter() {
                             
                         </TwitterShareButton>
 
-                        <button className="bg-emerald-500 text-white p-3 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent"
+                        <button className="dialog-btn bg-emerald-400 text-black"
                         onClick={closeModal}
                         >
                             Done
@@ -370,7 +370,7 @@ function GameplaySubmitter() {
             </Transition>
             {
                 modalState.state != MODAL_STATE.NOT_PREPARED? 
-                    <button className="btn mt-2 fixed text-[10px] shadow right-5 bottom-20 z-20" onClick={() => {openModal()}}>
+                    <button className="zoom-btn dialog-btn mt-2 fixed text-[10px] bg-rives-purple shadow right-5 bottom-20 z-20" onClick={() => {openModal()}}>
                         Open Submit
                     </button>
                 : 

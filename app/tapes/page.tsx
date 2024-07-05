@@ -81,7 +81,8 @@ export default function Tapes() {
   async function nextPage() {
     if (tapesRequestOptions.fetching || tapesRequestOptions.atEnd) return;
 
-    setTapesRequestOptions({...tapesRequestOptions, fetching: true});
+    const newRequestOptions = {...tapesRequestOptions, fetching: true};
+    setTapesRequestOptions(newRequestOptions);
     let res:DecodedIndexerOutput;
     try {
       res = await getTapes(tapesRequestOptions);
@@ -171,10 +172,10 @@ export default function Tapes() {
       setVerificationInputs([...verificationInputs, ...tapesInputs]);
     }
     
-    setTapesRequestOptions({...tapesRequestOptions, 
-      currentPage: tapesRequestOptions.currentPage+1, 
+    setTapesRequestOptions({...newRequestOptions, 
+      currentPage: newRequestOptions.currentPage+1, 
       fetching: false,
-      atEnd: res.total <= tapesRequestOptions.currentPage * tapesRequestOptions.pageSize
+      atEnd: res.total <= newRequestOptions.currentPage * newRequestOptions.pageSize
     });
 
   }
