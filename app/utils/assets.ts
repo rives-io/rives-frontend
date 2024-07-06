@@ -1,5 +1,5 @@
 import { envClient } from "./clientEnv";
-import { createPublicClient, http, getContract } from 'viem'
+import { createPublicClient, http, getAbiItem, AbiEvent, getContract } from 'viem'
 import { BigNumber } from "ethers";
 
 import { getChain } from "./util";
@@ -13,12 +13,13 @@ const currencyAbi: any = currencyAbiFile;
 
 
 export interface BondInfo {
-    buyPrice: BigNumber;
     currentSupply: BigNumber;
     currentPrice: BigNumber;
     marketcap: BigNumber;
     currencyDecimals: number;
     currencySymbol: string;
+    buyPrice?: BigNumber;
+    amountOwned?: BigNumber;
 }
 
 const publicClient = createPublicClient({ 
@@ -26,7 +27,7 @@ const publicClient = createPublicClient({
   transport: http()
 })
 
-export async function getCartridgeBondInfo(cartridgeId: string): Promise<BondInfo|null> {
+export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
     const bond: any[] = await publicClient.readContract({
@@ -52,13 +53,16 @@ export async function getCartridgeBondInfo(cartridgeId: string): Promise<BondInf
         }) as any[];
         symbol = symbolOut[0];
     }
-    const buyPriceOut: any[] = await publicClient.readContract({
-        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-        abi: cartridgeAbi.abi,
-        functionName: "getCurrentBuyPrice",
-        args: [`0x${cartridgeId}`,1]
-    }) as any[];
-    const buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+    let buyPrice: BigNumber|undefined = undefined;
+    if (getBuyPrice){
+        const buyPriceOut: any[] = await publicClient.readContract({
+            address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+            abi: cartridgeAbi.abi,
+            functionName: "getCurrentBuyPrice",
+            args: [`0x${cartridgeId}`,1]
+        }) as any[];
+        buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+    }
     const supply = BigNumber.from(bond[0].currentSupply);
     const price = BigNumber.from(bond[0].currentPrice);
     const marketcap = supply.mul(price);
@@ -73,7 +77,7 @@ export async function getCartridgeBondInfo(cartridgeId: string): Promise<BondInf
 }
 
 
-export async function getTapeBondInfo(tapeId: string): Promise<BondInfo|null> {
+export async function getTapeBondInfo(tapeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
     const bond: any[] = await publicClient.readContract({
@@ -99,13 +103,16 @@ export async function getTapeBondInfo(tapeId: string): Promise<BondInfo|null> {
         }) as any[];
         symbol = symbolOut[0];
     }
-    const buyPriceOut: any[] = await publicClient.readContract({
-        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-        abi: tapeAbi.abi,
-        functionName: "getCurrentBuyPrice",
-        args: [`0x${tapeId}`,1]
-    }) as any[];
-    const buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+    let buyPrice: BigNumber|undefined = undefined;
+    if (getBuyPrice){
+        const buyPriceOut: any[] = await publicClient.readContract({
+            address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+            abi: tapeAbi.abi,
+            functionName: "getCurrentBuyPrice",
+            args: [`0x${tapeId}`,1]
+        }) as any[];
+        buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+    }
     const supply = BigNumber.from(bond[0].currentSupply);
     const price = BigNumber.from(bond[0].currentPrice);
     const marketcap = supply.mul(price);
@@ -119,6 +126,91 @@ export async function getTapeBondInfo(tapeId: string): Promise<BondInfo|null> {
     };
 }
 
+export async function getUserCartridges(user: string): Promise<string[]> {
+
+    if (!user) return [];
+
+    const event = getAbiItem({abi:cartridgeAbi.abi,name:"TransferSingle"}) as AbiEvent;
+    const logs = await publicClient.getLogs({ 
+        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+        event: event,
+        args: {
+          to: user // `0x${user.slice(2)}`
+        },
+        fromBlock:BigNumber.from(envClient.ASSETS_BLOCK).toBigInt()
+    });
+    
+    const cartridgeIds = new Array<string>();
+    for (const log of logs) {
+        const args = log.args as any;
+        const cartridgeId = BigNumber.from(args.id).toHexString()
+        if (cartridgeIds.indexOf(cartridgeId) == -1) cartridgeIds.push(cartridgeId);
+    }
+    return cartridgeIds;
+}
+
+export async function getUserCartridgesBondInfo(user: string): Promise<BondInfo[]> {
+    const bondCartridges = new Array<BondInfo>();
+    for (const cartridgeId of await getUserCartridges(user)) {
+        const bond = await getCartridgeBondInfo(cartridgeId.slice(2));
+        if (bond) {
+            const balance: any[] = await publicClient.readContract({
+                address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+                abi: cartridgeAbi.abi,
+                functionName: "balanceOf",
+                args: [user,`0x${cartridgeId.slice(2)}`]
+            }) as any[];
+            if (balance) {
+                bond.amountOwned = BigNumber.from(balance);
+            }
+            bondCartridges.push(bond);
+        }
+    }
+    return bondCartridges;
+}
+
+export async function getUserTapes(user: string): Promise<string[]> {
+
+    if (!user) return [];
+
+    const event = getAbiItem({abi:tapeAbi.abi,name:"TransferSingle"}) as AbiEvent;
+    const logs = await publicClient.getLogs({ 
+        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+        event: event,
+        args: {
+          to: user // `0x${user.slice(2)}`
+        },
+        fromBlock:BigNumber.from(envClient.ASSETS_BLOCK).toBigInt()
+    });
+    
+    const tapeIds = new Array<string>();
+    for (const log of logs) {
+        const args = log.args as any;
+        const tapeId = BigNumber.from(args.id).toHexString()
+        if (tapeIds.indexOf(tapeId) == -1) tapeIds.push(tapeId);
+    }
+    return tapeIds;
+}
+
+export async function getUserTapesBondInfo(user: string): Promise<BondInfo[]> {
+    const bondTapes = new Array<BondInfo>();
+    for (const tapeId of await getUserTapes(user)) {
+        const bond = await getTapeBondInfo(tapeId.slice(2));
+        if (bond) {
+            const balance: any[] = await publicClient.readContract({
+                address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+                abi: tapeAbi.abi,
+                functionName: "balanceOf",
+                args: [user,`0x${tapeId.slice(2)}`]
+            }) as any[];
+            if (balance) {
+                bond.amountOwned = BigNumber.from(balance);
+            }
+            bondTapes.push(bond);
+        }
+    }
+    return bondTapes;
+}
 
 export function prettyNumberFormatter(num: number, digits: number): string {
     const lookup = [

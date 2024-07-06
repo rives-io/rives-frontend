@@ -14,7 +14,7 @@ export default async function ProfilePage({ params }: { params: { address: strin
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
             <div className="flex flex-wrap gap-8 items-center justify-center">
                 <ProfileOptions address={params.address} twitterInfo={twitterInfo} />
-                <ProfileSummary />
+                <ProfileSummary address={params.address} />
             </div>
             
             <div className="w-full md:w-2/3 flex flex-col gap-2">

@@ -64,6 +64,7 @@ const getTapeVerificationOutput = async (tapeId:string):Promise<VerificationOutp
         },
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     )).data;
+    console.log("tapeout",out)
     if (out.length == 0) return undefined;
     return out[0];
 }

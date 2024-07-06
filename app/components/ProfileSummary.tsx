@@ -1,9 +1,13 @@
+
+import { BigNumber, ethers } from "ethers";
 import { IndexerOutput, indexerQuery } from "../backend-libs/indexer/lib";
+import { getUserCartridgesBondInfo, getUserTapes, getUserTapesBondInfo, prettyNumberFormatter } from "../utils/assets";
 import { envClient } from "../utils/clientEnv";
 
 
 export async function getUserTapesTotal(address:string): Promise<number> {
 
+    if (!address) return 0;
     const indexerOutput: IndexerOutput = await indexerQuery(
         {
             tags:["tape"],
@@ -18,6 +22,7 @@ export async function getUserTapesTotal(address:string): Promise<number> {
 
 export async function getUserCartridgesTotal(address:string): Promise<number> {
 
+    if (!address) return 0;
     const indexerOutput: IndexerOutput = await indexerQuery(
         {
             tags:["cartridge"],
@@ -30,19 +35,53 @@ export async function getUserCartridgesTotal(address:string): Promise<number> {
 }
 
 
-export default function ProfileSummary({address}:{address:string}) {
+export default async function ProfileSummary({address}:{address:string}) {
 
     // fetch info to build profile summary
     const totalTapesCreated = getUserTapesTotal(address);
     const totalCartridgesCreated = getUserCartridgesTotal(address);
+    const tapes = await getUserTapesBondInfo(address);
+    const cartridges = await getUserCartridgesBondInfo(address);
+
+    // TODO: consider multiple currencies
+    let totalTapesOwned = BigNumber.from(0);
+    let totalCartridgesOwned = BigNumber.from(0);
+    let porfolio: any = {};
+    for (const bond of cartridges) {
+        if (bond.amountOwned) {
+            totalCartridgesOwned = totalCartridgesOwned.add(bond.amountOwned);
+            if (!porfolio[bond.currencySymbol]) porfolio[bond.currencySymbol] = {decimals:bond.currencyDecimals,value:BigNumber.from(0)};
+            porfolio[bond.currencySymbol].value = porfolio[bond.currencySymbol].value.add(bond.currentPrice.mul(bond.amountOwned));
+        }
+    }
+    for (const bond of tapes) {
+        if (bond.amountOwned) {
+            totalTapesOwned = totalTapesOwned.add(bond.amountOwned);
+            if (!porfolio[bond.currencySymbol]) porfolio[bond.currencySymbol] = {decimals:bond.currencyDecimals,value:BigNumber.from(0)};
+            porfolio[bond.currencySymbol].value = porfolio[bond.currencySymbol].value.add(bond.currentPrice.mul(bond.amountOwned));
+        }
+    }
+    let porfolioValue: string = "";
+    for (const currencySymbol of Object.keys(porfolio)) {
+        porfolioValue = porfolioValue + (porfolioValue && porfolioValue.length > 0 ? " / " : "") + 
+            `${parseFloat(ethers.utils.formatUnits(porfolio[currencySymbol].value,porfolio[currencySymbol].decimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${currencySymbol}`;
+    }
+
+    let cartridgesCollected: string|undefined = undefined;
+    if (totalCartridgesOwned.gt(0))
+        cartridgesCollected = prettyNumberFormatter(totalCartridgesOwned.toNumber(),2);
+
+    let tapesCollected: string|undefined = undefined;
+    if (totalTapesOwned.gt(0))
+        tapesCollected = prettyNumberFormatter(totalTapesOwned.toNumber(),2);
 
     return (
         <div id="profile_portfolio">
             <div className="grid grid-cols-3 gap-2 text-center">
-                {/* <div className="p-4 bg-rives-gray flex flex-col">
+                {porfolioValue ? <div className="p-4 bg-rives-gray flex flex-col">
                     <span>Portfolio Value</span>
-                    <span>250 USD</span>
-                </div> */}
+                    <span>{porfolioValue}</span>
+                </div> : <></>}
 
                 {totalCartridgesCreated ? <div className="p-4 bg-rives-gray flex flex-col">
                     <span>Cartridges Created</span>
@@ -54,17 +93,17 @@ export default function ProfileSummary({address}:{address:string}) {
                     <span>{totalTapesCreated}</span>
                 </div> : <></>}
 
-                {/* <div className="p-4 bg-rives-gray flex flex-col">
+                {cartridgesCollected ? <div className="p-4 bg-rives-gray flex flex-col">
                     <span>Cartridges Collected</span>
-                    <span>2</span>
-                </div>
+                    <span>{cartridgesCollected}</span>
+                </div> : <></>}
 
-                <div className="p-4 bg-rives-gray flex flex-col ">
+                {tapesCollected ? <div className="p-4 bg-rives-gray flex flex-col ">
                     <span>Tapes Collected</span>
-                    <span>2</span>
-                </div>
+                    <span>{tapesCollected}</span>
+                </div> : <></>}
 
-                <div className="p-4 bg-rives-gray flex flex-col ">
+                {/*<div className="p-4 bg-rives-gray flex flex-col ">
                     <span>Rives Points</span>
                     <span>1234</span>
                 </div> */}

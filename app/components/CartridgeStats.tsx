@@ -31,7 +31,7 @@ function CartridgeStats({cartridge_id,reload}:{cartridge_id:string,reload:number
     useEffect(() => {
         if (cartridge_id) {
             getCartridgeTapesTotal(cartridge_id).then((out) => setTotalTapes(out));
-            getCartridgeBondInfo(cartridge_id).then((bond: BondInfo|null) => {
+            getCartridgeBondInfo(cartridge_id,true).then((bond: BondInfo|null) => {
                 if (bond) {
                     setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
                     setMarketCap(`${parseFloat(ethers.utils.formatUnits(bond.marketcap,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);

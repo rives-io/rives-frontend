@@ -97,8 +97,8 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
         }
 
         if (tapeId) {
-            getTapeBondInfo(tapeId).then((bond: BondInfo|null) => {
-                if (bond)
+            getTapeBondInfo(tapeId,true).then((bond: BondInfo|null) => {
+                if (bond && bond.buyPrice)
                     setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
             });
         }

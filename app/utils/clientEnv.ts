@@ -34,4 +34,8 @@ export const envClient = envsafe({
     input: process.env.NEXT_PUBLIC_OPERATOR_ADDR,
     desc: "Operator ETH address."
   }),
+  ASSETS_BLOCK: str({
+    input: process.env.NEXT_PUBLIC_ASSETS_BLOCK,
+    desc: "(Earliest) assets deployment block number (hex)."
+  }),
 })
