@@ -37,7 +37,7 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
         if (cartridge.id) {
             getCartridgeBondInfo(cartridge.id).then((bond: BondInfo|null) => {
                 if (bond)
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
             });
         }
     }, [])

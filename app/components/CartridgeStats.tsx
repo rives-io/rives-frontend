@@ -13,6 +13,7 @@ export async function getCartridgeTapesTotal(cartridgeId:string): Promise<number
     const indexerOutput: IndexerOutput = await indexerQuery(
         {
             tags:["tape",cartridgeId],
+            type:"input",
             page_size:0
         },
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode:true, decodeModel:"IndexerOutput"}) as IndexerOutput;
@@ -32,18 +33,18 @@ function CartridgeStats({cartridge_id,reload}:{cartridge_id:string,reload:number
             getCartridgeTapesTotal(cartridge_id).then((out) => setTotalTapes(out));
             getCartridgeBondInfo(cartridge_id).then((bond: BondInfo|null) => {
                 if (bond) {
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
-                    setMarketCap(`${parseFloat(ethers.utils.formatUnits(bond.marketcap,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
+                    setMarketCap(`${parseFloat(ethers.utils.formatUnits(bond.marketcap,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
                     setTotalCartridges(prettyNumberFormatter(bond.currentSupply.toNumber(),2));
                 }
             });
         }
-    }, [reload])
+    }, [reload,cartridge_id])
 
     return (
         <div className='grid grid-cols-2 md:grid-cols-4 text-center gap-2'>
             {currentPrice ? <div className='p-4 flex flex-col bg-rives-gray'>
-                <span>Current Price</span>
+                <span>Current Value</span>
                 <span className='mt-auto'>{currentPrice}</span>
             </div> : <></>}
 

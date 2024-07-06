@@ -65,7 +65,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
             <div className='w-full md:w-2/3 flex flex-col gap-4'>
                 <div className='flex flex-wrap gap-4'>
                     <div className='flex flex-col w-fit'>
-                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`} title={tape.tape_id}>
+                        <h1 className={`pixelated-font text-2xl md:text-5xl truncate`} title={params.tape_id}>
                             {
                                 tapeName?
                                     tapeName

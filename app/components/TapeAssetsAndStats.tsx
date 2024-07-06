@@ -17,13 +17,13 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
         if (tape_id) {
             getTapeBondInfo(tape_id).then((bond: BondInfo|null) => {
                 if (bond) {
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
-                    setMarketCap(`${parseFloat(ethers.utils.formatUnits(bond.marketcap,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.currentPrice,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
+                    setMarketCap(`${parseFloat(ethers.utils.formatUnits(bond.marketcap,bond.currencyDecimals)).toLocaleString("en", { minimumFractionDigits: 5, maximumFractionDigits: 5 })} ${bond.currencySymbol}`);
                     setTotalTapes(prettyNumberFormatter(bond.currentSupply.toNumber(),2));
                 }
             });
         }
-    }, [reload])
+    }, [reload,tape_id])
 
     return (
         <>
@@ -32,7 +32,7 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
         </div>
         <div className='grid grid-cols-2 md:grid-cols-3 text-center gap-2'>
             {currentPrice ? <div className='p-4 flex flex-col bg-rives-gray'>
-                <span>Current Price</span>
+                <span>Current Value</span>
                 <span className='mt-auto'>{currentPrice}</span>
             </div> : <></>}
 

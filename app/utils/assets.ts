@@ -13,6 +13,7 @@ const currencyAbi: any = currencyAbiFile;
 
 
 export interface BondInfo {
+    buyPrice: BigNumber;
     currentSupply: BigNumber;
     currentPrice: BigNumber;
     marketcap: BigNumber;
@@ -51,10 +52,18 @@ export async function getCartridgeBondInfo(cartridgeId: string): Promise<BondInf
         }) as any[];
         symbol = symbolOut[0];
     }
+    const buyPriceOut: any[] = await publicClient.readContract({
+        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+        abi: cartridgeAbi.abi,
+        functionName: "getCurrentBuyPrice",
+        args: [`0x${cartridgeId}`,1]
+    }) as any[];
+    const buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
     const supply = BigNumber.from(bond[0].currentSupply);
     const price = BigNumber.from(bond[0].currentPrice);
     const marketcap = supply.mul(price);
     return {
+        buyPrice:buyPrice,
         currentPrice:price,
         currentSupply:supply,
         marketcap:marketcap,
@@ -90,10 +99,18 @@ export async function getTapeBondInfo(tapeId: string): Promise<BondInfo|null> {
         }) as any[];
         symbol = symbolOut[0];
     }
+    const buyPriceOut: any[] = await publicClient.readContract({
+        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+        abi: tapeAbi.abi,
+        functionName: "getCurrentBuyPrice",
+        args: [`0x${tapeId}`,1]
+    }) as any[];
+    const buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
     const supply = BigNumber.from(bond[0].currentSupply);
     const price = BigNumber.from(bond[0].currentPrice);
     const marketcap = supply.mul(price);
     return {
+        buyPrice:buyPrice,
         currentPrice:price,
         currentSupply:supply,
         marketcap:marketcap,

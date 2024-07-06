@@ -598,7 +598,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                 </Dialog>
             </Transition>
             {/* <div className="grid grid-cols-3 justify-items-center"> */}
-            <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
+            <div className='justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2'>
                 { tapeExists ? <>
                 {tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
                 <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} 
