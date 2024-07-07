@@ -76,7 +76,14 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                         <span className='text-sm md:text-base truncate'>
                         {
                             !user?
-                                tape._msgSender
+                                <div>
+                                    <span className='pixelated-font me-2'>By:</span>
+                                    <Link href={`/profile/${tape._msgSender}`}
+                                    className='hover:underline text-rives-purple pixelated-font break-all'
+                                    >
+                                        {tape._msgSender}
+                                    </Link>
+                                </div>
                             :
                                 <Link href={`/profile/${tape._msgSender}`} className='flex items-center gap-2 w-fit hover:underline'>
                                     <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='Nop' />

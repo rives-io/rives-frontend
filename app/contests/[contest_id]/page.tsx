@@ -115,7 +115,7 @@ export default async function Contest({ params }: { params: { contest_id: string
                 !contestMetadata.winner?
                   <></>
                 :
-                  <span title={contestMetadata.winner} className="text-gray-400">Winner: {`${contestMetadata.winner.slice(0, 6)}...${contestMetadata.winner.substring(contestMetadata.winner.length-4,contestMetadata.winner.length)}`}</span>
+                  <span title={contestMetadata.winner} className="text-gray-400">Winner: <Link className="pixelated-font text-rives-purple hover:underline" href={`/profile/${contestMetadata.winner}`}>{`${contestMetadata.winner.slice(0, 6)}...${contestMetadata.winner.substring(contestMetadata.winner.length-4,contestMetadata.winner.length)}`}</Link></span>
               }
             </div>
 

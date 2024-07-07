@@ -8,6 +8,8 @@ import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
 import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
 
+export const revalidate = 60 // revalidate the data at most every minute
+
 let total_cartridges:number;
 let total_tapes:number;
 

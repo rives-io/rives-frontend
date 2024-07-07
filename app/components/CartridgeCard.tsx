@@ -43,7 +43,7 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
     }, [])
 
     return (
-        <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col bg-rives-gray hover:scale-110`}>
+        <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col hover:scale-110`}>
 
             <div className="flex items-stretch">
                 <div className='w-fit h-8'>
