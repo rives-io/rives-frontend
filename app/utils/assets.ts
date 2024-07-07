@@ -23,8 +23,8 @@ export interface BondInfo {
 }
 
 const publicClient = createPublicClient({ 
-  chain: getChain(envClient.NETWORK_CHAIN_ID),
-  transport: http()
+    chain: getChain(envClient.NETWORK_CHAIN_ID),
+    transport: http(envClient.NETWORK_CHAIN_ID == "0xAA36A7" ? "https://ethereum-sepolia-rpc.publicnode.com" : undefined)
 })
 
 export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
