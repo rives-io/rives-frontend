@@ -22,22 +22,50 @@ export interface ERROR_FEEDBACK {
     dissmissFunction?():void
 }
 
+function icon(severity:string) {
+    if (severity == "error") {
+        return <ErrorIcon className={`text-red-400 text-5xl`}/>;
+    } else if (severity == "warning") {
+        return <WarningIcon className={`text-orange-400 text-5xl`} />;
+    }
 
+    return <ReportIcon className={`text-yellow-400 text-5xl`} />;
+}
+
+function dismissBtn(severity:string, dissmissFunction:() => void) {
+    if (severity == "error") {
+        return (
+            <button 
+                className="mt-4 bg-red-400 text-black p-3 font-bold hover:scale-110"
+                onClick={dissmissFunction}
+                >
+                    OK
+            </button>
+        );
+    } else if (severity == "warning") {
+        return (
+            <button 
+                className="mt-4 bg-orange-400 text-black p-3 font-bold hover:scale-110"
+                onClick={dissmissFunction}
+                >
+                    OK
+            </button>
+        );
+    }
+
+    return (
+        <button 
+            className="mt-4 bg-yellow-400 text-black p-3 font-bold hover:scale-110"
+            onClick={dissmissFunction}
+            >
+                OK
+        </button>
+    );
+}
 
 export default function ErrorModal({error}:{error:ERROR_FEEDBACK}) {
     if (error.dismissible && !error.dissmissFunction) throw new Error("Dissmissible Error missing dissmissFunction!")
 
-    let color:string;
-
-    if (error.severity == "alert") {
-        color = "yellow";
-    } else if (error.severity == "warning") {
-        color = "orange";
-    } else {
-        color = "red"
-    }
-
-    
     return (
         <>    
             <Transition appear show={true} as={Fragment}>
@@ -67,15 +95,7 @@ export default function ErrorModal({error}:{error:ERROR_FEEDBACK}) {
                             >
                                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-gray-500 p-4 shadow-xl transition-all flex flex-col items-center text-white">
                                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                                        {
-                                            error.severity == "error"?
-                                                <ErrorIcon className={`text-${color}-400 text-5xl`}/>
-                                            :
-                                                error.severity == "warning"?
-                                                    <WarningIcon className={`text-${color}-400 text-5xl`} />
-                                                :
-                                                    <ReportIcon className={`text-${color}-400 text-5xl`} />
-                                        }
+                                        {icon(error.severity)}
                                         
                                     </Dialog.Title>
                                     <div className='flex w-96 flex-wrap justify-center [overflow-wrap:anywhere]'>
@@ -83,14 +103,8 @@ export default function ErrorModal({error}:{error:ERROR_FEEDBACK}) {
                                     </div>
 
                                     {
-                                        error.dismissible?
-                                            <button 
-                                            // className={`mt-4 bg-${color}-500 text-white p-3 border border-${color}-500 hover:text-${color}-500 hover:bg-transparent`}
-                                            className={`mt-4 bg-${color}-400 text-black p-3 font-bold`}
-                                            onClick={error.dissmissFunction}
-                                            >
-                                                OK
-                                            </button>
+                                        error.dismissible && error.dissmissFunction?
+                                            dismissBtn(error.severity, error.dissmissFunction)
                                         :
                                             <></>
                                     }
