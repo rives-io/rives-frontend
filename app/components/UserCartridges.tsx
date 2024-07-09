@@ -26,8 +26,8 @@ export default function UserCartridges({address}:{address:string}) {
     const [cartridgesCollectedPageToLoad, setCartridgesCollectedPageToLoad] = useState(1);
     const [totalCartridgesCollectedPages, setTotalCartridgesCollectedPages] = useState(-1);
 
-    const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(true);
-    const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(true);
+    const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(false);
+    const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(false);
     
     const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>([]);
 

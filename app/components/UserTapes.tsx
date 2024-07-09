@@ -25,8 +25,8 @@ export default function UserTapes({address}:{address:string}) {
     const [tapesCollectedPageToLoad, setTapesCollectedPageToLoad] = useState(1);
     const [totalTapesCollectedPages, setTotalTapesCollectedPages] = useState(-1);
 
-    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(true);
-    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(true);
+    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(false);
+    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(false);
     
     const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
 
