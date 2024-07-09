@@ -13,6 +13,7 @@ import { Input } from '@mui/base/Input';
 import tapeAbiFile from "@/app/contracts/Tape.json"
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
+import { extractTxError } from "../utils/util";
 
 const tapeAbi: any = tapeAbiFile;
 
@@ -104,6 +105,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
     const [decimals,setDecimals] = useState<number>(6);
     const [symbol,setSymbol] = useState<string>("");
     const [tapeExists,setTapeExists] = useState<boolean>();
+    const [unclaimedFees,setUnclaimedFees] = useState<BigNumber>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -177,6 +179,8 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                         });
 
                         setErc20Address(bond.bond.currencyToken);
+                        const allUnclaimed = bond.bond.unclaimed.mint.add(bond.bond.unclaimed.burn).add(bond.bond.unclaimed.consume).add(bond.bond.unclaimed.royalties).add(bond.bond.unclaimed.undistributedRoyalties)
+                        setUnclaimedFees(allUnclaimed);
 
                         if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
                             const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
@@ -187,21 +191,21 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                                 }
                                 setErc20(curErc20Contract);
                             });
+                        } else {
+                            tapeContract.currencyTokenAddress().then((data:string) => {
+                                setErc20Address(data);
+                                if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
+                                    const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
+                                    curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
+                                        if (code == '0x') {
+                                            console.log("Couldn't get erc20 contract")
+                                            return;
+                                        }
+                                        setErc20(curErc20Contract);
+                                    });
+                                }
+                            });
                         }
-                    } else {
-                        tapeContract.currencyTokenAddress().then((data:string) => {
-                            setErc20Address(data);
-                            if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                                const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
-                                curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                                    if (code == '0x') {
-                                        console.log("Couldn't get erc20 contract")
-                                        return;
-                                    }
-                                    setErc20(curErc20Contract);
-                                });
-                            }
-                        });
                     }
                 });
             }
@@ -328,6 +332,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            else errorMsg = extractTxError(errorMsg);
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
     }
@@ -362,6 +367,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            else errorMsg = extractTxError(errorMsg);
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
     }
@@ -381,20 +387,20 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await tapeContract.validateTape(envClient.DAPP_ADDR,`0x${tape_id}`,tapeOutput?._payload,tapeOutput?._proof);
+            const tx = await tapeContract.validateTape(envClient.DAPP_ADDR,`0x${tape_id}`,tapeOutput._payload,tapeOutput._proof);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
             closeModal();
-            setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
             console.log(error)
-            setModalState({...modalState, state: MODAL_STATE.SELL});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
     }
 
     async function activate() {
@@ -413,15 +419,15 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             setReload(reload+1);
             onChange();
             closeModal();
-            setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
             console.log(error)
-            setModalState({...modalState, state: MODAL_STATE.SELL});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
     }
 
     function changeModalInput(value:string, state: MODAL_STATE) {
@@ -601,7 +607,11 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             <div className='justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2'>
                 { tapeExists ? <>
                 {tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
-                <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} 
+                <button title={validated ? "Claimed" : 
+                    (tapeOutput?._proof ? 
+                        (unclaimedFees ? `unclaimed fees = ${parseFloat(ethers.utils.formatUnits(unclaimedFees,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : "")
+                        : "No proof yet")
+                    } 
                     className='bg-[#4e99e0] assets-btn zoom-btn' 
                     onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
                 {validated ? "Claimed" : "Claim"}

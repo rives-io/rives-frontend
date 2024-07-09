@@ -9,6 +9,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
 import Loading from "./Loading";
+import { getUserTapes } from "../utils/assets";
 
 
 export default function UserTapes({address}:{address:string}) {
@@ -24,11 +25,16 @@ export default function UserTapes({address}:{address:string}) {
     const [tapesCollectedPageToLoad, setTapesCollectedPageToLoad] = useState(1);
     const [totalTapesCollectedPages, setTotalTapesCollectedPages] = useState(-1);
 
-    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(false);
-    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(false);
+    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(true);
+    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(true);
+    
+    const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
 
     const TapesCreatedByProfile = async () => {
-        if (tapesCreatedPage.atEnd || tapesCreated[tapesCreatedPage.curr]) return;
+        if (tapesCreatedPage.atEnd || tapesCreated[tapesCreatedPage.curr]) {
+            setTapesCreatedLoading(false);
+            return;
+        }
 
         setTapesCreatedLoading(true);
 
@@ -61,6 +67,31 @@ export default function UserTapes({address}:{address:string}) {
     }
 
     const TapesCollectedByProfile = async () => {
+        if (tapesCollectedList.length == 0 || tapesCollectedPage.atEnd || tapesCollect[tapesCollectedPage.curr]) {
+            setTapesCollectedLoading(false);
+            return;
+        }
+
+        setTapesCollectedLoading(true);
+
+        const page_size = 6;
+
+        const res:DecodedIndexerOutput = await getTapes(
+            {
+                tapeIds: tapesCollectedList, 
+                currentPage: tapesCollectedPageToLoad,
+                pageSize: page_size,
+                orderBy: "timestamp",
+                orderDir: "desc"
+            }
+        )
+    
+        const new_total_pages = Math.ceil(res.total / page_size);
+        if (totalTapesCollectedPages != new_total_pages) setTotalTapesCollectedPages(new_total_pages);
+
+        setTapesCollect([...tapesCollect, res.data]);
+        setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: res.total <= tapesCollectedPageToLoad * page_size});
+        setTapesCollectedLoading(false);
     }
 
     const nextCollectedTapesPage = () => {
@@ -74,8 +105,13 @@ export default function UserTapes({address}:{address:string}) {
 
     useEffect(() => {
         TapesCreatedByProfile();
-        TapesCollectedByProfile();
+        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => t.slice(2))));
     }, [])
+
+    useEffect(() => {
+        TapesCollectedByProfile();
+    }, [tapesCollectedList])
+
 
     useEffect(() => {
         TapesCreatedByProfile();
@@ -134,33 +170,38 @@ export default function UserTapes({address}:{address:string}) {
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Tapes Collected</h1>
                 </div>
+                { 
+                    tapesCollectedLoading?
+                        <Loading msg="Loading Created Tapes" />
+                    : <>
+                        <div className="flex flex-wrap gap-4">
+                            {
+                                tapesCollect[tapesCollectedPage.curr-1]?.map((tape, index) => {
+                                    return (
+                                        <TapeCard key={index} tapeInput={tape} />
+                                    )
+                                })
+                            }
 
-                <div className="flex flex-wrap gap-4">
-                    {
-                        tapesCollect[tapesCollectedPage.curr-1]?.map((tape, index) => {
-                            return (
-                                <TapeCard key={index} tapeInput={tape} />
-                            )
-                        })
-                    }
-
-                </div>
-
-                {
-                    tapesCollect.length == 0 || tapesCollect[0].length == 0?
-                        <div className="text-center pixelated-font">No Tapes Collected</div>
-                    :
-                        <div className='flex justify-center items-center space-x-1'>
-                            <button disabled={tapesCollectedPage.curr == 1} onClick={prevCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>
-                                <NavigateBeforeIcon />
-                            </button>
-                            <span>
-                                {tapesCollectedPage.curr} of {totalTapesCollectedPages}
-                            </span>
-                            <button disabled={tapesCollectedPage.atEnd} onClick={nextCollectedTapesPage} className={`border border-transparent ${!tapesCollectedPage.atEnd? "hover:border-black":""}`}>
-                                <NavigateNextIcon />                
-                            </button>
                         </div>
+
+                        {
+                            tapesCollect.length == 0 || tapesCollect[0].length == 0?
+                                <div className="text-center pixelated-font">No Tapes Collected</div>
+                            :
+                                <div className='flex justify-center items-center space-x-1'>
+                                    <button disabled={tapesCollectedPage.curr == 1} onClick={prevCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>
+                                        <NavigateBeforeIcon />
+                                    </button>
+                                    <span>
+                                        {tapesCollectedPage.curr} of {totalTapesCollectedPages}
+                                    </span>
+                                    <button disabled={tapesCollectedPage.atEnd} onClick={nextCollectedTapesPage} className={`border border-transparent ${!tapesCollectedPage.atEnd? "hover:border-black":""}`}>
+                                        <NavigateNextIcon />                
+                                    </button>
+                                </div>
+                        } 
+                    </>
                 }
             </div>
         </div>

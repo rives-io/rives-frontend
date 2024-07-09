@@ -212,6 +212,34 @@ export async function getUserTapesBondInfo(user: string): Promise<BondInfo[]> {
     return bondTapes;
 }
 
+export async function getTotalTapes(): Promise<BigNumber> {
+
+    const nAssets: any[] = await publicClient.readContract({
+        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+        abi: tapeAbi.abi,
+        functionName: "totalTapes",
+        args: []
+    }) as any[];
+    if (nAssets) {
+        return BigNumber.from(nAssets);
+    }
+    return BigNumber.from(0);
+}
+
+export async function getTotalCartridges(): Promise<BigNumber> {
+
+    const nAssets: any[] = await publicClient.readContract({
+        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+        abi: cartridgeAbi.abi,
+        functionName: "totalCartridges",
+        args: []
+    }) as any[];
+    if (nAssets) {
+        return BigNumber.from(nAssets);
+    }
+    return BigNumber.from(0);
+}
+
 export function prettyNumberFormatter(num: number, digits: number): string {
     const lookup = [
         { value: 1, symbol: "" },

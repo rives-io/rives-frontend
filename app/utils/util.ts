@@ -2,9 +2,10 @@ import { envClient } from "./clientEnv";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getOutputs } from "../backend-libs/core/lib";
+import { cartridges, getOutputs } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
+import { CartridgeInfo, CartridgesOutput, CartridgesPayload } from "../backend-libs/core/ifaces";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -221,6 +222,7 @@ export function getChain(chainId:number|string) {
 
 
 export interface TapesRequest {
+    tapeIds?:string[],
     currentPage:number,
     pageSize:number
     orderBy?:string,
@@ -235,6 +237,9 @@ export async function getTapes(options:TapesRequest) {
     if (options.cartridgeId) tags.push(options.cartridgeId);
     if (options.ruleId) tags.push(options.ruleId);
 
+    if (options.tapeIds && options.tapeIds.length > 0) {
+        tags = tags.concat(options.tapeIds);
+    }
     let req_options:IndexerPayload = {
         page: options.currentPage,
         page_size: options.pageSize,
@@ -255,4 +260,59 @@ export async function getTapes(options:TapesRequest) {
     );
   
     return res;
+}
+
+export interface CartridgesRequest {
+    cartridgeIds?:string[],
+    currentPage:number,
+    pageSize:number
+    orderBy?:string,
+    orderDir?:string,
+    user_address?:string,
+    ruleId?:string,
+    tags?:string[],
+    getCover?:boolean,
+}
+
+export async function getCartridges(options:CartridgesRequest): Promise<CartridgesOutput>{
+
+    let req_options:CartridgesPayload = {
+        get_cover:options.getCover
+        // page: options.currentPage,
+        // page_size: options.pageSize,
+        // TODO: other parameters after new version
+    }
+    if (options.tags && options.tags.length > 0) 
+        req_options.tags = options.tags;
+
+    const res:CartridgesOutput = await cartridges(
+        req_options,
+        {
+            decode:true,
+            decodeModel:"CartridgesOutput",
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
+        }
+    );
+
+    const newData: CartridgeInfo[] = [];
+    for (const cartridge of res.data) {
+        if (options.user_address && options.user_address.toLowerCase() != cartridge.user_address.toLowerCase()) continue;
+        if (options.cartridgeIds && options.cartridgeIds.indexOf(cartridge.id) == -1) continue;
+        newData.push(cartridge);
+    }
+
+    res.total = newData.length;
+    if (options.pageSize && options.currentPage && options.pageSize < newData.length) {
+        res.data = newData.slice(options.pageSize*(options.currentPage-1),options.pageSize*options.currentPage);
+    } else {
+        res.data = newData;
+    }
+  
+    return res;
+}
+
+export function extractTxError(msg:string):string {
+    const m = msg.match(/(.*)\s\[/);
+    if (m?.length && m.length >= 2) return m[1] as string;
+    return "Error in transaction";
 }

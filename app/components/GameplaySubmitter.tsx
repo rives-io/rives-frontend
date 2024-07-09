@@ -5,7 +5,7 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
+import { extractTxError, insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
 import { sha256 } from "js-sha256";
 import { ContractReceipt, ethers } from "ethers";
 import { VerifyPayload } from "../backend-libs/core/ifaces";
@@ -197,6 +197,7 @@ function GameplaySubmitter() {
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
             return;
         }

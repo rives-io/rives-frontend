@@ -1,3 +1,4 @@
+import { BigNumber } from "ethers";
 import CartridgeCard from "./components/CartridgeCard";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import TapeCard from "./components/TapeCard";
@@ -7,9 +8,13 @@ import Link from "next/link";
 import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
 import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
+import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 
 let total_cartridges:number;
 let total_tapes:number;
+
+let total_collected_cartridges:BigNumber;
+let total_collected_tapes:BigNumber;
 
 async function getLatestsCartridges() {
   const res = (await cartridgesRequest(
@@ -56,6 +61,8 @@ export default async function Home() {
   const cartridges = await getLatestsCartridges();
   const tapes:Array<VerifyPayload> = await getLatestsTapes();
   const contests:Array<RuleInfo> = await getLatestsContests();
+  total_collected_cartridges = await getTotalCartridges();
+  total_collected_tapes = await getTotalTapes();  
 
   const contestsColors:Record<number, string> = {0: "#53fcd8", 1: "#f99776", 2: "#8b5cf6"};
 
@@ -142,6 +149,16 @@ export default async function Home() {
           <div className='p-8 bg-rives-gray flex flex-col'>
             <span className={`text-3xl pixelated-font`}>Number of Tapes</span>
             <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
+          </div>
+
+          <div className='p-8 bg-rives-gray flex flex-col'>
+            <span className={`text-3xl pixelated-font`}>Collected Cartridges</span>
+            <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
+          </div>
+
+          <div className='p-8 bg-rives-gray flex flex-col'>
+            <span className={`text-3xl pixelated-font`}>Collected Tapes</span>
+            <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
           </div>
         </div>
 

@@ -2,6 +2,8 @@ import { User, getUsersByAddress } from "@/app/utils/privyApi";
 import ProfileNavigation from "@/app/components/ProfileNavigation";
 import ProfileOptions from "@/app/components/ProfileOptions";
 import ProfileSummary from "@/app/components/ProfileSummary";
+import TapeFeesManager from "@/app/components/TapeFeeManager";
+import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
 
 
 
@@ -13,7 +15,11 @@ export default async function ProfilePage({ params }: { params: { address: strin
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
             <div className="flex flex-wrap gap-8 items-center justify-center">
-                <ProfileOptions address={params.address} twitterInfo={twitterInfo} />
+                <div className="flex flex-col gap-2">
+                    <ProfileOptions address={params.address} twitterInfo={twitterInfo} />
+                    <TapeFeesManager address={params.address} />
+                    <CartridgeFeesManager address={params.address} />
+                </div>
                 <ProfileSummary address={params.address} />
             </div>
             

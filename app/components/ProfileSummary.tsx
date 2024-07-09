@@ -3,6 +3,7 @@ import { BigNumber, ethers } from "ethers";
 import { IndexerOutput, indexerQuery } from "../backend-libs/indexer/lib";
 import { getUserCartridgesBondInfo, getUserTapes, getUserTapesBondInfo, prettyNumberFormatter } from "../utils/assets";
 import { envClient } from "../utils/clientEnv";
+import { getCartridges } from "../utils/util";
 
 
 export async function getUserTapesTotal(address:string): Promise<number> {
@@ -23,15 +24,21 @@ export async function getUserTapesTotal(address:string): Promise<number> {
 export async function getUserCartridgesTotal(address:string): Promise<number> {
 
     if (!address) return 0;
-    const indexerOutput: IndexerOutput = await indexerQuery(
-        {
-            tags:["cartridge"],
-            msg_sender:address,
-            type:"input",
-            page_size:10
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode:true, decodeModel:"IndexerOutput"}) as IndexerOutput;
-    return indexerOutput.total;
+    // const indexerOutput: IndexerOutput = await indexerQuery(
+    //     {
+    //         tags:["cartridge"],
+    //         msg_sender:address,
+    //         type:"input",
+    //         page_size:0
+    //     },
+    //     {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode:true, decodeModel:"IndexerOutput"}) as IndexerOutput;
+    // return indexerOutput.total;
+    const out = await getCartridges({
+        pageSize:0,
+        currentPage:1,
+        user_address:address
+    });
+    return out.total;
 }
 
 

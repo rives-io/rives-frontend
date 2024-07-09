@@ -13,6 +13,7 @@ import { Input } from '@mui/base/Input';
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
+import { extractTxError } from "../utils/util";
 
 const cartridgeAbi: any = cartridgeAbiFile;
 
@@ -106,12 +107,13 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
     const [modalPreviewPrice,setModalPreviewPrice] = useState<BigNumber>();
     const [modalSlippage,setModalSlippage] = useState<number>(0);
     const [validated,setValidated] = useState<boolean>();
-    const [cartridgeOutput,setCartridgeOutput] = useState<VerificationOutput>();
     const [reload,setReload] = useState<number>(0);
     const [decimals,setDecimals] = useState<number>(6);
     const [symbol,setSymbol] = useState<string>("");
     const [cartridgeExists,setCartridgeExists] = useState<boolean>();
     const [tapeOutput,setTapeOutput] = useState<VerificationOutput>();
+    // const [cartridgeOutput,setCartridgeOutput] = useState<VerificationOutput>(); // TODO: change to cartridge event
+    const [unclaimedFees,setUnclaimedFees] = useState<BigNumber>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -186,6 +188,8 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                         });
 
                         setErc20Address(bond.bond.currencyToken);
+                        const allUnclaimed = bond.bond.unclaimed.mint.add(bond.bond.unclaimed.burn).add(bond.bond.unclaimed.consume).add(bond.bond.unclaimed.royalties).add(bond.bond.unclaimed.undistributedRoyalties)
+                        setUnclaimedFees(allUnclaimed);
 
                         if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
                             const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
@@ -196,21 +200,21 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                                 }
                                 setErc20(curErc20Contract);
                             });
+                        } else {
+                            cartridgeContract.currencyTokenAddress().then((data:string) => {
+                                setErc20Address(data);
+                                if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
+                                    const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
+                                    curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
+                                        if (code == '0x') {
+                                            console.log("Couldn't get erc20 contract")
+                                            return;
+                                        }
+                                        setErc20(curErc20Contract);
+                                    });
+                                }
+                            });
                         }
-                    } else {
-                        cartridgeContract.currencyTokenAddress().then((data:string) => {
-                            setErc20Address(data);
-                            if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                                const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
-                                curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                                    if (code == '0x') {
-                                        console.log("Couldn't get erc20 contract")
-                                        return;
-                                    }
-                                    setErc20(curErc20Contract);
-                                });
-                            }
-                        });
                     }
                 });
             }
@@ -337,6 +341,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            else errorMsg = extractTxError(errorMsg);
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
     }
@@ -371,6 +376,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            else errorMsg = extractTxError(errorMsg);
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
     }
@@ -392,20 +398,20 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
             // TODO: revert to cartridgeOutput._proof and payload
-            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,tapeOutput?._payload,tapeOutput?._proof);
+            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,tapeOutput._payload,tapeOutput._proof);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
             closeModal();
-            setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
             console.log(error)
-            setModalState({...modalState, state: MODAL_STATE.SELL});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
     }
 
     async function activate() {
@@ -424,15 +430,15 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             setReload(reload+1);
             onChange();
             closeModal();
-            setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
         } catch (error) {
             console.log(error)
-            setModalState({...modalState, state: MODAL_STATE.SELL});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
     }
 
     function changeModalInput(value:string, state: MODAL_STATE) {
@@ -613,7 +619,11 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                 { cartridgeExists ? <>
                 {cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
                 // TODO: revert to cartridgeOutput._proof
-                <button title={validated ? "Claimed" : tapeOutput?._proof ? "" : "No proof yet"} 
+                <button title={validated ? "Claimed" : 
+                        (tapeOutput?._proof ? 
+                            (unclaimedFees ? `unclaimed fees = ${parseFloat(ethers.utils.formatUnits(unclaimedFees,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : "")
+                            : "No proof yet")
+                        } 
                     className='bg-[#4e99e0] assets-btn zoom-btn' 
                     onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
                 {validated ? "Claimed" : "Claim"}

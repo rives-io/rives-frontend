@@ -28,6 +28,11 @@ body {
 
 @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
 
+@import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
+* {
+  font-family: 'Iosevka Web', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
 .pixelated-font{
   text-transform: uppercase;
   letter-spacing: -0.125em;
@@ -37,11 +42,6 @@ body {
 
 .pixelated-font::first-letter {
   margin-left: -0.12em;
-}
-
-@import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
-* {
-  font-family: 'Iosevka Web', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 
