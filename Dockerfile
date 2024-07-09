@@ -28,10 +28,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NETWORK
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN cp .env.${NETWORK} .env && npm run build
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

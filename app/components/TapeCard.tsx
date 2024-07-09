@@ -5,7 +5,7 @@ import Image from "next/image";
 import { VerifyPayload } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
-import rivesLogo from '@/public/logo.png';
+import rivesLogo from '@/public/logo_cutted.png';
 import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
 import rivesCheck from "@/public/rives_check.png";
@@ -116,19 +116,33 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                 pointerEvents: typeof tapeTitle == "string" ? "none":"auto"
             }}
             className="tapeBorder flex flex-col items-center w-44 h-60 hover:scale-110">
-                <div className='w-20 h-8'>
-                    <Image
-                        src={rivesLogo}
-                        quality={100}
-                        alt='rives logo'
-                        className="-mt-12 -ms-11"
-                    />
-                    {currentPrice ? <div className="h-fit w-16 px-1 bg-rives-purple text-black text-xs -mt-[28px] ms-12">
-                        {currentPrice}
-                    </div> : <></>}
+                <div className="w-44 flex items-stretch px-[10px] ms-2">
+                    <div className='w-fit h-8'>
+                        <div className="w-16 h-4 relative">
+                        <Image fill
+                            src={rivesLogo}
+                            quality={100}
+                            alt='rives logo'
+                            className="-mt-8"
+                        />
+
+                        </div>
+                    </div>
+
+                    {
+                        currentPrice?
+                            <div className="flex flex-1 justify-end text-wrap">
+                                <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-8">
+                                    {currentPrice}
+                                </div>
+                            </div>
+                        :
+                            <></>
+                    }
+
                 </div>
 
-                <div className="w-fill -mt-3 -me-2 mb-1 flex justify-center">
+                <div className="w-fill -mt-10 -me-2 mb-1 flex justify-center">
                     <div className="w-[156px] h-[156px] relative">
                         {
                             displayGif && gif && gif.length > 0?
@@ -149,7 +163,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                 </div>
                     
 
-                <div className="w-44 px-2 -me-2">
+                <div className="w-44 px-[10px] ms-2">
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
                         <span className="pixelated-font text-xs truncate">

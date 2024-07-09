@@ -12,7 +12,6 @@ import { VerifyPayload } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
-import Image from "next/image";
 import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";
 import { cartridgeInfo } from '../backend-libs/core/lib';
@@ -23,7 +22,6 @@ import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
-import Link from "next/link";
 
 
 enum MODAL_STATE {
@@ -118,7 +116,8 @@ function GameplaySubmitter() {
             const error:ERROR_FEEDBACK = {
                 severity: "alert",
                 message: "You need to be connect for your gameplay to be saved!",
-                dismissible: true
+                dismissible: true,
+                dissmissFunction: () => setErrorFeedback(undefined)
             };
             setErrorFeedback(error);
         } else if (player.length > 0 && (wallets[0].address.toLowerCase() != player)) {
@@ -197,8 +196,7 @@ function GameplaySubmitter() {
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            else errorMsg = extractTxError(errorMsg);
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -217,7 +215,7 @@ function GameplaySubmitter() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("failed to fetch") > -1) errorMsg = "Error storing gif";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
         }
         if (typeof window !== "undefined") {
             setTapeURL(`${window.location.origin}/tapes/${tapeId}`);

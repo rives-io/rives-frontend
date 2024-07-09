@@ -24,10 +24,10 @@ function Footer() {
             <Link href={"https://github.com/rives-io"} className='h-6 hover:text-rives-purple'><GitHubIcon /></Link>
           </div>
 
-          <div className='flex gap-2 items-center py-1 px-2 rounded-full bg-[#00F7FF]'>
+          <Link href="https://cartesi.io/" className='flex gap-2 items-center py-1 px-2 rounded-full bg-[#00F7FF]'>
             <Image width={24} height={24} quality={100} src={CartesiLogo} alt='Not found'></Image>
             <span className='pixelated-font text-black text-sm'>Powered by Cartesi</span>
-          </div>
+          </Link>
         </div>
       </div>
             {/* <Link href="https://twitter.com/rives_io" rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>

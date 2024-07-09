@@ -336,7 +336,7 @@ function RivemuEditor() {
                 } catch (e) {
                     rivemuRef.current?.stop();
                     console.log(e);
-                    setErrorFeedback({message:"Error parsing score", severity: "error", dismissible: true});
+                    setErrorFeedback({message:"Error parsing score", severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
                 }
             } else {
                 setCurrScore(outcard_json.score);
@@ -421,12 +421,12 @@ function RivemuEditor() {
     async function sendCartridge() {
 
         if (!cartridgeData) {
-            setErrorFeedback({message:"No cartridge data", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         if (storedCartridge) {
-            setErrorFeedback({message:"Cartridge is already stored", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge is already stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         
@@ -440,7 +440,7 @@ function RivemuEditor() {
         console.log(out)
 
         if (out) {
-            setErrorFeedback({message:"Cartridge already inserted", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge already inserted", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -468,7 +468,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
@@ -476,7 +476,7 @@ function RivemuEditor() {
     async function sendRule() {
 
         if (!cartridgeData) {
-            setErrorFeedback({message:"No rule name", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No rule name", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         const cartridgeId = sha256(cartridgeData);
@@ -488,12 +488,12 @@ function RivemuEditor() {
         );
 
         if (!out) {
-            setErrorFeedback({message:"Cartridge not inserted yet", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge not inserted yet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         if (!ruleName) {
-            setErrorFeedback({message:"Invalid rule name", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Invalid rule name", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -509,7 +509,7 @@ function RivemuEditor() {
         );
 
         if (existingRules.total > 0) {
-            setErrorFeedback({message:"Rule with this name already exists", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Rule with this name already exists", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -546,7 +546,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
@@ -554,23 +554,23 @@ function RivemuEditor() {
     async function sendRemoveCartridge() {
 
         if (!storedCartridge) {
-            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         
         if (!selectedCartridge) {
-            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         if (wallet.address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
-            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -586,7 +586,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
