@@ -105,6 +105,10 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
     
     }, [])
 
+    function handleClick(e:React.MouseEvent<HTMLElement>) {
+        e.preventDefault();
+        window.open(`/profile/${userAddress}`,"_self");
+    }
 
     return (
         <div 
@@ -167,7 +171,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
                         <span className="pixelated-font text-xs truncate">
-                            By: <button onClick={() => window.open(`/profile/${userAddress}`,"_self")}
+                            By: <button onClick={handleClick}
                                 className="pixelated-font text-rives-purple hover:underline">
                                     {
                                         playerName?

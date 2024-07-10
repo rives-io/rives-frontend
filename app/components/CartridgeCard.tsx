@@ -42,6 +42,11 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
         }
     }, [])
 
+    function handleClick(e:React.MouseEvent<HTMLElement>) {
+        e.preventDefault();
+        window.open(`/profile/${cartridge.user_address}`,"_self");
+    }
+
     return (
         <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col hover:scale-110`}>
 
@@ -80,7 +85,7 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
                 <div className="flex flex-col p-[2px] h-10 w-full">
                     <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
                     <span className="pixelated-font text-xs truncate">
-                        By: <button onClick={() => window.open(`/profile/${cartridge.user_address}`,"_self")}
+                        By: <button onClick={handleClick}
                             className="pixelated-font text-rives-purple hover:underline">
                                 {
                                     !twitterInfo?

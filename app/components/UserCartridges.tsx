@@ -148,8 +148,11 @@ export default function UserCartridges({address}:{address:string}) {
                             </div>
 
                             {
-                                totalCartridgesCreatedPages != -1 && (cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0)?
-                                    <div className="text-center pixelated-font">No Cartridges Created</div>
+                                cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0?
+                                    totalCartridgesCollectedPages != -1?
+                                        <div className="text-center pixelated-font">No Cartridges Created</div>
+                                    :
+                                        <></>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
                                         <button disabled={cartridgesCreatedPage.curr == 1} onClick={prevCreatedCartridgesPage} className={`border border-transparent ${cartridgesCreatedPage.curr != 1? "hover:border-black":""}`}>
@@ -190,8 +193,11 @@ export default function UserCartridges({address}:{address:string}) {
                         </div>
 
                         {
-                            totalCartridgesCollectedPages != -1 && (cartridgesCollect.length == 0 || cartridgesCollect[0].length == 0)?
-                                <div className="text-center pixelated-font">No Cartridges Collected</div>
+                            cartridgesCollect.length == 0 || cartridgesCollect[0].length == 0?
+                                totalCartridgesCollectedPages != -1?
+                                    <div className="text-center pixelated-font">No Cartridges Collected</div>
+                                :
+                                    <></>
                             :
                                 <div className='flex justify-center items-center space-x-1'>
                                     <button disabled={cartridgesCollectedPage.curr == 1} onClick={prevCollectedCartridgesPage} className={`border border-transparent ${cartridgesCollectedPage.curr != 1? "hover:border-black":""}`}>
