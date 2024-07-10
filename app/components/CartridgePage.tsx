@@ -135,24 +135,24 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
             <div className='w-full grid grid-cols-1 md:w-2/3 '>
                 <div>
                     <Tab.Group>
-                        <Tab.List className="grid grid-cols-2 place-content-center gap-2">
-                            <Tab
+                        <Tab.List className="grid grid-cols-1 place-content-center gap-2">
+                            {/* <Tab
                                 className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
                                 >
                                     <span className='text-xl pixelated-font'>Activity</span>
-                            </Tab>
+                            </Tab> */}
 
                             <Tab
-                                className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
+                                className={({selected}) => {return selected?"tab-navigation-item-selected h-[60px]":"tab-navigation-item"}}
                                 >
                                     <span className='text-xl pixelated-font'>Contests</span>
                             </Tab>
                         </Tab.List>
 
                         <Tab.Panels className="mt-2 overflow-auto custom-scrollbar">
-                            <Tab.Panel className="">
+                            {/* <Tab.Panel className="">
                                 Show Activities
-                            </Tab.Panel>
+                            </Tab.Panel> */}
 
                             <Tab.Panel className="">
                                 <CartridgeContests cartridgeId={cartridge.id} cartridge={cartridge} />

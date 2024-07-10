@@ -14,7 +14,7 @@ const contestsIds = Object.keys(knowContests);
 
 
 export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:string, cartridge:CartridgeInfo}) {    
-    const [cartridgeContests, setCartridgeContests] = useState<Array<ContestCardInfo>>([]);
+    const [cartridgeContests, setCartridgeContests] = useState<Array<ContestCardInfo>|null>(null);
     
     const [contestsLoading, setContestsLoading] = useState(false);
 
@@ -43,16 +43,19 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
                         <Loading msg="Loading Contests" />
                     </div>
                 :
-                    <div className="flex flex-wrap gap-4">
-                        {
-                            cartridgeContests.map((contest, index) => {
-                                return (
-                                    <ContestCard key={index} contest={contest} cartridge={cartridge} />
-                                )
-                            })
-                        }
+                    cartridgeContests?.length == 0?
+                        <div className="text-center pixelated-font">No Contests</div>
+                    :
+                        <div className="flex flex-wrap gap-4">
+                            {
+                                cartridgeContests?.map((contest, index) => {
+                                    return (
+                                        <ContestCard key={index} contest={contest} cartridge={cartridge} />
+                                    )
+                                })
+                            }
 
-                    </div>
+                        </div>
             }
         </div>
     )
