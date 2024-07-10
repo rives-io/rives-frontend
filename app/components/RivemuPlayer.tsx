@@ -112,7 +112,7 @@ const getTapePayload = async (tapeId:string):Promise<VerifyPayload> => {
 function RivemuPlayer(
         {rule_id, tape_id}:
         {rule_id?:string, tape_id?:string}) {
-            console.log("gameplayContext",gameplayContext)
+            
     const {setGameplayOwner, setGameplayLog, setGifResolution, addGifFrame} = useContext(gameplayContext);
 
     const isTape = tape_id? true:false;
