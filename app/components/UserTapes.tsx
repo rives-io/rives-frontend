@@ -25,8 +25,8 @@ export default function UserTapes({address}:{address:string}) {
     const [tapesCollectedPageToLoad, setTapesCollectedPageToLoad] = useState(1);
     const [totalTapesCollectedPages, setTotalTapesCollectedPages] = useState(-1);
 
-    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(false);
-    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(false);
+    const [tapesCreatedLoading, setTapesCreatedLoading] = useState(true);
+    const [tapesCollectedLoading, setTapesCollectedLoading] = useState(true);
     
     const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
 
@@ -146,7 +146,7 @@ export default function UserTapes({address}:{address:string}) {
                             </div>
 
                             {
-                                tapesCreated.length == 0 || tapesCreated[0].length == 0?
+                                totalTapesCreatedPages != -1 && (tapesCreated.length == 0 || tapesCreated[0].length == 0)?
                                     <div className="text-center pixelated-font">No Tapes Created</div>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
@@ -186,7 +186,7 @@ export default function UserTapes({address}:{address:string}) {
                         </div>
 
                         {
-                            tapesCollect.length == 0 || tapesCollect[0].length == 0?
+                            totalTapesCollectedPages != -1 && (tapesCollect.length == 0 || tapesCollect[0].length) == 0?
                                 <div className="text-center pixelated-font">No Tapes Collected</div>
                             :
                                 <div className='flex justify-center items-center space-x-1'>

@@ -2,7 +2,6 @@
 
 
 import { useEffect, useState } from "react";
-import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getCartridges } from "../utils/util";
 import { CartridgeInfo } from "../backend-libs/core/ifaces";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -26,8 +25,8 @@ export default function UserCartridges({address}:{address:string}) {
     const [cartridgesCollectedPageToLoad, setCartridgesCollectedPageToLoad] = useState(1);
     const [totalCartridgesCollectedPages, setTotalCartridgesCollectedPages] = useState(-1);
 
-    const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(false);
-    const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(false);
+    const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(true);
+    const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(true);
     
     const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>([]);
 
@@ -149,7 +148,7 @@ export default function UserCartridges({address}:{address:string}) {
                             </div>
 
                             {
-                                cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0?
+                                totalCartridgesCreatedPages != -1 && (cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0)?
                                     <div className="text-center pixelated-font">No Cartridges Created</div>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
@@ -191,7 +190,7 @@ export default function UserCartridges({address}:{address:string}) {
                         </div>
 
                         {
-                            cartridgesCollect.length == 0 || cartridgesCollect[0].length == 0?
+                            totalCartridgesCollectedPages != -1 && (cartridgesCollect.length == 0 || cartridgesCollect[0].length == 0)?
                                 <div className="text-center pixelated-font">No Cartridges Collected</div>
                             :
                                 <div className='flex justify-center items-center space-x-1'>

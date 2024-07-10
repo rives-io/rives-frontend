@@ -11,7 +11,7 @@ export default function ProfileNavigation({address}:{address:string}) {
 
     return (
         <Tab.Group>
-            <Tab.List className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Tab.List className="grid grid-cols-2 lg:flex lg:flex-wrap gap-4">
                 {/* <Tab
                     className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
                     >
@@ -19,19 +19,19 @@ export default function ProfileNavigation({address}:{address:string}) {
                 </Tab> */}
 
                 <Tab
-                    className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
+                    className={({selected}) => {return selected?"tab-navigation-item-selected grow":"tab-navigation-item grow"}}
                     >
                         <span>Tapes</span>
                 </Tab>
 
                 <Tab
-                    className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
+                    className={({selected}) => {return selected?"tab-navigation-item-selected grow":"tab-navigation-item grow"}}
                     >
                         <span>Cartridges</span>
                 </Tab>
 
                 <Tab
-                    className={({selected}) => {return selected?"tab-navigation-item-selected":"tab-navigation-item"}}
+                    className={({selected}) => {return selected?"tab-navigation-item-selected grow":"tab-navigation-item grow"}}
                     >
                         <span>Contests</span>
                 </Tab>
