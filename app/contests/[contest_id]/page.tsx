@@ -10,14 +10,14 @@ import RuleLeaderboard from "@/app/components/RuleLeaderboard";
 
 // diff in seconds
 function formatTime(diff:number):string {
-  if (diff > 60) {
-      return `${diff / 60} min`
+  if (diff > 86400) {
+    return `${Math.ceil(diff / 86400)} days`
   }
   if (diff > 3600) {
-      return `${diff / 3600} hours`
+    return `${Math.ceil(diff / 3600)} hours`
   }
-  if (diff > 86400) {
-      return `${diff / 86400} days`
+  if (diff > 60) {
+      return `${Math.ceil(diff / 60)} min`
   }
 
   return `${diff} seconds`
@@ -33,7 +33,7 @@ function contestStatusMessage(contest:RuleInfo) {
   } else if (currDate < contest.start) {
       return <span className="text-yellow-500">starts {new Date(contest.start * 1000).toLocaleDateString()}</span>;
   } else {
-      return <span className="text-green-500">OPEN: {formatTime(contest.end - currDate)}</span>;
+      return <span className="text-green-500">OPEN: ends in {formatTime(contest.end - currDate)}</span>;
   }
 }
 
@@ -120,7 +120,7 @@ export default async function Contest({ params }: { params: { contest_id: string
             </div>
 
             
-            <Link href={`/play/rule/${contest.id}`} className="bg-rives-purple pixelated-font justify-self-end h-fit text-center py-2 w-full md:w-2/3"
+            <Link href={`/play/rule/${contest.id}`} className="bg-rives-purple pixelated-font justify-self-end h-fit text-center py-2 w-full md:w-2/3 hover:scale-110"
               style={{pointerEvents: contestIsOpen ? "auto":"none"}}>
               PLAY
             </Link>

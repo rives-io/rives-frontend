@@ -7,18 +7,18 @@ import CartridgeCard from "./CartridgeCard";
 
 // diff in seconds
 function formatTime(diff:number):string {
-    if (diff > 60) {
-        return `${diff / 60} min`
+    if (diff > 86400) {
+      return `${Math.ceil(diff / 86400)} days`
     }
     if (diff > 3600) {
-        return `${diff / 3600} hours`
+      return `${Math.ceil(diff / 3600)} hours`
     }
-    if (diff > 86400) {
-        return `${diff / 86400} days`
+    if (diff > 60) {
+        return `${Math.ceil(diff / 60)} min`
     }
-
+  
     return `${diff} seconds`
-}
+  }
 
 function contestStatusMessage(contest:RuleInfo) {
     if (!(contest.start && contest.end)) return <></>;
@@ -30,7 +30,7 @@ function contestStatusMessage(contest:RuleInfo) {
     } else if (currDate < contest.start) {
         return <span className="text-yellow-500">starts {new Date(contest.start * 1000).toLocaleDateString()}</span>;
     } else {
-        return <span className="text-green-500">OPEN: {formatTime(contest.end - currDate)}</span>;
+        return <span className="text-green-500">OPEN: ends in {formatTime(contest.end - currDate)}</span>;
     }
 }
 
