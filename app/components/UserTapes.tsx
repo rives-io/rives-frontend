@@ -76,21 +76,40 @@ export default function UserTapes({address}:{address:string}) {
 
         const page_size = 6;
 
-        const res:DecodedIndexerOutput = await getTapes(
-            {
-                tapeIds: tapesCollectedList, 
-                currentPage: tapesCollectedPageToLoad,
-                pageSize: page_size,
-                orderBy: "timestamp",
-                orderDir: "desc"
-            }
-        )
+        let tapes:VerifyPayload[] = [];
+        const begin = page_size*(tapesCollectedPageToLoad-1)
+        for (let i = begin; i < tapesCollectedList.length; i++) {
+            const tapeId = tapesCollectedList[i];
+            const res:DecodedIndexerOutput = await getTapes(
+                {
+                    tapeIds: [tapeId], 
+                    currentPage: 1,
+                    pageSize: 1,
+                }
+            );
+
+            if (res.data.length == 0) continue;
+            
+            tapes.push(res.data[0])
+        }
+        // const res:DecodedIndexerOutput = await getTapes(
+        //     {
+        //         tapeIds: tapesCollectedList, 
+        //         currentPage: tapesCollectedPageToLoad,
+        //         pageSize: page_size,
+        //         orderBy: "timestamp",
+        //         orderDir: "desc"
+        //     }
+        // )
     
-        const new_total_pages = Math.ceil(res.total / page_size);
+        //const new_total_pages = Math.ceil(res.total / page_size);
+        const new_total_pages = Math.ceil(tapesCollectedList.length/page_size);
         if (totalTapesCollectedPages != new_total_pages) setTotalTapesCollectedPages(new_total_pages);
 
-        setTapesCollect([...tapesCollect, res.data]);
-        setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: res.total <= tapesCollectedPageToLoad * page_size});
+        //setTapesCollect([...tapesCollect, res.data]);
+        setTapesCollect([...tapesCollect, tapes]);
+        //setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: res.total <= tapesCollectedPageToLoad * page_size});
+        setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: tapesCollectedList.length <= tapesCollectedPageToLoad * page_size});
         setTapesCollectedLoading(false);
     }
 

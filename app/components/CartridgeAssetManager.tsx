@@ -186,35 +186,21 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                         cartridgeContract.getCurrentSellPrice(`0x${cartridge_id}`,1).then((data:BigNumber[]) => {
                             setSellPrice(data[0]);
                         });
+                    }
 
-                        setErc20Address(bond.bond.currencyToken);
-                        const allUnclaimed = bond.bond.unclaimed.mint.add(bond.bond.unclaimed.burn).add(bond.bond.unclaimed.consume).add(bond.bond.unclaimed.royalties).add(bond.bond.unclaimed.undistributedRoyalties)
-                        setUnclaimedFees(allUnclaimed);
+                    setErc20Address(bond.bond.currencyToken);
+                    const allUnclaimed = bond.bond.unclaimed.mint.add(bond.bond.unclaimed.burn).add(bond.bond.unclaimed.consume).add(bond.bond.unclaimed.royalties).add(bond.bond.unclaimed.undistributedRoyalties)
+                    setUnclaimedFees(allUnclaimed);
 
-                        if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                            const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
-                            curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                                if (code == '0x') {
-                                    console.log("Couldn't get erc20 contract")
-                                    return;
-                                }
-                                setErc20(curErc20Contract);
-                            });
-                        } else {
-                            cartridgeContract.currencyTokenAddress().then((data:string) => {
-                                setErc20Address(data);
-                                if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
-                                    const curErc20Contract = new ethers.Contract(data,erc20abi,signer);
-                                    curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                                        if (code == '0x') {
-                                            console.log("Couldn't get erc20 contract")
-                                            return;
-                                        }
-                                        setErc20(curErc20Contract);
-                                    });
-                                }
-                            });
-                        }
+                    if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
+                        const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
+                        curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
+                            if (code == '0x') {
+                                console.log("Couldn't get erc20 contract")
+                                return;
+                            }
+                            setErc20(curErc20Contract);
+                        });
                     }
                 });
             }
