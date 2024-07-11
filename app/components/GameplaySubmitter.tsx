@@ -5,7 +5,7 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { extractTxError, insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
+import { insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
 import { sha256 } from "js-sha256";
 import { ContractReceipt, ethers } from "ethers";
 import { VerifyPayload } from "../backend-libs/core/ifaces";
@@ -288,9 +288,7 @@ function GameplaySubmitter() {
                             !gameplay?
                                 <></>
                             :
-                                <button onClick={() => window.open(tapeURL,"_self")}>
-                                    <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
-                                </button>
+                                <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
                         }
                     </div>
 

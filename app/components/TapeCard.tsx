@@ -68,7 +68,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
     
     useEffect(() => {
         const tapePreview = tape as TapePreview;
-        if (tapePreview && !title) setTitle(tapePreview.title === null || tapePreview.title === undefined || tapePreview.title.length == 0 ? tapeId : tapePreview.title);
+        if (tapePreview.gif) setTitle(!tapePreview.title || tapePreview.title.length == 0 ? tapeId : tapePreview.title);
     }, [tape])
 
     useEffect(() => {
@@ -116,9 +116,6 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
         onMouseLeave={onMouseLeave}
         >
             <Link href={`/tapes/${tapeId}`}
-            style={{
-                pointerEvents: typeof tapeTitle == "string" ? "none":"auto"
-            }}
             className="tapeBorder flex flex-col items-center w-44 h-60 hover:scale-110">
                 <div className="w-44 flex items-stretch px-[10px] ms-2">
                     <div className='w-fit h-8'>

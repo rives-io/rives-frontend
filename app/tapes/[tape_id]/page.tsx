@@ -6,6 +6,7 @@ import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
 import { getTapeName } from '@/app/utils/util';
+import { ethers } from 'ethers';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -117,7 +118,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                     </div>
 
                     <div>
-                        Score: {Number(tape.claimed_score._hex)}
+                        Score: {ethers.utils.formatUnits(tape.claimed_score, 0)}
                     </div>
 
                 </div>

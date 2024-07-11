@@ -114,7 +114,7 @@ export default async function Home() {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-center w-full lg:w-[80%] text-black'>
               {
                 contests.map((contest, index) => {
-                  return <Link href={`/contests/${contest.id}`} className={`p-8 bg-[${contestsColors[index]}] hover:scale-110`}>{contest.name}</Link>
+                  return <Link key={index} href={`/contests/${contest.id}`} className={`p-8 bg-[${contestsColors[index]}] hover:scale-110`}>{contest.name}</Link>
                 })
               }
             </div>
