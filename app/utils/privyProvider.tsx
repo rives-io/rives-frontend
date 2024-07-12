@@ -21,6 +21,7 @@ export default function PrivyProviders({children}: {children: React.ReactNode}) 
         //   createOnLogin: 'users-without-wallets',
         // },
         defaultChain: chain,
+        loginMethods: ["wallet"],
         supportedChains: [chain]
       }}
     >
