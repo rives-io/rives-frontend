@@ -14,10 +14,10 @@ import { getUserTapes } from "../utils/assets";
 
 export default function UserTapes({address}:{address:string}) {
     const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayload>>>([]);
-    const [tapesCreatedPage, setTapesCreatedPage] = useState({curr: 0, atEnd: false});
+    const [tapesCreatedPage, setTapesCreatedPage] = useState(0);
     
     const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayload>>>([]);
-    const [tapesCollectedPage, setTapesCollectedPage] = useState({curr: 0, atEnd: false});
+    const [tapesCollectedPage, setTapesCollectedPage] = useState(0);
     
     const [tapesCreatedPageToLoad, setTapesCreatedPageToLoad] = useState(1);
     const [totalTapesCreatedPages, setTotalTapesCreatedPages] = useState(-1);
@@ -30,8 +30,15 @@ export default function UserTapes({address}:{address:string}) {
     
     const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
 
+    const disablePrevTapesCreatedPage = tapesCreatedPage == 1;
+    const disablePrevTapesCollectedPage = tapesCollectedPage == 1;
+    
+    const disableNextTapesCreatedPage = tapesCreatedPage == totalTapesCreatedPages;
+    const disableNextTapesCollectedPage = tapesCollectedPage == totalTapesCollectedPages;
+
     const TapesCreatedByProfile = async () => {
-        if (tapesCreatedPage.atEnd || tapesCreated[tapesCreatedPage.curr]) {
+        if (tapesCreated[tapesCreatedPageToLoad-1]) {
+            setTapesCreatedPage(tapesCreatedPageToLoad);
             setTapesCreatedLoading(false);
             return;
         }
@@ -54,7 +61,7 @@ export default function UserTapes({address}:{address:string}) {
         if (totalTapesCreatedPages != new_total_pages) setTotalTapesCreatedPages(new_total_pages);
 
         setTapesCreated([...tapesCreated, res.data]);
-        setTapesCreatedPage({curr: tapesCreatedPageToLoad, atEnd: res.total <= tapesCreatedPageToLoad * page_size});
+        setTapesCreatedPage(tapesCreatedPageToLoad);
         setTapesCreatedLoading(false);
     }
 
@@ -67,7 +74,8 @@ export default function UserTapes({address}:{address:string}) {
     }
 
     const TapesCollectedByProfile = async () => {
-        if (tapesCollectedList.length == 0 || tapesCollectedPage.atEnd || tapesCollect[tapesCollectedPage.curr]) {
+        if (tapesCollectedList.length == 0 || tapesCollect[tapesCollectedPageToLoad-1]) {
+            setTapesCollectedPage(tapesCollectedPageToLoad);
             setTapesCollectedLoading(false);
             return;
         }
@@ -109,7 +117,7 @@ export default function UserTapes({address}:{address:string}) {
         //setTapesCollect([...tapesCollect, res.data]);
         setTapesCollect([...tapesCollect, tapes]);
         //setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: res.total <= tapesCollectedPageToLoad * page_size});
-        setTapesCollectedPage({curr: tapesCollectedPageToLoad, atEnd: tapesCollectedList.length <= tapesCollectedPageToLoad * page_size});
+        setTapesCollectedPage(tapesCollectedPageToLoad);
         setTapesCollectedLoading(false);
     }
 
@@ -155,9 +163,9 @@ export default function UserTapes({address}:{address:string}) {
                         <>
                             <div className="flex flex-wrap gap-4 justify-evenly md:justify-start">
                                 {
-                                    tapesCreated[tapesCreatedPage.curr-1]?.map((tape, index) => {
+                                    tapesCreated[tapesCreatedPage-1]?.map((tape, index) => {
                                         return (
-                                            <TapeCard key={index} tapeInput={tape} />
+                                            <TapeCard key={`${tapesCreatedPage}-${index}`} tapeInput={tape} />
                                         )
                                     })
                                 }
@@ -172,13 +180,13 @@ export default function UserTapes({address}:{address:string}) {
                                         <></>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
-                                        <button disabled={tapesCreatedPage.curr == 1} onClick={prevCreatedTapesPage} className={`border border-transparent ${tapesCreatedPage.curr != 1? "hover:border-black":""}`}>
+                                        <button disabled={disablePrevTapesCreatedPage} onClick={prevCreatedTapesPage} className={`border border-transparent ${disablePrevTapesCreatedPage? "":"hover:border-black"}`}>
                                             <NavigateBeforeIcon />
                                         </button>
                                         <span>
-                                            {tapesCreatedPage.curr} of {totalTapesCreatedPages}
+                                            {tapesCreatedPage} of {totalTapesCreatedPages}
                                         </span>
-                                        <button disabled={tapesCreatedPage.atEnd} onClick={nextCreatedTapesPage} className={`border border-transparent ${!tapesCreatedPage.atEnd? "hover:border-black":""}`}>
+                                        <button disabled={disableNextTapesCreatedPage} onClick={nextCreatedTapesPage} className={`border border-transparent ${disableNextTapesCreatedPage? "":"hover:border-black"}`}>
                                             <NavigateNextIcon />                
                                         </button>
                                     </div>
@@ -198,9 +206,9 @@ export default function UserTapes({address}:{address:string}) {
                     : <>
                         <div className="flex flex-wrap gap-4">
                             {
-                                tapesCollect[tapesCollectedPage.curr-1]?.map((tape, index) => {
+                                tapesCollect[tapesCollectedPage-1]?.map((tape, index) => {
                                     return (
-                                        <TapeCard key={index} tapeInput={tape} />
+                                        <TapeCard key={`${tapesCollectedPage}-${index}`} tapeInput={tape} />
                                     )
                                 })
                             }
@@ -215,13 +223,13 @@ export default function UserTapes({address}:{address:string}) {
                                     <></>
                             :
                                 <div className='flex justify-center items-center space-x-1'>
-                                    <button disabled={tapesCollectedPage.curr == 1} onClick={prevCollectedTapesPage} className={`border border-transparent ${tapesCollectedPage.curr != 1? "hover:border-black":""}`}>
+                                    <button disabled={disablePrevTapesCollectedPage} onClick={prevCollectedTapesPage} className={`border border-transparent ${disablePrevTapesCollectedPage? "":"hover:border-black"}`}>
                                         <NavigateBeforeIcon />
                                     </button>
                                     <span>
-                                        {tapesCollectedPage.curr} of {totalTapesCollectedPages}
+                                        {tapesCollectedPage} of {totalTapesCollectedPages}
                                     </span>
-                                    <button disabled={tapesCollectedPage.atEnd} onClick={nextCollectedTapesPage} className={`border border-transparent ${!tapesCollectedPage.atEnd? "hover:border-black":""}`}>
+                                    <button disabled={disableNextTapesCollectedPage} onClick={nextCollectedTapesPage} className={`border border-transparent ${disableNextTapesCollectedPage? "":"hover:border-black"}`}>
                                         <NavigateNextIcon />                
                                     </button>
                                 </div>

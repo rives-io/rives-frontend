@@ -10,7 +10,7 @@ import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 
-export const revalidate = 60 // revalidate the data at most every minute
+export const revalidate = 0 // revalidate data always
 
 let total_cartridges:number;
 let total_tapes:number;

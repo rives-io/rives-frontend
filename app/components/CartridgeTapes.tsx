@@ -13,7 +13,7 @@ import Loading from "./Loading";
 
 export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string, ruleId?:string}) {
     const [tapes, setTapes] = useState<Array<Array<VerifyPayload>>>([]);
-    const [tapesPage, setTapesPage] = useState({curr: 0, atEnd: false});
+    const [tapesPage, setTapesPage] = useState(0);
         
     const [tapesPageToLoad, setTapesPageToLoad] = useState(1);
     const [totalTapesPages, setTotalTapesPages] = useState(-1);
@@ -22,11 +22,12 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
 
     const [reload, setReload] = useState(0);
 
-    const disableNextPage = (tapesPage.curr == tapes.length) && tapesPage.atEnd;
+    const disablePrevPage = tapesPage == 1;
+    const disableNextPage = tapesPage == totalTapesPages;
 
     const tapesByCartridge = async () => {
-        if (tapes[tapesPageToLoad-1] && tapes[tapesPageToLoad-1].length > 0) {
-            setTapesPage({...tapesPage, curr: tapesPageToLoad});
+        if (tapes[tapesPageToLoad-1]) {
+            setTapesPage(tapesPageToLoad);
             return;
         }
 
@@ -48,7 +49,7 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
         if (totalTapesPages != new_total_pages) setTotalTapesPages(new_total_pages);
 
         setTapes([...tapes, res.data]);
-        setTapesPage({curr: tapesPageToLoad, atEnd: res.total <= tapesPageToLoad * page_size});
+        setTapesPage(tapesPageToLoad);
         setLoading(false);
     }
 
@@ -67,7 +68,7 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
     useEffect(() => {
         console.log("rule changed");
         setTapes([]);
-        setTapesPage({curr: 0, atEnd: false});
+        setTapesPage(0);
         setTotalTapesPages(-1);
         
         if (tapesPageToLoad == 1) setReload(reload+1);
@@ -99,9 +100,9 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
                     <>
                         <div className="flex flex-wrap gap-4 justify-evenly md:justify-center">
                             {
-                                tapes[tapesPage.curr-1]?.map((tape, index) => {
+                                tapes[tapesPage-1]?.map((tape, index) => {
                                     return (
-                                        <TapeCard key={index} tapeInput={tape} />
+                                        <TapeCard key={`${tapesPage}-${index}`} tapeInput={tape} />
                                     )
                                 })
                             }
@@ -113,13 +114,13 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
                                 <></>
                             :
                                 <div className='flex justify-center items-center space-x-1'>
-                                    <button disabled={tapesPage.curr == 1} onClick={prevTapesPage} className={`border border-transparent ${tapesPage.curr != 1? "hover:border-black":""}`}>
+                                    <button disabled={disablePrevPage} onClick={prevTapesPage} className={`border border-transparent ${disablePrevPage? "":"hover:border-black"}`}>
                                         <NavigateBeforeIcon />
                                     </button>
                                     <span>
-                                        {tapesPage.curr} of {totalTapesPages}
+                                        {tapesPage} of {totalTapesPages}
                                     </span>
-                                    <button disabled={disableNextPage} onClick={nextTapesPage} className={`border border-transparent ${!disableNextPage? "hover:border-black":""}`}>
+                                    <button disabled={disableNextPage} onClick={nextTapesPage} className={`border border-transparent ${disableNextPage? "":"hover:border-black"}`}>
                                         <NavigateNextIcon />                
                                     </button>
                                 </div>

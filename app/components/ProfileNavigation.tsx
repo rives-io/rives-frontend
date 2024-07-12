@@ -37,7 +37,7 @@ export default function ProfileNavigation({address}:{address:string}) {
                 </Tab>
             </Tab.List>
 
-            <Tab.Panels className="mt-2 overflow-auto custom-scrollbar">
+            <Tab.Panels className="mt-2 overflow-visible">
                 {/* <Tab.Panel className="">
                     Show User's Activity
                 </Tab.Panel> */}

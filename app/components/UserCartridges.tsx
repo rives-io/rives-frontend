@@ -14,10 +14,10 @@ import { CartridgesOutput } from "../backend-libs/core/ifaces";
 
 export default function UserCartridges({address}:{address:string}) {
     const [cartridgesCreated, setCartridgesCreated] = useState<Array<Array<CartridgeInfo>>>([]);
-    const [cartridgesCreatedPage, setCartridgesCreatedPage] = useState({curr: 0, atEnd: false});
+    const [cartridgesCreatedPage, setCartridgesCreatedPage] = useState(0);
     
     const [cartridgesCollect, setCartridgesCollect] = useState<Array<Array<CartridgeInfo>>>([]);
-    const [cartridgesCollectedPage, setCartridgesCollectedPage] = useState({curr: 0, atEnd: false});
+    const [cartridgesCollectedPage, setCartridgesCollectedPage] = useState(0);
     
     const [cartridgesCreatedPageToLoad, setCartridgesCreatedPageToLoad] = useState(1);
     const [totalCartridgesCreatedPages, setTotalCartridgesCreatedPages] = useState(-1);
@@ -30,8 +30,15 @@ export default function UserCartridges({address}:{address:string}) {
     
     const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>([]);
 
+    const disablePrevCartridgesCreatedPage = cartridgesCreatedPage == 1;
+    const disablePrevCartridgesCollectedPage = cartridgesCollectedPage == 1;
+
+    const disableNextCartridgesCreatedPage = cartridgesCreatedPage == totalCartridgesCreatedPages;
+    const disableNextCartridgesCollectedPage = cartridgesCollectedPage == totalCartridgesCollectedPages;
+
     const CartridgesCreatedByProfile = async () => {
-        if (cartridgesCreatedPage.atEnd || cartridgesCreated[cartridgesCreatedPage.curr]) {
+        if (cartridgesCreated[cartridgesCreatedPageToLoad-1]) {
+            setCartridgesCreatedPage(cartridgesCreatedPageToLoad);
             setCartridgesCreatedLoading(false);
             return;
         }
@@ -55,7 +62,7 @@ export default function UserCartridges({address}:{address:string}) {
         if (totalCartridgesCreatedPages != new_total_pages) setTotalCartridgesCreatedPages(new_total_pages);
 
         setCartridgesCreated([...cartridgesCreated, res.data]);
-        setCartridgesCreatedPage({curr: cartridgesCreatedPageToLoad, atEnd: res.total <= cartridgesCreatedPageToLoad * page_size});
+        setCartridgesCreatedPage(cartridgesCreatedPageToLoad);
         setCartridgesCreatedLoading(false);
     }
 
@@ -68,7 +75,7 @@ export default function UserCartridges({address}:{address:string}) {
     }
 
     const CartridgesCollectedByProfile = async () => {
-        if (cartridgesCollectedList.length == 0 || cartridgesCollectedPage.atEnd || cartridgesCollect[cartridgesCollectedPage.curr]) {
+        if (cartridgesCollectedList.length == 0 || cartridgesCollect[cartridgesCollectedPageToLoad-1]) {
             setCartridgesCollectedLoading(false);
             return;
         }
@@ -92,7 +99,7 @@ export default function UserCartridges({address}:{address:string}) {
         if (totalCartridgesCollectedPages != new_total_pages) setTotalCartridgesCollectedPages(new_total_pages);
 
         setCartridgesCollect([...cartridgesCollect, res.data]);
-        setCartridgesCollectedPage({curr: cartridgesCollectedPageToLoad, atEnd: res.total <= cartridgesCollectedPageToLoad * page_size});
+        setCartridgesCollectedPage(cartridgesCollectedPageToLoad);
         setCartridgesCollectedLoading(false);
     }
 
@@ -138,9 +145,9 @@ export default function UserCartridges({address}:{address:string}) {
                         <>
                             <div className="flex flex-wrap gap-4 justify-evenly md:justify-start">
                                 {
-                                    cartridgesCreated[cartridgesCreatedPage.curr-1]?.map((cartridge, index) => {
+                                    cartridgesCreated[cartridgesCreatedPage-1]?.map((cartridge, index) => {
                                         return (
-                                            <CartridgeCard key={index} cartridge={cartridge} />
+                                            <CartridgeCard key={`${cartridgesCreatedPage}-${index}`} cartridge={cartridge} />
                                         )
                                     })
                                 }
@@ -155,13 +162,13 @@ export default function UserCartridges({address}:{address:string}) {
                                         <></>
                                 :
                                     <div className='flex justify-center items-center space-x-1'>
-                                        <button disabled={cartridgesCreatedPage.curr == 1} onClick={prevCreatedCartridgesPage} className={`border border-transparent ${cartridgesCreatedPage.curr != 1? "hover:border-black":""}`}>
+                                        <button disabled={disablePrevCartridgesCreatedPage} onClick={prevCreatedCartridgesPage} className={`border border-transparent ${disablePrevCartridgesCreatedPage? "":"hover:border-black"}`}>
                                             <NavigateBeforeIcon />
                                         </button>
                                         <span>
-                                            {cartridgesCreatedPage.curr} of {totalCartridgesCreatedPages}
+                                            {cartridgesCreatedPage} of {totalCartridgesCreatedPages}
                                         </span>
-                                        <button disabled={cartridgesCreatedPage.atEnd} onClick={nextCreatedCartridgesPage} className={`border border-transparent ${!cartridgesCreatedPage.atEnd? "hover:border-black":""}`}>
+                                        <button disabled={disableNextCartridgesCreatedPage} onClick={nextCreatedCartridgesPage} className={`border border-transparent ${disableNextCartridgesCreatedPage? "":"hover:border-black"}`}>
                                             <NavigateNextIcon />                
                                         </button>
                                     </div>
@@ -183,9 +190,9 @@ export default function UserCartridges({address}:{address:string}) {
                     <>
                         <div className="flex flex-wrap gap-4">
                             {
-                                cartridgesCollect[cartridgesCollectedPage.curr-1]?.map((cartridge, index) => {
+                                cartridgesCollect[cartridgesCollectedPage-1]?.map((cartridge, index) => {
                                     return (
-                                        <CartridgeCard key={index} cartridge={cartridge} />
+                                        <CartridgeCard key={`${cartridgesCollectedPage}-${index}`} cartridge={cartridge} />
                                     )
                                 })
                             }
@@ -200,13 +207,13 @@ export default function UserCartridges({address}:{address:string}) {
                                     <></>
                             :
                                 <div className='flex justify-center items-center space-x-1'>
-                                    <button disabled={cartridgesCollectedPage.curr == 1} onClick={prevCollectedCartridgesPage} className={`border border-transparent ${cartridgesCollectedPage.curr != 1? "hover:border-black":""}`}>
+                                    <button disabled={disablePrevCartridgesCollectedPage} onClick={prevCollectedCartridgesPage} className={`border border-transparent ${disablePrevCartridgesCollectedPage? "":"hover:border-black"}`}>
                                         <NavigateBeforeIcon />
                                     </button>
                                     <span>
-                                        {cartridgesCollectedPage.curr} of {totalCartridgesCollectedPages}
+                                        {cartridgesCollectedPage} of {totalCartridgesCollectedPages}
                                     </span>
-                                    <button disabled={cartridgesCollectedPage.atEnd} onClick={nextCollectedCartridgesPage} className={`border border-transparent ${!cartridgesCollectedPage.atEnd? "hover:border-black":""}`}>
+                                    <button disabled={disableNextCartridgesCollectedPage} onClick={nextCollectedCartridgesPage} className={`border border-transparent ${disableNextCartridgesCollectedPage? "":"hover:border-black"}`}>
                                         <NavigateNextIcon />                
                                     </button>
                                 </div>
