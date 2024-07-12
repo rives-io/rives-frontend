@@ -8,6 +8,8 @@ import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
 
 
+export const revalidate = 0 // revalidate always
+
 // diff in seconds
 function formatTime(diff:number):string {
   if (diff > 86400) {
@@ -48,7 +50,7 @@ const getContest = (rule_id:string) => {
 }
 
 const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
-  const rulesFound = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true,cache:"reload"})).data;
+  const rulesFound = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
   if (rulesFound.length == 0) return null;
 
