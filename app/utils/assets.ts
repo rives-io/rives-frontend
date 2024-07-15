@@ -1,5 +1,5 @@
 import { envClient } from "./clientEnv";
-import { createPublicClient, http, getAbiItem, AbiEvent, getContract } from 'viem'
+import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType } from 'viem'
 import { BigNumber } from "ethers";
 
 import { getChain } from "./util";
@@ -131,20 +131,34 @@ export async function getUserCartridges(user: string): Promise<string[]> {
     if (!user) return [];
 
     const event = getAbiItem({abi:cartridgeAbi.abi,name:"TransferSingle"}) as AbiEvent;
-    const logs = await publicClient.getLogs({ 
-        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-        event: event,
-        args: {
-          to: user // `0x${user.slice(2)}`
-        },
-        fromBlock:BigNumber.from(envClient.ASSETS_BLOCK).toBigInt()
-    });
+    let logs:any = [];
+    
+    let initialBlock = BigNumber.from(envClient.ASSETS_BLOCK).toBigInt();
+    let lastBlock = await publicClient.getBlockNumber();
+    const blockRange = BigInt(40000);
+
+    for (let i = initialBlock; i <= lastBlock; i += blockRange) {
+        const toBlock = lastBlock < i + blockRange? lastBlock: i+blockRange;
+        
+        logs.push(await publicClient.getLogs({ 
+            address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+            event: event,
+            args: {
+              to: user // `0x${user.slice(2)}`
+            },
+            fromBlock:i,
+            toBlock: toBlock
+        }));
+    
+    }
     
     const cartridgeIds = new Array<string>();
-    for (const log of logs) {
-        const args = log.args as any;
-        const cartridgeId = BigNumber.from(args.id).toHexString()
-        if (cartridgeIds.indexOf(cartridgeId) == -1) cartridgeIds.push(cartridgeId);
+    for (const logArr of logs) {
+        for (const log of logArr) {
+            const args = log.args as any;
+            const cartridgeId = BigNumber.from(args.id).toHexString()
+            if (cartridgeIds.indexOf(cartridgeId) == -1) cartridgeIds.push(cartridgeId);
+        }
     }
     return cartridgeIds;
 }
@@ -174,20 +188,34 @@ export async function getUserTapes(user: string): Promise<string[]> {
     if (!user) return [];
 
     const event = getAbiItem({abi:tapeAbi.abi,name:"TransferSingle"}) as AbiEvent;
-    const logs = await publicClient.getLogs({ 
-        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-        event: event,
-        args: {
-          to: user // `0x${user.slice(2)}`
-        },
-        fromBlock:BigNumber.from(envClient.ASSETS_BLOCK).toBigInt()
-    });
+    let logs:Array<any> = [];
+    
+    let initialBlock = BigNumber.from(envClient.ASSETS_BLOCK).toBigInt();
+    let lastBlock = await publicClient.getBlockNumber();
+    const blockRange = BigInt(40000);
+
+    for (let i = initialBlock; i <= lastBlock; i += blockRange) {
+        const toBlock = lastBlock < i + blockRange? lastBlock: i+blockRange;
+
+        logs.push(await publicClient.getLogs({ 
+            address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+            event: event,
+            args: {
+              to: user // `0x${user.slice(2)}`
+            },
+            fromBlock:i,
+            toBlock: toBlock
+        }));
+    
+    }
     
     const tapeIds = new Array<string>();
-    for (const log of logs) {
-        const args = log.args as any;
-        const tapeId = BigNumber.from(args.id).toHexString()
-        if (tapeIds.indexOf(tapeId) == -1) tapeIds.push(tapeId);
+    for (const logArr of logs) {
+        for (const log of logArr) {
+            const args = log.args as any;
+            const tapeId = BigNumber.from(args.id).toHexString()
+            if (tapeIds.indexOf(tapeId) == -1) tapeIds.push(tapeId);
+        }
     }
     return tapeIds;
 }
