@@ -138,6 +138,8 @@ export async function getUserCartridges(user: string): Promise<string[]> {
     const blockRange = BigInt(40000);
 
     for (let i = initialBlock; i <= lastBlock; i += blockRange) {
+        const toBlock = lastBlock < i + blockRange? lastBlock: i+blockRange;
+        
         logs.push(await publicClient.getLogs({ 
             address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
             event: event,
@@ -145,7 +147,7 @@ export async function getUserCartridges(user: string): Promise<string[]> {
               to: user // `0x${user.slice(2)}`
             },
             fromBlock:i,
-            toBlock: i + blockRange
+            toBlock: toBlock
         }));
     
     }
@@ -193,6 +195,8 @@ export async function getUserTapes(user: string): Promise<string[]> {
     const blockRange = BigInt(40000);
 
     for (let i = initialBlock; i <= lastBlock; i += blockRange) {
+        const toBlock = lastBlock < i + blockRange? lastBlock: i+blockRange;
+
         logs.push(await publicClient.getLogs({ 
             address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
             event: event,
@@ -200,7 +204,7 @@ export async function getUserTapes(user: string): Promise<string[]> {
               to: user // `0x${user.slice(2)}`
             },
             fromBlock:i,
-            toBlock: i + blockRange
+            toBlock: toBlock
         }));
     
     }
