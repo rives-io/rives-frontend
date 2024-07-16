@@ -8,19 +8,22 @@ import { User, getUsersByAddress } from '@/app/utils/privyApi';
 import { getTapeName } from '@/app/utils/util';
 import { ethers } from 'ethers';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import WarningIcon from '@mui/icons-material/Warning';
 
 // Make Next.JS revalidate the page every 30 seconds
 export const revalidate = 30;
 
 export async function generateMetadata({ params }: { params: { tape_id: string } }) {
     const imageUrl = `${envClient.GIF_SERVER_URL}/images/${params.tape_id}`;
+    const tapeName = await getTapeName(params.tape_id);
+    let desc = tapeName? `RIVES - ${tapeName}`:`RIVES - ${params.tape_id}`;
+
     return {
         openGraph: {
             images: [imageUrl], 
             siteName: 'rives.io',
             title: 'RIVES',
-            description: 'RiscV Verifiable Entertainment System',
+            description: desc,
         },
         // icons: {
         //     icon: imageUrl,
@@ -30,7 +33,7 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
         twitter: {
             images: [imageUrl], 
             title: 'RIVES',
-            description: 'RiscV Verifiable Entertainment System',
+            description: desc,
             card: 'summary',
             creator: '@rives_io',
         },
@@ -45,7 +48,15 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     ));
 
-    if (res.data.length == 0) return notFound();
+    if (res.data.length == 0) {
+        return (
+            <main className='flex justify-center items-center gap-2 px-4 h-svh text-center'>
+                <WarningIcon className='text-yellow-400' />
+                <p className='pixelated-font text-xl'>The requested tape is still being processed or does not exist.</p>
+                <WarningIcon className='text-yellow-400' />
+            </main>
+        );
+    }
     
     const tape:VerifyPayload = res.data[0];
 

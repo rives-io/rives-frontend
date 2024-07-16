@@ -40,19 +40,29 @@ export interface ContestCardInfo extends RuleInfo, Contest {
 
 export default function ContestCard({contest, cartridge}:{contest:ContestCardInfo, cartridge:CartridgeInfo}) {
     const isContest = contest.start && contest.end;
+    const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} />;
 
     return (
-        <div onClick={() => isContest? window.open(`/contests/${contest.id}`, "_self"):null}
-        className={`bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
-            <CartridgeCard cartridge={cartridge} small={true} />
+        <div className="relative">
+            <div id={contest.id} 
+            onClick={() => isContest? window.open(`/contests/${contest.id}`, "_self"):null}
+            className={`bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
+                <div>
+                    {cartridgeCard}
+                </div>
 
-            <div className="flex flex-col md:w-52">
-                <span className="pixelated-font text-lg">{contest.name}</span>
-                <span className="text-sm text-gray-400">{contest.n_tapes} Submissions</span>
+                <div className="flex flex-col md:w-52"
+                >
+                    <span className="pixelated-font text-lg">{contest.name}</span>
+                    <span className="text-sm text-gray-400">{contest.n_tapes} Submissions</span>
 
-                {
-                    contestStatusMessage(contest)
-                }
+                    {
+                        contestStatusMessage(contest)
+                    }
+                </div>
+            </div>
+            <div className="absolute start-4 top-4">
+                {cartridgeCard}
             </div>
         </div>
     );
