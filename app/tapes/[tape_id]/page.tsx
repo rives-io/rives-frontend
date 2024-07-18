@@ -105,7 +105,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                                 </Link>
                         }
                         </span>
-                        <span>Cartrige: {tapeCartridge.name}</span>
+                        <span>Cartrige: <Link className='text-rives-purple hover:underline' href={`/cartridges/${tapeCartridge.id}`}>{tapeCartridge.name}</Link></span>
                     </div>
 
                     {/* <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>

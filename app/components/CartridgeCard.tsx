@@ -85,7 +85,7 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
                 <div className="flex flex-col p-[2px] h-10 w-full">
                     <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
                     <span className="pixelated-font text-xs truncate">
-                        By: <button onClick={handleClick}
+                        By <button onClick={handleClick}
                             className="pixelated-font text-rives-purple hover:underline">
                                 {
                                     !twitterInfo?

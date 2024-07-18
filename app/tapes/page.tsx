@@ -7,7 +7,7 @@ import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { TapesRequest, getTapes } from "../utils/util";
+import { TapesRequest, getTapes, timeToDateUTCString } from "../utils/util";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import TapeCard from "../components/TapeCard";
@@ -201,7 +201,7 @@ export default function Tapes() {
               const ruleName = ruleInfoMap[verificationInput.rule_id]?.name;
               const user = verificationInput._msgSender;
               const player = `${user.slice(0, 6)}...${user.substring(user.length-4,user.length)}`;
-              const timestamp = new Date(verificationInput._timestamp*1000).toLocaleDateString();
+              const timestamp = timeToDateUTCString(verificationInput._timestamp*1000);
               const tapeId = getTapeId(verificationInput.tape);
               const size = formatBytes((verificationInput.tape.length -2 )/2);
               

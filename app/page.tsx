@@ -69,7 +69,7 @@ export default async function Home() {
   const contestsColors:Record<number, string> = {0: "#53fcd8", 1: "#f99776", 2: "#8b5cf6"};
 
   return (
-    <main className="px-4 md:px-0">
+    <main className="px-4">
       <div className='flex flex-col items-center mb-8 space-y-8'>
         <div className='w-full lg:w-[80%]'>
           <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
@@ -144,22 +144,22 @@ export default async function Home() {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-center w-full lg:w-[80%]'>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Number of Cartridges</span>
+            <span className={`text-3xl pixelated-font`}>Total Cartridges Created</span>
             <span className={`text-5xl pixelated-font`}>{total_cartridges}</span>
           </div>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Number of Tapes</span>
+            <span className={`text-3xl pixelated-font`}>Total Tapes Created</span>
             <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
           </div>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Collected Cartridges</span>
+            <span className={`text-3xl pixelated-font`}>Total Collected Cartridges</span>
             <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
           </div>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Collected Tapes</span>
+            <span className={`text-3xl pixelated-font`}>Total Collected Tapes</span>
             <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
           </div>
         </div>

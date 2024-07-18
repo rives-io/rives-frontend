@@ -49,7 +49,7 @@ function CartridgeStats({cartridge_id,reload}:{cartridge_id:string,reload:number
             </div> : <></>}
 
             {totalCartridges ? <div className='p-4 flex flex-col bg-rives-gray'>
-                <span>Total Cartridges</span>
+                <span>Cartridges Collected</span>
                 <span className='mt-auto'>{totalCartridges}</span>
             </div> : <></>}
 

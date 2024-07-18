@@ -11,17 +11,33 @@ export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+
+// time in seconds
+export function timeToDateUTCString(time:number) {
+
+    const date = new Date(time*1000);
+    return formatDate(date);
+}
+
 export function formatDate(date:Date) {
     const options:Intl.DateTimeFormatOptions = {
         year: "numeric",
-        month: "2-digit",
+        month: "short",
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit"
+        second: "2-digit",
+        hourCycle: "h23",
+        timeZone: "UTC",
+        timeZoneName: "short"
     }
     
-    return date.toLocaleString(undefined, options);
+    const dateString = date.toLocaleDateString("en-US", options);
+    let [month_day, year, time] = dateString.split(",");
+    const [month, day] = month_day.split(" ");
+    year = year.substring(1);
+
+    return `${month}/${day}/${year}, ${time}`;
 }
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {

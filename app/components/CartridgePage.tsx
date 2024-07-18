@@ -13,6 +13,7 @@ import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
 import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
+import { timeToDateUTCString } from '../utils/util';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
@@ -25,7 +26,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
             <div className='cartridgePageCover flex justify-center relative'>
-                <Image fill style={{objectFit: "contain"}} quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
+                <Image className='pixelated-img' fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
             </div>
 
             <div className='w-full md:w-2/3 flex flex-col gap-2'>
@@ -39,6 +40,10 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             >
                                 {cartridge.user_address}
                             </Link>
+                        </div>
+                        <div className='flex'>
+                            <span className='pixelated-font me-2'>On:</span>
+                            <div>{timeToDateUTCString(cartridge.created_at)}</div>
                         </div>
                     </div>
 
@@ -56,6 +61,19 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                 <CartridgeStats cartridge_id={cartridge.id} reload={reload}/>
             </div>
 
+            <div className='w-full md:w-2/3 flex flex-col'>
+                <h2 className={`pixelated-font text-3xl`}>Summary</h2>
+                <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web',marginBottom: "4px"}}>
+                    {cartridge.info?.summary}
+                </pre>
+                <div className='flex flex-warp gap-2 items-center'>
+                    {
+                        cartridge.info?.tags.map((tag, index) => {
+                            return <span key={`${tag}-${index}`} className='pixelated-font py-1 px-2 rounded-full bg-rives-gray text-center text-sm'>{tag}</span>
+                        }) 
+                    }
+                </div>
+            </div>
 
             <div className='w-full md:w-2/3 flex flex-col'>
                 <h2 className={`pixelated-font text-3xl`}>Description</h2>
