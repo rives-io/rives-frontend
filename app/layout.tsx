@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import PrivyProviders from './utils/privyProvider';
 
 export const metadata: Metadata = {
-  title: 'RiVES',
+  title: 'RIVES',
   description: 'RiscV Verifiable Entertainment System',
 }
 

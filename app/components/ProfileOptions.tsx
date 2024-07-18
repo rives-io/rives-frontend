@@ -18,7 +18,7 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
             {
                 !twitterInfo?
                     <div className="flex items-center gap-4">
-                        <Image width={72} height={72} src={rivesCheck} className='rounded-full' alt='Nop' />
+                        <Image width={72} height={72} src={rivesCheck} className='rounded-full pixelated-img' alt='Nop' />
                         <div className="flex flex-col gap-2">
                             <div title={address} className="flex flex-col">
                                 {formated_addr}

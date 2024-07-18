@@ -272,7 +272,7 @@ body {
   }
 
   .tab-navigation-item-selected {
-    @apply bg-[#403f47] text-black;
+    @apply bg-[rgb(var(--background-start-rgb))];
   }
 }
 

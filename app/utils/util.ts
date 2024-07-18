@@ -13,6 +13,34 @@ export function delay(ms: number) {
 
 
 // time in seconds
+export function formatTime(time:number):string {
+    let val:number;
+
+    if (time > 2592000) {
+        val = Math.round(time / 2592000);
+        return val == 1? `${val} month`:`${val} months`;
+    }
+    if (time > 604800) {
+        val = Math.round(time / 604800);
+        return val == 1? `${val} week`:`${val} weeks`;
+    }
+    if (time > 86400) {
+        val = Math.round(time / 86400);
+        return val == 1? `${val} day`:`${val} days`;
+    }
+    if (time > 3600) {
+        val = Math.round(time / 3600);
+      return val == 1? `${val} hour`:`${val} hours`;
+    }
+    if (time > 60) {
+        val = Math.round(time / 60);
+        return val == 1? `${val} minute`:`${val} minutes`;
+    }
+  
+    return `${time} seconds`
+}
+
+// time in seconds
 export function timeToDateUTCString(time:number) {
 
     const date = new Date(time*1000);

@@ -76,6 +76,7 @@ export default function UserTapes({address}:{address:string}) {
     const TapesCollectedByProfile = async () => {
         if (tapesCollectedList.length == 0 || tapesCollect[tapesCollectedPageToLoad-1]) {
             setTapesCollectedPage(tapesCollectedPageToLoad);
+            setTotalTapesCollectedPages(0);
             setTapesCollectedLoading(false);
             return;
         }

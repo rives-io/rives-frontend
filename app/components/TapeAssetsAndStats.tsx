@@ -25,6 +25,10 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
         }
     }, [reload,tape_id])
 
+    if (! (currentPrice || totalTapes || marketCap)) {
+        return <></>;
+    }
+
     return (
         <>
         <div className="flex justify-end">
@@ -37,7 +41,7 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
             </div> : <></>}
 
             {totalTapes ? <div className='p-4 flex flex-col bg-rives-gray'>
-                <span>Total Minted</span>
+                <span>Total Collected</span>
                 <span className='mt-auto'>{totalTapes}</span>
             </div> : <></>}
 

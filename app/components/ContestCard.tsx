@@ -3,36 +3,22 @@
 import { Contest } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
+import { formatTime } from "../utils/util";
 
-
-// diff in seconds
-function formatTime(diff:number):string {
-    if (diff > 86400) {
-      return `${Math.ceil(diff / 86400)} days`
-    }
-    if (diff > 3600) {
-      return `${Math.ceil(diff / 3600)} hours`
-    }
-    if (diff > 60) {
-        return `${Math.ceil(diff / 60)} min`
-    }
-  
-    return `${diff} seconds`
-  }
 
 function contestStatusMessage(contest:RuleInfo) {
     if (!(contest.start && contest.end)) return <></>;
-
+  
     const currDate = new Date().getTime() / 1000;
-
+  
     if (currDate > contest.end) {
-        return <span className="text-red-500">closed on {new Date(contest.end * 1000).toLocaleDateString()} </span>;
+        return <span className="text-red-500">CLOSED: ended {formatTime(currDate - contest.end)} ago </span>;
     } else if (currDate < contest.start) {
-        return <span className="text-yellow-500">starts {new Date(contest.start * 1000).toLocaleDateString()}</span>;
+        return <span className="text-yellow-500">UPCOMING: starts in {formatTime(contest.start - currDate)} and lasts {formatTime(contest.end - contest.start)}</span>;
     } else {
         return <span className="text-green-500">OPEN: ends in {formatTime(contest.end - currDate)}</span>;
     }
-}
+  }
 
 export interface ContestCardInfo extends RuleInfo, Contest {
     rank?:number // user rank

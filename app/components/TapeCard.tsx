@@ -154,6 +154,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                                 />
                             :
                                 <Image fill
+                                    className={`${!gifImage || gifImage.length == 0? "":"pixelated-img"}`}
                                     style={{objectFit: "cover"}}
                                     src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
                                     alt={"Not found"}
@@ -168,7 +169,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
                         <span className="pixelated-font text-xs truncate">
-                            By: <button onClick={handleClick}
+                            By <button onClick={handleClick}
                                 className="pixelated-font text-rives-purple hover:underline">
                                     {
                                         playerName?
