@@ -154,7 +154,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                                 />
                             :
                                 <Image fill
-                                    className={`${!gifImage || gifImage.length == 0? "":"pixelated-img"}`}
+                                    className={`${!gifImage || gifImage.length == 0? "pixelated-img":""}`}
                                     style={{objectFit: "cover"}}
                                     src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
                                     alt={"Not found"}
