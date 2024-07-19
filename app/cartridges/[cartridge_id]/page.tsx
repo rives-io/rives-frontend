@@ -9,17 +9,18 @@ export async function generateMetadata({ params }: { params: { cartridge_id: str
         {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     );
 
-    const desc = `RIVES - ${cartridge.name}`
+    const cartridgeCoverUrl = `/cartridges-img/${params.cartridge_id}`;
+    const desc = `RIVES - ${cartridge.name}`;
 
     return {
         openGraph: {
-            images: [`data:image/png;base64,${cartridge.cover}`], 
+            images: [cartridgeCoverUrl], 
             siteName: 'rives.io',
             title: 'RIVES',
             description: desc,
         },
         twitter: {
-            images: [`data:image/png;base64,${cartridge.cover}`],
+            images: [cartridgeCoverUrl],
             title: 'RIVES',
             description: desc,
             card: 'summary',

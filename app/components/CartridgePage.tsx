@@ -36,7 +36,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
             <div className='cartridgePageCover flex justify-center relative'>
-                <Image className='pixelated-img' fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
+                <Image className='pixelated-img' style={{objectFit: "contain"}} fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
             </div>
 
             <div className='w-full md:w-2/3 flex flex-col gap-2'>

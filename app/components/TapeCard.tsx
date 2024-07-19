@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
 import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
-import rivesCheck from "@/public/rives_check.png";
+import rivesCheck from "@/public/default_tape.png";
 import { Twitter } from "@privy-io/react-auth";
 import { User, getUsersByAddress } from "../utils/privyApi";
 import { BondInfo, getTapeBondInfo } from "../utils/assets";

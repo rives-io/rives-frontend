@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image";
-import rivesCheck from "@/public/rives_check.png";
+import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from "@privy-io/react-auth";
 import XIcon from '@mui/icons-material/X';
 import { User } from "../utils/privyApi";

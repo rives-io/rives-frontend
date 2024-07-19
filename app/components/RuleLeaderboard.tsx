@@ -10,7 +10,7 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { DecodedIndexerOutput } from '../backend-libs/cartesapp/lib';
 import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
-import rivesCheck from "@/public/rives_check.png";
+import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
 import { timeToDateUTCString } from '../utils/util';
 

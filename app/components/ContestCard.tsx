@@ -76,7 +76,10 @@ export default function ContestCard({contest, cartridge}:{contest:ContestCardInf
 
                     {
                         winnerAddress.length == 0?
-                            <></>
+                            status == ContestStatus.FINISHED?
+                                <span>WINNER: TBA</span>
+                            :
+                                <></>
                         :
                             !winnerUser?
                                 <span title={winnerAddress}>
