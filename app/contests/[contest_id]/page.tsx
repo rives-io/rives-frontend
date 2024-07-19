@@ -1,4 +1,4 @@
-import { VerificationOutput, cartridgeInfo, getOutputs, rules } from "@/app/backend-libs/core/lib";
+import { cartridgeInfo, rules } from "@/app/backend-libs/core/lib";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import { envClient } from "@/app/utils/clientEnv";
 import Link from "next/link";
@@ -6,10 +6,31 @@ import { notFound } from "next/navigation";
 import { Contest as ContestClass, ContestStatus, getContestStatus } from "../../utils/common";
 import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
-import { formatTime, timeToDateUTCString } from "@/app/utils/util";
+import { formatTime, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
+import { getUsersByAddress, User } from "@/app/utils/privyApi";
 
 
 export const revalidate = 0 // revalidate always
+
+export async function generateMetadata({ params }: { params: { contest_id: string } }) {
+  const contest = await getRule(params.contest_id);
+
+  const desc = `RIVES - ${contest?.name}`
+
+  return {
+      openGraph: {
+          siteName: 'rives.io',
+          title: 'RIVES',
+          description: desc,
+      },
+      twitter: {
+          title: 'RIVES',
+          description: desc,
+          card: 'summary',
+          creator: '@rives_io',
+      },
+  }
+}
 
 function contestStatusMessage(contest:RuleInfo) {
   if (!(contest.start && contest.end)) return <></>;
@@ -51,23 +72,6 @@ async function getGameInfo(cartridge_id:string) {
   return cartridgeWithInfo;
 }
 
-const getWinner = async (cartridge_id:string, rule:string):Promise<string|undefined> => {
-  const tags = ["score",cartridge_id,rule];
-  const tapes:Array<VerificationOutput> = (await getOutputs(
-      {
-          tags,
-          type: 'notice',
-          page_size: 1,
-          page: 1,
-          order_by: "value",
-          order_dir: "desc"
-      },
-      {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
-
-  if (tapes.length == 0) return undefined
-  return tapes[0].user_address
-}
-  
 export default async function Contest({ params }: { params: { contest_id: string } }) {
   const contest_id = params.contest_id;
 
@@ -82,12 +86,23 @@ export default async function Contest({ params }: { params: { contest_id: string
     notFound();
   }
 
+  let user = null as User|null;
+  let winnerUser:User|null = null;
+  getUsersByAddress([contest.created_by]).then((userMapString) => {
+    const userMap:Record<string,User> = JSON.parse(userMapString);
+    user = userMap[contest.created_by.toLowerCase()];
+  })
+
   const formatedContestCreator = `${contest.created_by.slice(0, 6)}...${contest.created_by.substring(contest.created_by.length-4,contest.created_by.length)}`;
   const status = getContestStatus(contest);
   const contestIsOpen = status == ContestStatus.IN_PROGRESS;
   const game = await getGameInfo(contest.cartridge_id);
   if (status == ContestStatus.VALIDATED) {
-    contestMetadata.winner = await getWinner(contest.cartridge_id,contest_id);
+    contestMetadata.winner = await getContestWinner(contest.cartridge_id,contest_id);
+    if (contestMetadata.winner) {
+      const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([contestMetadata.winner]));
+      winnerUser = userMap[contestMetadata.winner.toLowerCase()];
+    }
   }
 
   return (
@@ -103,7 +118,22 @@ export default async function Contest({ params }: { params: { contest_id: string
                 !contestMetadata.winner?
                   <></>
                 :
-                  <span title={contestMetadata.winner} className="text-gray-400">Winner: <Link className="pixelated-font text-rives-purple hover:underline" href={`/profile/${contestMetadata.winner}`}>{`${contestMetadata.winner.slice(0, 6)}...${contestMetadata.winner.substring(contestMetadata.winner.length-4,contestMetadata.winner.length)}`}</Link></span>
+                  winnerUser?
+                    <span title={contestMetadata.winner} className="text-gray-400">
+                      Winner: <Link 
+                      className="pixelated-font text-rives-purple hover:underline"
+                      href={`/profile/${contestMetadata.winner}`}>
+                        {winnerUser.name}
+                      </Link>
+                    </span>
+                  :
+                    <span title={contestMetadata.winner} className="text-gray-400">
+                      Winner: <Link 
+                      className="pixelated-font text-rives-purple hover:underline" 
+                      href={`/profile/${contestMetadata.winner}`}>
+                        {`${contestMetadata.winner.slice(0, 6)}...${contestMetadata.winner.substring(contestMetadata.winner.length-4,contestMetadata.winner.length)}`}
+                      </Link>
+                    </span>
               }
             </div>
 
@@ -134,11 +164,20 @@ export default async function Contest({ params }: { params: { contest_id: string
                   {contest.end? timeToDateUTCString(contest.end):"-"}
 
                   <span className="text-gray-400">Contest Creator</span>
-                  <Link className="hover:text-rives-purple"
-                  title={contest.created_by}
-                  href={`/profile/${contest.created_by}`}>
-                    {formatedContestCreator}
-                  </Link>
+                  {
+                    user?
+                      <Link className="text-rives-purple hover:underline"
+                      title={contest.created_by}
+                      href={`/profile/${contest.created_by}`}>
+                        {user.name}
+                      </Link>
+                    :
+                      <Link className="text-rives-purple hover:underline"
+                      title={contest.created_by}
+                      href={`/profile/${contest.created_by}`}>
+                        {formatedContestCreator}
+                      </Link>  
+                  }
 
                 </div>
               </div>

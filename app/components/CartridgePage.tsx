@@ -4,7 +4,7 @@
 import { CartridgeInfo as Cartridge, RuleInfo } from '../backend-libs/core/ifaces';
 import Image from "next/image";
 import { Menu, Tab } from '@headlessui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RuleLeaderboard from './RuleLeaderboard';
 import { ContestStatus, getContestStatus } from '../utils/common';
@@ -14,14 +14,24 @@ import CartridgeTapes from './CartridgeTapes';
 import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
 import { timeToDateUTCString } from '../utils/util';
+import { getUsersByAddress, User } from '../utils/privyApi';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
+    const [creator, setCreator] = useState<User|null>(null);
 
     const status = !selectedRule? null:getContestStatus(selectedRule);
     const contestIsOpen = (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
     const [reload, setReload] = useState(0);
+
+    useEffect(() => {
+        getUsersByAddress([cartridge.user_address]).then((userMapString) => {
+            const userMap:Record<string,User> = JSON.parse(userMapString);
+            const user = userMap[cartridge.user_address.toLowerCase()];
+            if (user) setCreator(user);
+        })
+    }, []);
 
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
@@ -38,7 +48,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             <Link href={`/profile/${cartridge.user_address}`}
                             className='hover:underline text-rives-purple pixelated-font break-all'
                             >
-                                {cartridge.user_address}
+                                {creator? creator.name:cartridge.user_address}
                             </Link>
                         </div>
                         <div className='flex'>

@@ -1,9 +1,12 @@
 "use client"
 
-import { Contest } from "../utils/common";
+import { Contest, ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
-import { formatTime } from "../utils/util";
+import { formatTime, getContestWinner } from "../utils/util";
+import { useEffect, useState } from "react";
+import { getUsersByAddress, User } from "../utils/privyApi";
+import Link from "next/link";
 
 
 function contestStatusMessage(contest:RuleInfo) {
@@ -25,8 +28,33 @@ export interface ContestCardInfo extends RuleInfo, Contest {
 }
 
 export default function ContestCard({contest, cartridge}:{contest:ContestCardInfo, cartridge:CartridgeInfo}) {
+    const [winnerAddress, setWinnerAddress] = useState<string>("");
+    const [winnerUser, setWinnerUser] = useState<User|null>(null);
     const isContest = contest.start && contest.end;
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} />;
+
+    const status = getContestStatus(contest);
+
+    useEffect(() => {
+        const checkWinner = async () => {
+            if (status == ContestStatus.VALIDATED) {
+                const contestWinnerAddress = await getContestWinner(contest.cartridge_id, contest.id);
+                if (!contestWinnerAddress) return;
+                setWinnerAddress(contestWinnerAddress);
+
+                const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([contestWinnerAddress]));
+                const contestWinnerUser = userMap[contestWinnerAddress.toLowerCase()];
+
+                if (!contestWinnerUser) {
+                    return;
+                }
+
+                setWinnerUser(contestWinnerUser);
+            }
+        }
+
+        checkWinner();
+    }, []);
 
     return (
         <div className="relative">
@@ -44,6 +72,24 @@ export default function ContestCard({contest, cartridge}:{contest:ContestCardInf
 
                     {
                         contestStatusMessage(contest)
+                    }
+
+                    {
+                        winnerAddress.length == 0?
+                            <></>
+                        :
+                            !winnerUser?
+                                <span title={winnerAddress}>
+                                    WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
+                                        {`${winnerAddress.slice(0, 6)}...${winnerAddress.substring(winnerAddress.length-4,winnerAddress.length)}`}
+                                    </Link>
+                                </span>
+                            :
+                                <span title={winnerAddress}>
+                                    WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
+                                        {winnerUser.name}
+                                    </Link>
+                                </span>
                     }
                 </div>
             </div>

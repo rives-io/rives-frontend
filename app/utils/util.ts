@@ -5,12 +5,29 @@ import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridges, getOutputs } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
-import { CartridgeInfo, CartridgesOutput, CartridgesPayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+
+export async function getContestWinner(cartridge_id:string, rule:string):Promise<string|undefined> {
+    const tags = ["score",cartridge_id,rule];
+    const tapes:Array<VerificationOutput> = (await getOutputs(
+        {
+            tags,
+            type: 'notice',
+            page_size: 1,
+            page: 1,
+            order_by: "value",
+            order_dir: "desc"
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
+  
+    if (tapes.length == 0) return undefined
+    return tapes[0].user_address
+}
 
 // time in seconds
 export function formatTime(time:number):string {
