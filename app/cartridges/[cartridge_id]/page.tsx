@@ -10,21 +10,23 @@ export async function generateMetadata({ params }: { params: { cartridge_id: str
     );
 
     const cartridgeCoverUrl = `https://app.rives.io/cartridges-img/${params.cartridge_id}`;
-    const desc = `RIVES - ${cartridge.name}`;
+    const title = `${cartridge.name} | RIVES`;
+    const desc = `Cartridge "${cartridge.name}"`;
 
     return {
+        title: title,
         openGraph: {
             images: [cartridgeCoverUrl], 
             siteName: 'rives.io',
-            title: 'RIVES',
-            description: desc,
+            title: title,
+            description: desc
         },
         twitter: {
             images: [cartridgeCoverUrl],
-            title: 'RIVES',
-            description: desc,
+            title: title,
             card: 'summary',
             creator: '@rives_io',
+            description: desc
         },
     }
 }

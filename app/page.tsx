@@ -154,12 +154,12 @@ export default async function Home() {
           </div>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Collected Cartridges</span>
+            <span className={`text-3xl pixelated-font`}>Total Cartridges Collected</span>
             <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
           </div>
 
           <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Collected Tapes</span>
+            <span className={`text-3xl pixelated-font`}>Total Tapes Collected</span>
             <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
           </div>
         </div>

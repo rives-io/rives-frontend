@@ -43,14 +43,22 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                 <div className='flex flex-wrap gap-4'>
                     <div className='flex flex-col'>
                         <h1 className={`pixelated-font text-5xl`}>{cartridge.name}</h1>
-                        <div>
-                            <span className='pixelated-font me-2'>By:</span>
-                            <Link href={`/profile/${cartridge.user_address}`}
-                            className='hover:underline text-rives-purple pixelated-font break-all'
-                            >
-                                {creator? creator.name:cartridge.user_address}
-                            </Link>
-                        </div>
+                        {
+                            !creator?
+                                <div>
+                                    <span className='pixelated-font me-2'>By:</span>
+                                    <Link href={`/profile/${cartridge.user_address}`}
+                                    className='hover:underline text-rives-purple pixelated-font break-all'
+                                    >
+                                        {cartridge.user_address}
+                                    </Link>
+                                </div>
+                            :
+                                <Link href={`/profile/${cartridge.user_address}`} className='flex items-center gap-2 w-fit hover:underline'>
+                                            <img width={48} height={48} src={creator.picture_url} className='rounded-full' alt='' />
+                                            <span title={cartridge.user_address}>{creator.name}</span>
+                                </Link>
+                        }
                         <div className='flex'>
                             <span className='pixelated-font me-2'>On:</span>
                             <div>{timeToDateUTCString(cartridge.created_at)}</div>

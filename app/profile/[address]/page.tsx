@@ -6,6 +6,29 @@ import TapeFeesManager from "@/app/components/TapeFeeManager";
 import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
 
 
+export async function generateMetadata({ params }: { params: { address: string } }) {
+    const userMap:Record<string, User> = JSON.parse(await getUsersByAddress([params.address]));
+    const twitterInfo = userMap[params.address.toLowerCase()];
+  
+    const title = twitterInfo? `${twitterInfo.name} | RIVES`:`${params.address.toLowerCase()} | RIVES`;
+    const desc = twitterInfo? `Profile "${twitterInfo.name}"`:`Profile "${params.address.toLowerCase()}"`;
+  
+    return {
+      title: title,
+      openGraph: {
+            siteName: 'rives.io',
+            title: title,
+            description: desc
+      },
+      twitter: {
+            title: title,
+            card: 'summary',
+            creator: '@rives_io',
+            description: desc
+      },
+    }
+}
+
 
 export default async function ProfilePage({ params }: { params: { address: string } }) {
     const userMap:Record<string, User> = JSON.parse(await getUsersByAddress([params.address]));

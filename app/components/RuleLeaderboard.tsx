@@ -195,7 +195,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
     if (tapePayloads.length == 0) {
         return (
             <div className='relative text-center'>
-                <span>No tapes!</span>
+                <span className='pixelated-font'>No tapes</span>
             </div>
         )
     }

@@ -3,8 +3,14 @@ import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/i
 import { cartridgeInfo, rules } from "../backend-libs/core/lib";
 import { Contest, getContestStatus } from "../utils/common";
 import ContestCard from "../components/ContestCard";
+import { Metadata } from "next";
 
 export const revalidate = 0 // revalidate always
+
+export const metadata: Metadata = {
+  title: 'Contests',
+  description: 'Contests',
+}
 
 interface RuleWithMetadata extends RuleInfo, Contest {}
 

@@ -16,26 +16,23 @@ export const revalidate = 30;
 export async function generateMetadata({ params }: { params: { tape_id: string } }) {
     const imageUrl = `${envClient.GIF_SERVER_URL}/images/${params.tape_id}`;
     const tapeName = await getTapeName(params.tape_id);
-    let desc = tapeName? `RIVES - ${tapeName}`:`RIVES - ${params.tape_id}`;
+    let title = tapeName? `${tapeName} | RIVES`:`${params.tape_id} | RIVES`;
+    const desc = tapeName? `Tape "${tapeName}"`:`Tape "${params.tape_id}"`;
 
     return {
+        title: title,
         openGraph: {
             images: [imageUrl], 
             siteName: 'rives.io',
-            title: 'RIVES',
-            description: desc,
+            title: title,
+            description: desc
         },
-        // icons: {
-        //     icon: imageUrl,
-        //     shortcut: imageUrl,
-        //     apple: imageUrl,
-        // },
         twitter: {
             images: [imageUrl], 
-            title: 'RIVES',
-            description: desc,
+            title: title,
             card: 'summary',
             creator: '@rives_io',
+            description: desc
         },
     }
 }
@@ -112,13 +109,13 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                 <div className='flex flex-col'>
                     <h2 className={`pixelated-font text-3xl`}>Overview</h2>
                     <div className="grid grid-cols-2 w-fit">
-                        <span className="text-gray-400">Cartrige: </span>
+                        <span className="text-gray-400">Cartrige</span>
                         <Link className='text-rives-purple hover:underline' href={`/cartridges/${tapeCartridge.id}`}>{tapeCartridge.name}</Link>
 
-                        <span className="text-gray-400">Date:</span>
+                        <span className="text-gray-400">Date</span>
                         <span>{timeToDateUTCString(tape._timestamp)}</span>
 
-                        <span className="text-gray-400">Rule:</span>
+                        <span className="text-gray-400">Rule</span>
                         {contest.name}
 
                         <span className="text-gray-400">Score</span>

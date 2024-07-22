@@ -5,8 +5,12 @@ import Footer from './components/Footer';
 import PrivyProviders from './utils/privyProvider';
 
 export const metadata: Metadata = {
-  title: 'RIVES',
-  description: 'RiscV Verifiable Entertainment System',
+  title: {
+    template: "%s | RIVES",
+    default: "RIVES"
+  },
+  description: 'RISC-V Verifiable Entertainment System',
+
 }
 
 export default function RootLayout({
