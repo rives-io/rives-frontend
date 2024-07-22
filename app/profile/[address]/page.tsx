@@ -8,20 +8,22 @@ import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
 
 export async function generateMetadata({ params }: { params: { address: string } }) {
     const userMap:Record<string, User> = JSON.parse(await getUsersByAddress([params.address]));
-    const twitterInfo = userMap[params.address.toLowerCase()];
+
+    const profileAddr = params.address.toLowerCase();
+    const twitterInfo = userMap[profileAddr];
   
-    const title = twitterInfo? `${twitterInfo.name} | RIVES`:`${params.address.toLowerCase()} | RIVES`;
-    const desc = twitterInfo? `Profile "${twitterInfo.name}"`:`Profile "${params.address.toLowerCase()}"`;
+    const shareTitle = twitterInfo? `${twitterInfo.name} | RIVES`:`${profileAddr} | RIVES`;
+    const desc = twitterInfo? `Profile "${twitterInfo.name}"`:`Profile "${profileAddr}"`;
   
     return {
-      title: title,
+      title: twitterInfo? twitterInfo.name:profileAddr,
       openGraph: {
             siteName: 'rives.io',
-            title: title,
+            title: shareTitle,
             description: desc
       },
       twitter: {
-            title: title,
+            title: shareTitle,
             card: 'summary',
             creator: '@rives_io',
             description: desc

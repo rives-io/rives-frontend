@@ -15,18 +15,18 @@ export const revalidate = 0 // revalidate always
 export async function generateMetadata({ params }: { params: { contest_id: string } }) {
   const contest = await getRule(params.contest_id);
 
-  const title = `${contest?.name} | RIVES`;
+  const sharetitle = `${contest?.name} | RIVES`;
   const desc = `Contest "${contest?.name}"`;
 
   return {
-    title: title,
+    title: contest?.name,
     openGraph: {
         siteName: 'rives.io',
-        title: title,
+        title: sharetitle,
         description: desc
     },
     twitter: {
-        title: title,
+        title: sharetitle,
         card: 'summary',
         creator: '@rives_io',
         description: desc
