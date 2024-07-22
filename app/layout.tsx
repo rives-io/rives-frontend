@@ -3,8 +3,11 @@ import './globals.css'
 import Navbar from '@/app/components/Navbar';
 import Footer from './components/Footer';
 import PrivyProviders from './utils/privyProvider';
+import { envClient } from './utils/clientEnv';
+
 
 export const metadata: Metadata = {
+  metadataBase: new URL(envClient.DEPLOYMENT_URL),
   title: {
     template: "%s | RIVES",
     default: "RIVES"

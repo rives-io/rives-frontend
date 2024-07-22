@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: { cartridge_id: str
         {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     );
 
-    const cartridgeCoverUrl = `https://app.rives.io/cartridges-img/${params.cartridge_id}`;
+    const cartridgeCoverUrl = `/cartridges-img/${params.cartridge_id}`;
     const shareTitle = `${cartridge.name} | RIVES`;
     const desc = `Cartridge "${cartridge.name}"`;
 
