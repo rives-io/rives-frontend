@@ -139,11 +139,16 @@ export default async function Contest({ params }: { params: { contest_id: string
               }
             </div>
 
-            
-            <Link href={`/play/rule/${contest.id}`} className="bg-rives-purple pixelated-font justify-self-end h-fit text-center py-2 w-full md:w-2/3 hover:scale-110"
-              style={{pointerEvents: contestIsOpen ? "auto":"none"}}>
-              PLAY
-            </Link>
+            {
+              !contestIsOpen?
+                <></>
+              :
+                <Link href={`/play/rule/${contest.id}`}
+                className="bg-rives-purple pixelated-font justify-self-end h-fit text-center py-2 w-full md:w-2/3 hover:scale-110"
+                >
+                  PLAY
+                </Link>
+            }
           </div>
         </div>
 
@@ -202,67 +207,4 @@ export default async function Contest({ params }: { params: { contest_id: string
       </div>
     </main>
   );
-
-  // return (
-  //     <main className="flex justify-center h-svh">
-  //       <section className="w-full flex flex-col space-y-8 max-w-5xl h-2/3">
-  //         <div className="bg-gray-400 grid grid-cols-9 gap-2 justify-between p-4">
-            
-  //           <div className="flex col-span-1 justify-center items-center">
-  //             <Image alt={"Cover " + game.name}
-  //               id="canvas-cover"
-  //               width={120}
-  //               height={120}
-  //               objectFit='contain'
-  //               style={{
-  //                   imageRendering: "pixelated",
-  //               }}
-  //               src={game.cover? `data:image/png;base64,${game.cover}`:"/logo.png"}
-  //               />
-  //           </div>
-  //           <div className="flex flex-col col-span-4 relative justify-center">
-  //             <span className="text-2xl">{contest.name}</span>
-  //             {contest.start && contest.end ? <span title={new Date(contest.start*1000).toLocaleString() + " until " + new Date((contest.end*1000)).toLocaleString()} className="text-[10px] opacity-60">ends {new Date((contest.end*1000)).toLocaleDateString()}</span> : <></>}
-  //             {/* <span className={"absolute bottom-0 right-0 " }>{ContestStatus[getContestStatus(contest)]}</span> */}
-  //           </div>
-
-  //           <div className="flex flex-col col-span-3 justify-center">
-  //             {/* <span>Game: {game.name}</span> */}
-  //             <span>Prize: {contestMetadata.prize}</span>
-  //             <span>Tapes: {contest.n_tapes}</span>
-  //             <span title={contestMetadata.winner}>Winner: {contestMetadata.winner? contestMetadata.winner?.substring(0,6)+"..."+contestMetadata.winner?.substring(contestMetadata.winner?.length-4,contestMetadata.winner?.length): "TBA"}</span>
-  //             <span>Status: {getContestStatusMessage(status)}</span>
-  //           </div>
-
-  //           <div className="flex col-span-1 justify-right items-center">
-  //             <Link href={`/play/rule/${contest.id}`} className="btn"
-  //               style={{
-  //                 pointerEvents: contestIsOpen ? "auto":"none",
-  //                 height:"50px"
-  //               }}>
-  //               PLAY
-  //             </Link>
-  //           </div>
-
-  //         </div>
-
-  //         {
-  //           status != ContestStatus.VALIDATED?
-  //             <div className="text-white flex space-x-1 items-center justify-center">
-  //               <ReportIcon className="text-yellow-500 text-3xl" />
-  //               <span className="text-sm text-center">
-  //                 Scores will be available after the contest ends.
-  //               </span>
-  //               <ReportIcon className="text-yellow-500 text-3xl" />
-  //             </div>
-  //           :
-  //             <></>
-  //         }
-
-  //         <div className="flex h-full">
-  //           <ContestInfo contest={contest} status={status}></ContestInfo>
-  //         </div>
-  //       </section>
-  //     </main>
-  //   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { Contest, ContestStatus, getContestStatus } from "../utils/common";
+import { ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
 import { formatTime, getContestWinner } from "../utils/util";
@@ -23,11 +23,8 @@ function contestStatusMessage(contest:RuleInfo) {
     }
   }
 
-export interface ContestCardInfo extends RuleInfo, Contest {
-    rank?:number // user rank
-}
 
-export default function ContestCard({contest, cartridge}:{contest:ContestCardInfo, cartridge:CartridgeInfo}) {
+export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeInfo}) {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [winnerUser, setWinnerUser] = useState<User|null>(null);
     const isContest = contest.start && contest.end;

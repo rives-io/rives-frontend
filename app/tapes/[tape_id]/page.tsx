@@ -22,8 +22,7 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
     return {
         title: title,
         openGraph: {
-            images: [imageUrl], 
-            siteName: 'rives.io',
+            images: [imageUrl],
             title: title,
             description: desc
         },
@@ -125,7 +124,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
 
                 <div className='flex justify-center'>
-                    <ContestCard contest={{...contest, prize: ""}} cartridge={tapeCartridge} />
+                    <ContestCard contest={contest} cartridge={tapeCartridge} />
                 </div>
             </div>
         </main>
