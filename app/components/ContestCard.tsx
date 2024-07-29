@@ -23,12 +23,15 @@ function contestStatusMessage(contest:RuleInfo) {
     }
   }
 
+export interface CartridgeWithUser extends CartridgeInfo {
+    user?:User|null
+}
 
-export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeInfo}) {
+export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeWithUser}) {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [winnerUser, setWinnerUser] = useState<User|null>(null);
     const isContest = contest.start && contest.end;
-    const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} />;
+    const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
 
     const status = getContestStatus(contest);
 

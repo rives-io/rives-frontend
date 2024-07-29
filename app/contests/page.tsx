@@ -4,6 +4,7 @@ import { cartridgeInfo, rules } from "../backend-libs/core/lib";
 import { Contest, getContestStatus } from "../utils/common";
 import ContestCard from "../components/ContestCard";
 import { Metadata } from "next";
+import { getUsersByAddress, User } from "../utils/privyApi";
 
 export const revalidate = 0 // revalidate always
 
@@ -47,6 +48,7 @@ export default async function Contests() {
   });
 
   let cartridgeInfoMap:Record<string, CartridgeInfo> = {};
+  let userAddresses:Set<string> = new Set();
   
   if (contests.length == 0) {
     return (
@@ -65,9 +67,11 @@ export default async function Contests() {
       );
 
       cartridgeInfoMap[cartridge.id] = cartridge;
+      userAddresses.add(cartridge.user_address);
     }
   }
 
+  const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
   return (
     <main>
@@ -76,8 +80,12 @@ export default async function Contests() {
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
+
+              const cartridgeCreatorAddr = cartridgeInfoMap[contest.cartridge_id].user_address.toLowerCase();
+              const cartridgeCreatorUser = userMap[cartridgeCreatorAddr] || null;
               return (
-                <ContestCard key={index} contest={contest} cartridge={cartridgeInfoMap[contest.cartridge_id]} />
+                <ContestCard key={index} contest={contest} 
+                cartridge={{...cartridgeInfoMap[contest.cartridge_id], user: cartridgeCreatorUser}} />
               )
             })
           }

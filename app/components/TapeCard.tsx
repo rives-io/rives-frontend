@@ -22,7 +22,7 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|TapePreview}) {
+export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayload|TapePreview, creator?:User|null}) {
     let tape:VerifyPayload|TapePreview;
 
     if (typeof tapeInput == "string") {
@@ -73,14 +73,18 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
 
     useEffect(() => {
         if (!playerName) {
-            getUsersByAddress([userAddress]).then((userMapString) => {
-                const userMap:Record<string,User> = JSON.parse(userMapString);
-                const user = userMap[userAddress];
-    
-                if (user) {
-                    setPlayerName(user.name);
-                }
-            });
+            if (creator) {
+                setPlayerName(creator.name);
+            } else if (typeof creator === "undefined") {
+                getUsersByAddress([userAddress]).then((userMapString) => {
+                    const userMap:Record<string,User> = JSON.parse(userMapString);
+                    const user = userMap[userAddress];
+        
+                    if (user) {
+                        setPlayerName(user.name);
+                    }
+                });    
+            }
         }
         if (!(tape as TapePreview).title) {
             getTapeName(tapeId).then((tapeName) => {

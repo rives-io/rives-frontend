@@ -3,16 +3,17 @@
 
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getTapes } from "../utils/util";
+import { getTapes, getUsersFromTapes } from "../utils/util";
 import { VerifyPayload } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
 import Loading from "./Loading";
 import { getUserTapes } from "../utils/assets";
+import { User } from "../utils/privyApi";
 
 
-export default function UserTapes({address}:{address:string}) {
+export default function UserTapes({address, twitterInfo}:{address:string, twitterInfo:User}) {
     const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayload>>>([]);
     const [tapesCreatedPage, setTapesCreatedPage] = useState(0);
     
@@ -35,6 +36,8 @@ export default function UserTapes({address}:{address:string}) {
     
     const disableNextTapesCreatedPage = tapesCreatedPage == totalTapesCreatedPages;
     const disableNextTapesCollectedPage = tapesCollectedPage == totalTapesCollectedPages;
+
+    const [userMap, setUserMap] = useState<Record<string, User>>({});
 
     const TapesCreatedByProfile = async () => {
         if (tapesCreated[tapesCreatedPageToLoad-1]) {
@@ -101,6 +104,10 @@ export default function UserTapes({address}:{address:string}) {
             
             tapes.push(res.data[0])
         }
+
+        const newUserMap:Record<string, User> = await getUsersFromTapes(tapes, userMap);
+        if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
+
         // const res:DecodedIndexerOutput = await getTapes(
         //     {
         //         tapeIds: tapesCollectedList, 
@@ -166,7 +173,7 @@ export default function UserTapes({address}:{address:string}) {
                                 {
                                     tapesCreated[tapesCreatedPage-1]?.map((tape, index) => {
                                         return (
-                                            <TapeCard key={`${tapesCreatedPage}-${index}`} tapeInput={tape} />
+                                            <TapeCard key={`${tapesCreatedPage}-${index}`} tapeInput={tape} creator={twitterInfo? twitterInfo:null} />
                                         )
                                     })
                                 }
@@ -209,7 +216,7 @@ export default function UserTapes({address}:{address:string}) {
                             {
                                 tapesCollect[tapesCollectedPage-1]?.map((tape, index) => {
                                     return (
-                                        <TapeCard key={`${tapesCollectedPage}-${index}`} tapeInput={tape} />
+                                        <TapeCard key={`${tapesCollectedPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
                                     )
                                 })
                             }

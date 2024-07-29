@@ -2,7 +2,7 @@
 
 
 import { useEffect, useState } from "react";
-import { getCartridges } from "../utils/util";
+import { getCartridges, getUsersFromCartridges } from "../utils/util";
 import { CartridgeInfo } from "../backend-libs/core/ifaces";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -10,9 +10,10 @@ import CartridgeCard from "./CartridgeCard";
 import Loading from "./Loading";
 import { getUserCartridges } from "../utils/assets";
 import { CartridgesOutput } from "../backend-libs/core/ifaces";
+import { User } from "../utils/privyApi";
 
 
-export default function UserCartridges({address}:{address:string}) {
+export default function UserCartridges({address, twitterInfo}:{address:string, twitterInfo:User}) {
     const [cartridgesCreated, setCartridgesCreated] = useState<Array<Array<CartridgeInfo>>>([]);
     const [cartridgesCreatedPage, setCartridgesCreatedPage] = useState(0);
     
@@ -35,6 +36,9 @@ export default function UserCartridges({address}:{address:string}) {
 
     const disableNextCartridgesCreatedPage = cartridgesCreatedPage == totalCartridgesCreatedPages;
     const disableNextCartridgesCollectedPage = cartridgesCollectedPage == totalCartridgesCollectedPages;
+
+    const [userMap, setUserMap] = useState<Record<string, User>>({});
+
 
     const CartridgesCreatedByProfile = async () => {
         if (cartridgesCreated[cartridgesCreatedPageToLoad-1]) {
@@ -94,6 +98,9 @@ export default function UserCartridges({address}:{address:string}) {
                 getCover:true
             }
         )
+
+        const newUserMap:Record<string, User> = await getUsersFromCartridges(res.data, userMap);
+        if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
     
         const new_total_pages = Math.ceil(res.total / page_size);
         if (totalCartridgesCollectedPages != new_total_pages) setTotalCartridgesCollectedPages(new_total_pages);
@@ -147,7 +154,7 @@ export default function UserCartridges({address}:{address:string}) {
                                 {
                                     cartridgesCreated[cartridgesCreatedPage-1]?.map((cartridge, index) => {
                                         return (
-                                            <CartridgeCard key={`${cartridgesCreatedPage}-${index}`} cartridge={cartridge} />
+                                            <CartridgeCard key={`${cartridgesCreatedPage}-${index}`} cartridge={cartridge} creator={twitterInfo? twitterInfo:null} />
                                         )
                                     })
                                 }
@@ -192,7 +199,7 @@ export default function UserCartridges({address}:{address:string}) {
                             {
                                 cartridgesCollect[cartridgesCollectedPage-1]?.map((cartridge, index) => {
                                     return (
-                                        <CartridgeCard key={`${cartridgesCollectedPage}-${index}`} cartridge={cartridge} />
+                                        <CartridgeCard key={`${cartridgesCollectedPage}-${index}`} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null} />
                                     )
                                 })
                             }

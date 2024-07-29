@@ -49,7 +49,7 @@ export default async function ProfilePage({ params }: { params: { address: strin
             </div>
             
             <div className="w-full md:w-2/3 flex flex-col gap-2">
-                <ProfileNavigation address={params.address} />
+                <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
             </div>
 
         </main>

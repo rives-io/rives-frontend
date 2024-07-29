@@ -1,12 +1,14 @@
 "use client"
 
 
-import { cache, useContext, useEffect, useState } from 'react';
+import { cache, useEffect, useState } from 'react';
 import { cartridges as cartridgerequest} from "../backend-libs/core/lib";
 import { envClient } from '../utils/clientEnv';
 import CartridgeCard from './CartridgeCard';
 import { CartridgeInfo } from '../backend-libs/core/ifaces';
 import Loading from './Loading';
+import { User } from '../utils/privyApi';
+import { getUsersFromCartridges } from '../utils/util';
 
 
 
@@ -35,6 +37,7 @@ function CartridgesList() {
     const [cartridgesRequestOptions, setCartridgesRequestOptions] = useState<CartridgesRequest>(
         {currentPage: 1, pageSize: 12, atEnd: false, fetching: false}
     );
+    const [userMap, setUserMap] = useState<Record<string, User>>({});
 
 
     useEffect(() => {
@@ -56,6 +59,9 @@ function CartridgesList() {
             setCartridgesRequestOptions({...cartridgesRequestOptions, atEnd: true, fetching: false});
             return;
         }
+
+        const newUserMap:Record<string, User> = await getUsersFromCartridges(newCartridges, userMap);
+        if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
 
         if (cartridges) setCartridges([...cartridges, ...newCartridges]);
         else setCartridges(newCartridges);
@@ -85,7 +91,7 @@ function CartridgesList() {
                 cartridges?.map((cartridge: CartridgeInfo, index: number) => {
                     return (
                         <div key={index}>
-                            <CartridgeCard cartridge={cartridge} />
+                            <CartridgeCard cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null} />
                         </div>
                     );
                 })

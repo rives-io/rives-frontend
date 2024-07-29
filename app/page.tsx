@@ -3,12 +3,13 @@ import CartridgeCard from "./components/CartridgeCard";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import TapeCard from "./components/TapeCard";
 import { cartridgeInfo, rules } from "./backend-libs/core/lib";
-import { VerifyPayload } from "./backend-libs/core/ifaces";
+import { VerifyPayload } from "@/app/backend-libs/core/lib";
 import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
 import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
+import { getUsersByAddress, User } from "./utils/privyApi";
 
 export const revalidate = 0 // revalidate data always
 
@@ -64,6 +65,7 @@ export default async function Home() {
   let cartridges:Array<CartridgeInfo>;
   let tapes:Array<VerifyPayload>;
   let contests:Array<RuleInfo>;
+  let userAddresses:Set<string> = new Set();
   
   [cartridges, tapes, contests, total_collected_cartridges, total_collected_tapes] = await Promise.all(promises)
 
@@ -80,8 +82,21 @@ export default async function Home() {
 
     if (!cartridge) continue;
 
+    userAddresses.add(cartridge.user_address); // contest cartridge creator
     contestCartridges[contests[i].id] = cartridge;
   }
+
+  // users from cartridges
+  for (let cartridge of cartridges) {
+    userAddresses.add(cartridge.user_address);
+  }
+
+  // users from tapes
+  for (let tape of tapes) {
+    userAddresses.add(tape._msgSender);
+  }
+
+  const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
   return (
     <main className="px-4">
@@ -93,7 +108,7 @@ export default async function Home() {
         <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
           {
             cartridges.map((cartridge, index) => {
-              return <CartridgeCard key={index} cartridge={cartridge} />
+              return <CartridgeCard key={index} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null}/>
             })
           }
 
@@ -109,7 +124,7 @@ export default async function Home() {
         <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
           {
             tapes.map((tape, index) => {
-              return <TapeCard key={index} tapeInput={JSON.stringify(tape)} />
+              return <TapeCard key={index} tapeInput={JSON.stringify(tape)} creator={userMap[tape._msgSender.toLowerCase()] || null} />
             })
           }
         </div>
@@ -129,7 +144,11 @@ export default async function Home() {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full lg:w-[80%]'>
               {
                 contests.map((contest, index) => {
-                  return <ContestCard key={`${contest.id}-${index}`} contest={contest} cartridge={contestCartridges[contest.id]} />
+                  return <ContestCard 
+                  key={`${contest.id}-${index}`} 
+                  contest={contest} 
+                  cartridge={{...contestCartridges[contest.id], user: userMap[contestCartridges[contest.id].user_address.toLowerCase()]}} 
+                  />
                 })
               }
             </div>

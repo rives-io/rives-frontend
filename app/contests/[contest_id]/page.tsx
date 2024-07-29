@@ -76,6 +76,7 @@ async function getGameInfo(cartridge_id:string) {
 
 export default async function Contest({ params }: { params: { contest_id: string } }) {
   const contest_id = params.contest_id;
+  let userAddresses:Set<string> = new Set();
 
   const contestMetadata = getContest(contest_id);
 
@@ -90,28 +91,32 @@ export default async function Contest({ params }: { params: { contest_id: string
 
   let user = null as User|null;
   let winnerUser:User|null = null;
-  getUsersByAddress([contest.created_by]).then((userMapString) => {
-    const userMap:Record<string,User> = JSON.parse(userMapString);
-    user = userMap[contest.created_by.toLowerCase()];
-  })
+  userAddresses.add(contest.created_by);
+  const contestCreatorAddr = contest.created_by.toLowerCase();
 
-  const formatedContestCreator = `${contest.created_by.slice(0, 6)}...${contest.created_by.substring(contest.created_by.length-4,contest.created_by.length)}`;
+  const formatedContestCreator = `${contestCreatorAddr.slice(0, 6)}...${contestCreatorAddr.substring(contestCreatorAddr.length-4,contestCreatorAddr.length)}`;
   const status = getContestStatus(contest);
   const contestIsOpen = status == ContestStatus.IN_PROGRESS;
   const game = await getGameInfo(contest.cartridge_id);
   if (status == ContestStatus.VALIDATED) {
     contestMetadata.winner = await getContestWinner(contest.cartridge_id,contest_id);
     if (contestMetadata.winner) {
-      const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([contestMetadata.winner]));
-      winnerUser = userMap[contestMetadata.winner.toLowerCase()];
+      userAddresses.add(contestMetadata.winner);
     }
   }
+
+  const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
+  if (contestMetadata.winner && userMap[contestMetadata.winner.toLowerCase()]) {
+    winnerUser = userMap[contestMetadata.winner];
+  }
+
+  if (userMap[contestCreatorAddr]) user = userMap[contestCreatorAddr];
 
   return (
     <main className="flex justify-center">
       <div className="container">
         <div className="w-full flex flex-wrap items-center bg-black p-4 gap-2 md:gap-8 lg:gap-20">
-          <CartridgeCard cartridge={game} small={true} />
+          <CartridgeCard cartridge={game} small={true} creator={userMap[game.user_address.toLowerCase()] || null} />
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col">

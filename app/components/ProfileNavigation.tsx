@@ -5,9 +5,10 @@ import { Tab } from "@headlessui/react";
 import UserTapes from "./UserTapes";
 import UserContests from "./UserContests";
 import UserCartridges from "./UserCartridges";
+import { User } from "../utils/privyApi";
 
 
-export default function ProfileNavigation({address}:{address:string}) {
+export default function ProfileNavigation({address, twitterInfo}:{address:string, twitterInfo:User}) {
 
     return (
         <Tab.Group>
@@ -43,11 +44,11 @@ export default function ProfileNavigation({address}:{address:string}) {
                 </Tab.Panel> */}
 
                 <Tab.Panel className="flex flex-col gap-4">
-                    <UserTapes address={address} />
+                    <UserTapes address={address} twitterInfo={twitterInfo} />
                 </Tab.Panel>
 
                 <Tab.Panel className="">
-                    <UserCartridges address={address} />
+                    <UserCartridges address={address} twitterInfo={twitterInfo} />
                 </Tab.Panel>
 
                 <Tab.Panel className="">

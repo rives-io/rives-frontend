@@ -2,10 +2,11 @@ import { envClient } from "./clientEnv";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { cartridges, getOutputs } from "../backend-libs/core/lib";
+import { cartridges, getOutputs, VerifyPayload } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
+import { getUsersByAddress, User } from "./privyApi";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -376,4 +377,39 @@ export function extractTxError(msg:string):string {
     const m = msg.match(/(.*)\s\[/);
     if (m?.length && m.length >= 2) return m[1] as string;
     return "Error in transaction";
+}
+
+
+export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
+    let newUserAddresses:Set<string> = new Set();
+    for (let cartridge of cartridges) {
+        const userAddress = cartridge.user_address.toLowerCase();
+        if (!currUserMap[userAddress]) {
+            newUserAddresses.add(userAddress);
+        }
+    }
+
+    let newUserMap:Record<string, User> = {};
+    if (newUserAddresses.size > 0) {
+        newUserMap = JSON.parse(await getUsersByAddress(Array.from(newUserAddresses)));
+    }
+
+    return newUserMap;
+}
+
+export async function getUsersFromTapes(tapes:Array<VerifyPayload>, currUserMap:Record<string, User>) {
+    let newUserAddresses:Set<string> = new Set();
+    for (let tape of tapes) {
+        const userAddress = tape._msgSender.toLowerCase();
+        if (!currUserMap[userAddress]) {
+            newUserAddresses.add(userAddress);
+        }
+    }
+
+    let newUserMap:Record<string, User> = {};
+    if (newUserAddresses.size > 0) {
+        newUserMap = JSON.parse(await getUsersByAddress(Array.from(newUserAddresses)));
+    }
+
+    return newUserMap;
 }

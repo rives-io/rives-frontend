@@ -3,12 +3,13 @@
 
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getTapes } from "../utils/util";
+import { getTapes, getUsersFromTapes } from "../utils/util";
 import { VerifyPayload } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
 import Loading from "./Loading";
+import { User } from "../utils/privyApi";
 
 
 export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string, ruleId?:string}) {
@@ -24,6 +25,8 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
 
     const disablePrevPage = tapesPage == 1;
     const disableNextPage = tapesPage == totalTapesPages;
+
+    const [userMap, setUserMap] = useState<Record<string, User>>({});
 
     const tapesByCartridge = async () => {
         if (tapes[tapesPageToLoad-1]) {
@@ -48,7 +51,11 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
         const new_total_pages = Math.ceil(res.total / page_size);
         if (totalTapesPages != new_total_pages) setTotalTapesPages(new_total_pages);
 
-        setTapes([...tapes, res.data]);
+        const newTapes:Array<VerifyPayload> = res.data;
+        const newUserMap:Record<string, User> = await getUsersFromTapes(newTapes, userMap);
+        if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
+
+        setTapes([...tapes, newTapes]);
         setTapesPage(tapesPageToLoad);
         setLoading(false);
     }
@@ -102,7 +109,7 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
                             {
                                 tapes[tapesPage-1]?.map((tape, index) => {
                                     return (
-                                        <TapeCard key={`${tapesPage}-${index}`} tapeInput={tape} />
+                                        <TapeCard key={`${tapesPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
                                     )
                                 })
                             }
