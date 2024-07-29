@@ -1,4 +1,5 @@
 import { envClient } from "./clientEnv";
+import { ethers } from "ethers";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
@@ -315,4 +316,41 @@ export function extractTxError(msg:string):string {
     const m = msg.match(/(.*)\s\[/);
     if (m?.length && m.length >= 2) return m[1] as string;
     return "Error in transaction";
+}
+
+const CARTRIDGE_ID_BYTES = 6;
+const RULE_ID_BYTES = 20;
+const TAPE_ID_BYTES = 32;
+const TRUNCATED_TAPE_ID_BYTES = 12;
+
+export function cartridgeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*CARTRIDGE_ID_BYTES) : id.slice(0,2*CARTRIDGE_ID_BYTES);
+}
+
+export function ruleIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*RULE_ID_BYTES) : id.slice(0,2*RULE_ID_BYTES);
+}
+
+export function tapeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TAPE_ID_BYTES) : id.slice(0,2*TAPE_ID_BYTES);
+}
+
+export function truncateTapeHash(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TRUNCATED_TAPE_ID_BYTES) : id.slice(0,2*TRUNCATED_TAPE_ID_BYTES);
+}
+
+export function formatCartridgeIdToBytes(id: string): string {
+    return `0x${cartridgeIdFromBytes(id)}${'0'.repeat(2*(32-CARTRIDGE_ID_BYTES))}`;
+}
+
+export function formatRuleIdToBytes(id: string): string {
+    return `0x${ruleIdFromBytes(id)}${'0'.repeat(2*(32-RULE_ID_BYTES))}`;
+}
+
+export function formatTapeIdToBytes(id: string): string {
+    return `0x${tapeIdFromBytes(id)}${'0'.repeat(2*(32-TAPE_ID_BYTES))}`;
+}
+
+export function calculateTapeId(ruleId:string, log: Uint8Array): string {
+    return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
 }

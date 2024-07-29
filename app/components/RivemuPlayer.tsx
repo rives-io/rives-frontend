@@ -13,17 +13,35 @@ import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import FastForwardIcon from '@mui/icons-material/FastForward';
+import UploadIcon from '@mui/icons-material/Upload';
+import CloseIcon from '@mui/icons-material/Close';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import FormControl from '@mui/material/FormControl';
+import Input from '@mui/material/Input';
+import InputLabel from '@mui/material/InputLabel';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
+import Chip from '@mui/material/Chip';
+import TextField from '@mui/material/TextField';
 import { GIF_FRAME_FREQ, gameplayContext } from "../play/GameplayContextProvider";
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayload, cartridge, getOutputs, rules } from "../backend-libs/core/lib";
+import { VerificationOutput, VerifyPayload, cartridge, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { RuleInfo } from "../backend-libs/core/ifaces";
+import { FormatInCardPayload, InfoCartridge, RuleInfo } from "../backend-libs/core/ifaces";
 import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
+import { cartridgeIdFromBytes, ruleIdFromBytes } from "../utils/util";
 
+let canvasPlaying = false;
+
+const darkTheme = createTheme({
+    palette: {
+       mode: 'dark',
+    },
+});
 
 export interface TapeInfo {
     player?: string,
@@ -33,8 +51,8 @@ export interface TapeInfo {
 }
 
 
-const getCartridgeData = async (cartridgeId:string) => {
-    const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeId.slice(2): cartridgeId;
+const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
+    const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
     const data = await cartridge(
         {
             id:formatedCartridgeId
@@ -45,10 +63,18 @@ const getCartridgeData = async (cartridgeId:string) => {
             cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
-    
-    if (data.length === 0) throw new Error(`Cartridge ${formatedCartridgeId} not found!`);
-    
-    return data;
+    if (data.length > 0) return data;
+
+    const out:Array<Uint8Array> = (await getOutputs(
+        {
+            tags: ['cartridge','cartridge_data',cartridgeId],
+            type: 'report'
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    )).data;
+    if (out.length > 0) return out[0];
+
+    throw new Error(`Cartridge ${formatedCartridgeId} not found!`);
 }
 
 export function generateEntropy(userAddress?:String, ruleId?:String): string {
@@ -71,7 +97,8 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
     const formatedRuleId = ruleId;
     const data = await rules(
         {
-            id:formatedRuleId
+            id:formatedRuleId,
+            full:true
         },
         {
             decode:true,
@@ -135,6 +162,11 @@ function RivemuPlayer(
     const [paused, setPaused] = useState(false);
     const [speed, setSpeed] = useState(1.0);
     const [restarting, setRestarting] = useState(false);
+    const [inCard, setInCard] = useState<Uint8Array>();
+    const [tapeInCard, setTapeInCard] = useState<Uint8Array>();
+    const [usedTapes, setUsedTapes] = useState<string[]>();
+    const [ruleInCardHash, setRuleIncardHash] = useState<string>(sha256(""));
+    const incardFileRef = useRef<HTMLInputElement | null>(null);
 
     // signer
     const {user, ready} = usePrivy();
@@ -164,11 +196,39 @@ function RivemuPlayer(
         }
         document.addEventListener("visibilitychange", (event) => {
             if (document.visibilityState == "hidden") {
-                rivemuRef.current?.setSpeed(0);
-                setPaused(true);
+                if (canvasPlaying) {
+                    rivemuRef.current?.setSpeed(0);
+                    setPaused(true);
+                }
             }
           });
     }, []);
+
+    useEffect(() => {
+        if (!rule) {
+            return;
+        }
+        if (isTape && (!tapeInCard || !usedTapes)) {
+            setRuleIncardHash(sha256(""));
+            setUsedTapes(undefined);
+            return;
+        }
+
+        const inputData: FormatInCardPayload = {rule_id:rule.id};
+        if (tapeInCard && tapeInCard.length > 0) inputData.in_card = ethers.utils.hexlify(tapeInCard);
+        if (usedTapes && usedTapes.length > 0) inputData.tapes = usedTapes;
+        formatInCard(inputData,
+            {
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
+                decode:true,
+                decodeModel:"bytes",
+                method:"POST"
+        }).then(out => {
+            console.log("incard formatted",out)
+            setInCard(out);
+        });
+
+    }, [rule,tapeInCard,usedTapes]);
 
     const loadRule = (ruleId:string, currTapeInfo?: TapeInfo) => {
         setLoadingMessage("Loading rule");
@@ -188,7 +248,7 @@ function RivemuPlayer(
                 setLoadingMessage(undefined);
             });
 
-            if (tape_id && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(out)) > -1) {
+            if (tape_id) { //} && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(out)) > -1) {
                 getScore(tape_id).then((out) => setTapeInfo({...currTapeInfo,score:out}))
             }
         });
@@ -209,12 +269,15 @@ function RivemuPlayer(
             const currTapeInfo: TapeInfo = {player,timestamp,size};
 
             setTapeInfo({...tapeInfo,...{player,timestamp,size}});
-            setEntropy(generateEntropy(out._msgSender,out.rule_id.slice(2)));
+            setEntropy(generateEntropy(out._msgSender,ruleIdFromBytes(out.rule_id)));
             if (loadRuleFromTape) {
-                loadRule(out.rule_id.slice(2),currTapeInfo)
+                loadRule(ruleIdFromBytes(out.rule_id),currTapeInfo)
             } else {
                 setLoadingMessage(undefined);
             }
+
+            setUsedTapes(out.tapes);
+            setTapeInCard(out.in_card);
         });
     }
 
@@ -251,6 +314,32 @@ function RivemuPlayer(
     
     let decoder = new TextDecoder("utf-8");
 
+    const filter = createFilterOptions<string>();
+
+    async function uploadIncard() {
+        // replay({car});
+        incardFileRef.current?.click();
+    }
+
+    function handleOnChangeIncardUpload(e: any) {
+        const reader = new FileReader();
+        reader.onload = async (readerEvent) => {
+            if (playing.isPlaying) rivemuRef.current?.stop();
+            const data = readerEvent.target?.result as ArrayBuffer;
+            if (data) {
+                const incard = new Uint8Array(data);
+                setRuleIncardHash(sha256(incard));
+                setTapeInCard(incard);
+            }
+        };
+        reader.readAsArrayBuffer(e.target.files[0])
+    }
+    
+    async function cleanIncard() {
+        setTapeInCard(new Uint8Array([]));
+        setRuleIncardHash(sha256(""));
+        if (incardFileRef.current) incardFileRef.current.value = '';
+    }
     const rivemuOnFrame = function (
         outcard: ArrayBuffer,
         frame: number,
@@ -291,8 +380,9 @@ function RivemuPlayer(
         }
     };
 
-    const rivemuOnBegin = function (width: number, height: number, target_fps: number, total_frames: number) {
+    const rivemuOnBegin = function (width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array) {
         console.log("rivemu_on_begin");
+        canvasPlaying = true;
         setCurrScore(undefined);
         if (rule?.score_function) {
             setCurrScore(0);
@@ -315,6 +405,7 @@ function RivemuPlayer(
     ) {
         rivemuRef.current?.stop();
         console.log("rivemu_on_finish")
+        canvasPlaying = false;
         if (isTape && totalFrames && totalFrames != 0)
             setCurrProgress(100);
         if (!isTape && rule && signerAddress && !restarting) {
@@ -333,7 +424,9 @@ function RivemuPlayer(
                         hash: outhash
                     },
                     score,
-                    rule_id: rule.id
+                    rule_id: rule.id,
+                    tapes:usedTapes && usedTapes.length > 0 ? usedTapes.map((t,i)=>`0x${t}`) : undefined,
+                    in_card:tapeInCard
                 }
             );
             if (document.fullscreenElement) document.exitFullscreen();
@@ -486,7 +579,7 @@ function RivemuPlayer(
                     }
                         <Rivemu ref={rivemuRef} cartridge_data={cartridgeData} args={rule.args} entropy={entropy}
                             tape={tape?.tape && tape.tape.length > 0 && ethers.utils.arrayify(tape.tape)}
-                            in_card={rule.in_card && rule.in_card.length > 0 ? ethers.utils.arrayify(rule.in_card) : new Uint8Array([])} 
+                            in_card={inCard && inCard.length > 0 ? inCard : new Uint8Array([])} 
                             rivemu_on_frame={rivemuOnFrame} rivemu_on_begin={rivemuOnBegin} rivemu_on_finish={rivemuOnFinish}
                         />
                     </div>
@@ -504,7 +597,54 @@ function RivemuPlayer(
                     />
                     </Box>
                     </div>
-                : <></>}
+                : <div>
+                    <ThemeProvider theme={darkTheme}>
+                        <CssBaseline />
+                        <FormControl variant="standard" hidden={!rule.allow_in_card}>
+                            <InputLabel htmlFor="tape-incard">Tape Incard (Hash) <UploadIcon onClick={uploadIncard} className='cursor-pointer'/> <CloseIcon onClick={cleanIncard} className='cursor-pointer' /></InputLabel>
+                            <Input id="tape-incard" disabled value={ruleInCardHash || ""} 
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleIncardHash(e.target.value)} />
+                            <input type="file" ref={incardFileRef} onChange={(e) => handleOnChangeIncardUpload(e)} style={{ display: 'none' }}/>
+                        </FormControl>
+
+                        <Autocomplete
+                            hidden={!rule.allow_tapes}
+                            multiple
+                            value={usedTapes||[]}
+                            defaultValue={[]}
+                            id="tapes-standard"
+                            options={usedTapes||[]}
+                            getOptionLabel={(option) => option}
+                            isOptionEqualToValue={(option, value) => option === value}
+                            onChange={(event: any, newValue: string[] | null) => setUsedTapes(newValue||undefined)}
+                            filterOptions={(options, params) => {
+                                const filtered = filter(options, params);
+
+                                const { inputValue } = params;
+                                // Suggest the creation of a new value
+                                const isExisting = options.some((option) => inputValue === option);
+                                if (inputValue !== '' && !isExisting) {
+                                    filtered.push(inputValue);
+                                }
+
+                                return filtered;
+                            }}
+                            renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                variant="standard"
+                                label="Tapes"
+                            />
+                            )}
+                            renderTags={(tagValue, getTagProps) => {
+                            return tagValue.map((option, index) => (
+                                <Chip {...getTagProps({ index })} key={option} label={option} />
+                            ))
+                            }}
+                        />
+
+                    </ThemeProvider>
+                </div>}
         </section>
     )
 }

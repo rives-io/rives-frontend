@@ -10,9 +10,10 @@ export default async function Cartridge({ params }: { params: { cartridge_id: st
     );
 
     const cartridgeRules:RuleInfo[] = (await rules(
-        {cartridge_id: cartridge.id},
+        {cartridge_id: cartridge.last_version},
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}
     )).data;
+    console.log("rules",cartridgeRules)
 
 
     return (

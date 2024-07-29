@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import { useState, useEffect, useRef } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -28,11 +29,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge } from "../backend-libs/core/lib";
+import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge, transferCartridge, formatInCard } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { CartridgeInfo, RuleInfo, InfoCartridge, RuleData, InsertCartridgePayload, RemoveCartridgePayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, RuleInfo, InfoCartridge, RuleData, InsertCartridgePayload, RemoveCartridgePayload, TransferCartridgePayload, CartridgesPayload, FormatInCardPayload } from "../backend-libs/core/ifaces";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
+import { cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
 
 const darkTheme = createTheme({
     palette: {
@@ -48,10 +50,26 @@ export interface TapeInfo {
 }
 
 
-const getCartridges = async ():Promise<CartridgeInfo[]> => {
-    const out: CartridgesOutput = await cartridges(
+const getCartridgeInfo = async (id: string):Promise<CartridgeInfo> => {
+    const out: CartridgeInfo = await cartridgeInfo(
+        {id},
         {
-        },
+            decode:true,
+            decodeModel:"CartridgeInfo",
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
+        }
+    );
+    return out;
+}
+
+const getCartridges = async (ids?: string[]):Promise<CartridgeInfo[]> => {
+    let inputData: CartridgesPayload = {};
+    if (ids && ids.length > 0) {
+        inputData.ids = ids;
+        inputData.enable_non_primary = true;
+    }
+    const out: CartridgesOutput = await cartridges(
+        inputData,
         {
             decode:true,
             decodeModel:"CartridgesOutput",
@@ -64,7 +82,7 @@ const getCartridges = async ():Promise<CartridgeInfo[]> => {
 }
 
 const getCartridgeData = async (cartridgeId:string):Promise<Uint8Array> => {
-    const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeId.slice(2): cartridgeId;
+    const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
     const data = await cartridge(
         {
             id:formatedCartridgeId
@@ -101,7 +119,8 @@ const getRules = async (cartridge_id:string):Promise<RuleInfo[]> => {
     if (!cartridge_id) return [];
     const data = await rules(
         {
-            cartridge_id
+            cartridge_id,
+            full:true
         },
         {
             decode:true,
@@ -134,6 +153,7 @@ function RivemuEditor() {
     const [rulesComboOpen, setRulesComboOpen] = useState(false);
     const [storedCartridge, setStoredCartridge] = useState(false);
     const [ruleInCard, setRuleIncard] = useState<Uint8Array>();
+    const [finalInCard, setFinalIncard] = useState<Uint8Array>();
     const [ruleInCardHash, setRuleIncardHash] = useState<string>();
     const [ruleArgs, setRuleArgs] = useState<string>();
     const [ruleScoreFunction, setRuleScoreFunction] = useState<string>();
@@ -149,6 +169,16 @@ function RivemuEditor() {
     const [showCartridgeInfo, setShowCartridgeInfo] = useState(false);
     const [infoCartridge, setInfoCartridge] = useState<InfoCartridge>();
     const [restarting, setRestarting] = useState(false);
+    const [ruleTapes, setRuleTapes] = useState<string[]>();
+    const [ruleAllowTapes, setRuleAllowTapes] = useState(false);
+    const [ruleAllowIncard, setRuleAllowIncard] = useState(false);
+    const [ruleSaveOutcard, setRuleSaveOutcard] = useState(false);
+    const [ruleSaveTapes, setRuleSaveTapes] = useState(false);
+    const [manageCartridge, setManageCartridge] = useState(false);
+    const [newUserAddress, setNewUserAddress] = useState<string>();
+    const [cartridgeVersions, setCartridgeVersions] = useState<readonly CartridgeInfo[]>([])
+    const [versionsComboOpen, setVersionsComboOpen] = useState(false);
+    const [versionSelected, setVersionSelected] = useState<CartridgeInfo|null>();
 
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
 
@@ -202,6 +232,11 @@ function RivemuEditor() {
         setRuleIncardHash(sha256(incard));
         setRuleStart(rule?.start && rule.start > 0 ? dayjs.unix(rule.start) : undefined);
         setRuleEnd(rule?.end && rule.end > 0 ? dayjs.unix(rule.end) : undefined);
+        if (rule?.allow_in_card != undefined) setRuleAllowIncard(rule.allow_in_card);
+        if (rule?.allow_tapes != undefined) setRuleAllowTapes(rule.allow_tapes);
+        if (rule?.save_tapes != undefined) setRuleSaveTapes(rule.save_tapes);
+        if (rule?.save_out_cards != undefined) setRuleSaveOutcard(rule.save_out_cards);
+        setRuleTapes(rule?.tapes)
         getRuleTags(
             {
                 cartridge_id: rule?.cartridge_id
@@ -224,8 +259,21 @@ function RivemuEditor() {
     }, [playing.isPlaying,playing.isReplay,tape]);
 
     useEffect(() => {
-        setInfoCartridge({name:"test",tags:[]});
-    }, [cartridgeData]);
+        const inputData: FormatInCardPayload = {};
+        if (selectedCartridge && storedCartridge) inputData.cartridge_id = selectedCartridge.id;
+        if (ruleInCard && ruleInCard.length > 0) inputData.in_card = ethers.utils.hexlify(ruleInCard);
+        if (ruleTapes && ruleTapes.length > 0) inputData.tapes = ruleTapes;
+        formatInCard(inputData,
+            {
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
+                decode:true,
+                decodeModel:"bytes",
+                method:"POST"
+        }).then(out => {
+            setFinalIncard(out);
+        });
+
+    }, [ruleInCard,selectedCartridge,storedCartridge,ruleTapes]);
 
     const loadCartridgeList = () => {
         if (cartridgeList && cartridgeList.length > 0) return;
@@ -241,22 +289,28 @@ function RivemuEditor() {
         });
     }
 
-    const selectCartridge = (newCartridge: CartridgeInfo|null) => {
-        setSelectedCartridge(newCartridge);
+    const selectCartridge = (selCart: CartridgeInfo|null) => {
         setRuleList([]);
         setRule(undefined);
         setTape(new Uint8Array([]));
         setOutcard(undefined);
-        if (playing.isPlaying) rivemuRef.current?.stop();
-        if (newCartridge) {
-            setStoredCartridge(false);
-            getCartridgeData(newCartridge.id).then((data) => {
-                setCartridgeData(data);
-                setStoredCartridge(true);
-            });
-        } else {
-            setCartridgeData(undefined);
-        }
+        if (selCart) getCartridgeInfo(selCart.id).then(newCartridge => {
+            setSelectedCartridge(newCartridge);
+            if (playing.isPlaying) rivemuRef.current?.stop();
+            if (newCartridge && newCartridge.last_version) {
+                setStoredCartridge(false);
+                getCartridgeData(newCartridge.last_version).then((data) => {
+                    setCartridgeData(data);
+                    setStoredCartridge(true);
+                });
+                if (newCartridge.versions) {
+                    getCartridges(newCartridge.versions).then(data => setCartridgeVersions(data));
+                }
+            } else {
+                setCartridgeData(undefined);
+            }
+        });
+        else setSelectedCartridge(null);
     }
 
     const selectRule = (newRule: RuleInfo|null) => {
@@ -270,9 +324,13 @@ function RivemuEditor() {
     }
 
     function handleOnChangeCartridgeUpload(e: any) {
+        changeCartridgeUpload(e.target.files[0]);
+    }
+    function changeCartridgeUpload(f: any) {
+        
         const reader = new FileReader();
         reader.onload = async (readerEvent) => {
-            if (playing.isPlaying) rivemuRef.current?.stop();
+            rivemuRef.current?.stop();
             setRuleList([]);
             setRule(undefined);
             setTape(new Uint8Array([]));
@@ -285,9 +343,13 @@ function RivemuEditor() {
                 setCartridgeData(new Uint8Array(data as ArrayBuffer));
             }
         };
-        reader.readAsArrayBuffer(e.target.files[0])
+        reader.readAsArrayBuffer(f)
     }
     
+    const handleCartridgeDrop = (e: any) => {
+        e.preventDefault();
+        changeCartridgeUpload(e.dataTransfer.files[0]);
+    };
 
     async function uploadIncard() {
         // replay({car});
@@ -344,8 +406,19 @@ function RivemuEditor() {
         }
     };
 
-    const rivemuOnBegin = function (width: number, height: number, target_fps: number, total_frames: number) {
+    const rivemuOnBegin = function (width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array) {
         console.log("rivemu_on_begin");
+        
+        let info: InfoCartridge|undefined;
+        if (info_data.length > 0) {
+            try {
+                let textDecoder = new TextDecoder();
+                info = JSON.parse(textDecoder.decode(info_data));
+            } catch(e) {
+                console.warn("Failed to parse cartridge info.json:", e);
+            }
+        }
+        setInfoCartridge(info);
         setCurrScore(undefined);
         setOutcard(undefined);
         if (rule?.score_function) {
@@ -431,13 +504,12 @@ function RivemuEditor() {
         }
         
         const out: CartridgeInfo = await cartridgeInfo(
-            {id:sha256(cartridgeData)},
+            {id:sha256(cartridgeData)}, // TODO: Fix name here
             {
                 decode:true,
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
-        console.log(out)
 
         if (out) {
             setErrorFeedback({message:"Cartridge already inserted", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
@@ -464,6 +536,8 @@ function RivemuEditor() {
         }
         try {
             await insertCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            setStoredCartridge(true);
+            setInfoCartridge(undefined);
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
@@ -476,10 +550,10 @@ function RivemuEditor() {
     async function sendRule() {
 
         if (!cartridgeData) {
-            setErrorFeedback({message:"No rule name", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            setErrorFeedback({message:"No cartridge selected", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
-        const cartridgeId = sha256(cartridgeData);
+        const cartridgeId = cartridgeIdFromBytes(ethers.utils.keccak256(cartridgeData)); // TODO: Fix name here
         const out: CartridgeInfo = await cartridgeInfo(
             {id:cartridgeId},
             {
@@ -526,11 +600,11 @@ function RivemuEditor() {
             return;
         }
 
-        // submit the gameplay
+        // submit rule
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: RuleData = {
-            cartridge_id:"0x"+cartridgeId,
+            cartridge_id:formatCartridgeIdToBytes(cartridgeId),
             name:ruleName,
             description:ruleDescription||"",
             args:ruleArgs||"",
@@ -538,7 +612,12 @@ function RivemuEditor() {
             in_card:ethers.utils.hexlify(ruleInCard||new Uint8Array([])),
             start:ruleStart?.unix() || 0,
             end:ruleEnd?.unix() || 0,
-            tags:ruleTags||[]
+            tags:ruleTags||[],
+            tapes:ruleTapes && ruleTapes.length > 0 ? ruleTapes.map( (t,i) =>t.startsWith('0x') ? t : `0x${t}`) : [],
+            allow_in_card:ruleAllowIncard||false,
+            allow_tapes:ruleAllowTapes||false,
+            save_out_cards:ruleSaveOutcard||false,
+            save_tapes:ruleSaveTapes||false
         }
         try {
             await createRule(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
@@ -563,6 +642,11 @@ function RivemuEditor() {
             return;
         }
 
+        if (!versionSelected) {
+            setErrorFeedback({message:"No version selected", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+
         const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
             setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
@@ -570,7 +654,7 @@ function RivemuEditor() {
         }
 
         if (wallet.address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
-            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            setErrorFeedback({message:"Not owner of the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -578,10 +662,60 @@ function RivemuEditor() {
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
 
         const inputData: RemoveCartridgePayload = {
-            id: selectedCartridge.id
+            id: formatCartridgeIdToBytes(versionSelected.id)
         }
         try {
             await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            selectCartridge(null);
+            setVersionSelected(null);
+        } catch (error) {
+            console.log(error)
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+    }
+
+    async function sendTransferCartridge() {
+
+        if (!storedCartridge) {
+            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+        
+        if (!selectedCartridge) {
+            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+
+        if (!newUserAddress) {
+            setErrorFeedback({message:"No new user address", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) {
+            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+
+        if (wallet.address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
+            setErrorFeedback({message:"Not owner of the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
+
+        const inputData: TransferCartridgePayload = {
+            id: formatCartridgeIdToBytes(selectedCartridge.id),
+            new_user_address:newUserAddress
+        }
+        try {
+            await transferCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            selectCartridge(null);
+            setNewUserAddress(undefined);
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
@@ -594,7 +728,7 @@ function RivemuEditor() {
     return (
         <ThemeProvider theme={darkTheme}>
         <CssBaseline />
-            <main className="flex items-center flex-wrap justify-center h-[calc(100vh-8rem)] gap-2 overflow-auto absolute top-16 botom-16 w-full">
+            <div className="flex items-center flex-wrap justify-center h-[calc(100vh-13rem)] gap-2 overflow-auto absolute top-16 w-full">
                 <div className="grid grid-cols-1 place-items-center">
                     <div className='grid grid-cols-3 bg-gray-500 p-2 w-full'>
                         <div className="flex justify-start gap-2">
@@ -660,16 +794,31 @@ function RivemuEditor() {
                         </div>
 
                     </div>
-                    <div className='relative gameplay-screen' >
+                    <div className='relative gameplay-screen' 
+                        onDrop={handleCartridgeDrop}
+                        onDragOver={(event) => event.preventDefault()}
+                    >
                         { !cartridgeData?
                             <div className={'absolute gameplay-screen text-white t-0 border border-gray-500 flex items-center justify-center'}>
-                                <span>Select/upload cartridge</span>
+                                <span>Select/Drop cartridge</span>
                             </div>
                         : <></> }
-                        <div hidden={!cartridgeData}  className={'absolute t-0'}>
+                        <div hidden={!cartridgeData}  className={'absolute t-0 relative'}>
+
+                            { !playing.isPlaying?
+                                <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={record}
+                                title="Record">
+                                    <PlayArrowIcon className='text-7xl'/>
+                                </button>
+                            : (paused ?     
+                                <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
+                                    <PlayArrowIcon className='text-7xl' />
+                                </button>
+                            : <></>)
+                            }
                             <Rivemu ref={rivemuRef} cartridge_data={cartridgeData} args={ruleArgs} entropy={entropy}
                                 tape={tape}
-                                in_card={ruleInCard ? ruleInCard : new Uint8Array([])} 
+                                in_card={finalInCard ? finalInCard : new Uint8Array([])} 
                                 rivemu_on_frame={rivemuOnFrame} rivemu_on_begin={rivemuOnBegin} rivemu_on_finish={rivemuOnFinish}
                             />
                         </div>
@@ -687,6 +836,7 @@ function RivemuEditor() {
                         open={cartridgesComboOpen}
                         onOpen={() => setCartridgesComboOpen(true)}
                         onClose={() => setCartridgesComboOpen(false)}
+                        isOptionEqualToValue={(a,b) => a.id.toLowerCase() == b.id.toLowerCase()}
                         getOptionLabel={(option: CartridgeInfo) => option?.name}
                         renderInput={(params) => (
                             <TextField {...params} label="Cartridge" variant="standard"/>
@@ -701,13 +851,14 @@ function RivemuEditor() {
                         onChange={(event: any, newValue: RuleInfo | null) => selectRule(newValue)}
                         onOpen={() => setRulesComboOpen(true)}
                         onClose={() => setRulesComboOpen(false)}
+                        isOptionEqualToValue={(a,b) => a.id.toLowerCase() == b.id.toLowerCase()}
                         getOptionLabel={(option: RuleInfo) => option.name}
                         renderInput={(params) => (
                             <TextField label="Rule" {...params} variant="standard" />
                         )}
                     />
                     <FormControlLabel control={
-                        <Switch value={enableRuleEditing} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableRuleEditing(!enableRuleEditing)}/>
+                        <Switch checked={enableRuleEditing} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableRuleEditing(!enableRuleEditing)}/>
                         } label="Rule Editing" />
                     <TextField className="w-full" label="Rule Name" value={ruleName || ""} variant="standard" hidden={!enableRuleEditing}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleName(e.target.value)} />
@@ -768,11 +919,63 @@ function RivemuEditor() {
                           ))
                         }}
                     />
-                    
-                    <FormControlLabel 
-                        hidden={true} // TODO: get info from cartridge data and remove this hidden
+                    <FormControlLabel hidden={!enableRuleEditing}
                         control={
-                            <Switch value={showCartridgeInfo} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowCartridgeInfo(!showCartridgeInfo)}/>
+                            <Switch checked={ruleAllowIncard} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleAllowIncard(!ruleAllowIncard)}/>
+                        } label="Allow tapes to use incards" />
+                    
+                    <FormControlLabel hidden={!enableRuleEditing}
+                        control={
+                            <Switch checked={ruleAllowTapes} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleAllowTapes(!ruleAllowTapes)}/>
+                        } label="Allow tapes to use tapes" />
+                    <FormControlLabel hidden={!enableRuleEditing}
+                        control={
+                            <Switch checked={ruleSaveOutcard} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleSaveOutcard(!ruleSaveOutcard)}/>
+                        } label="Save outcards" />
+                    <FormControlLabel hidden={!enableRuleEditing} disabled={true}
+                        control={
+                            <Switch checked={ruleSaveTapes} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRuleSaveTapes(!ruleSaveTapes)}/>
+                        } label="Save tapes" />
+                    
+                    <Autocomplete
+                        hidden={!enableRuleEditing}
+                        multiple
+                        value={ruleTapes||[]}
+                        defaultValue={[]}
+                        id="tapes-standard"
+                        options={ruleTapes||[]}
+                        getOptionLabel={(option) => option}
+                        isOptionEqualToValue={(option, value) => option === value}
+                        onChange={(event: any, newValue: string[] | null) => setRuleTapes(newValue||undefined)}
+                        filterOptions={(options, params) => {
+                            const filtered = filter(options, params);
+
+                            const { inputValue } = params;
+                            // Suggest the creation of a new value
+                            const isExisting = options.some((option) => inputValue === option);
+                            if (inputValue !== '' && !isExisting) {
+                                filtered.push(inputValue);
+                            }
+
+                            return filtered;
+                        }}
+                        renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
+                            label="Tapes"
+                        />
+                        )}
+                        renderTags={(tagValue, getTagProps) => {
+                          return tagValue.map((option, index) => (
+                            <Chip {...getTagProps({ index })} key={option} label={option} />
+                          ))
+                        }}
+                    />
+
+                    <FormControlLabel 
+                        control={
+                            <Switch checked={showCartridgeInfo} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowCartridgeInfo(!showCartridgeInfo)}/>
                         } label="Show Cartridge Info" />
                     <TextField className="w-full" label="Cartridge Info Name" disabled value={infoCartridge?.name || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
@@ -780,22 +983,56 @@ function RivemuEditor() {
                          InputLabelProps={{ shrink: true }} />
                     <TextField className="w-full" label="Cartridge Info Description" disabled value={infoCartridge?.description || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
-                    <TextField className="w-full" label="Cartridge Info Authors" disabled value={`${infoCartridge?.authors}` || ""} variant="standard" hidden={!showCartridgeInfo}
+                    <TextField className="w-full" label="Cartridge Info Authors" disabled value={`${infoCartridge?.authors?.map((a,i) => a.name + (a.link ? `: ${a.link}` : '')).join(", ")}` || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
                     <TextField className="w-full" label="Cartridge Info Status" disabled value={infoCartridge?.status || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
-                    <TextField className="w-full" label="Cartridge Info Url" disabled value={infoCartridge?.url || ""} variant="standard" hidden={!showCartridgeInfo}
+                    <TextField className="w-full" label="Cartridge Info Url" disabled value={infoCartridge?.links?.join(", ") || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
                     <TextField className="w-full" label="Cartridge Info Tags" disabled value={`${infoCartridge?.tags}` || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
                     <TextField className="w-full" label="Cartridge Info Version" disabled value={infoCartridge?.version || ""} variant="standard" hidden={!showCartridgeInfo}
                          InputLabelProps={{ shrink: true }} />
 
-                    <div className='grid grid-cols-2 gap-2 justify-items-center'>
-                    <button disabled={!cartridgeData || storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
+                    <FormControlLabel control={
+                        <Switch checked={manageCartridge} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManageCartridge(!manageCartridge)}/>
+                            } label="Manage Cartridge" />
+                    <TextField className="w-full" label="Transfer to" value={newUserAddress || ""} variant="standard" hidden={!manageCartridge}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUserAddress(e.target.value)} />
+
+                    <Autocomplete
+                        hidden={!manageCartridge}
+                        value={versionSelected || null}
+                        className="w-full"
+                        options={cartridgeVersions}
+                        onChange={(event: any, newValue: CartridgeInfo | null) => setVersionSelected(newValue)}
+                        open={versionsComboOpen}
+                        onOpen={() => setVersionsComboOpen(true)}
+                        onClose={() => setVersionsComboOpen(false)}
+                        getOptionLabel={(option: CartridgeInfo) => 
+                            (option?.updated_at ? `${option?.id} - ${new Date(option?.updated_at * 1000).toLocaleDateString()}` : option?.id) + 
+                            (option?.primary ? " primary" : "") + 
+                            (selectedCartridge?.last_version == option?.id ? " latest" : "")
+                        }
+                        renderInput={(params) => (
+                            <TextField {...params} label="Version" variant="standard"/>
+                        )}
+                    />
+
+
+                    <div className='grid grid-cols-3 gap-1 justify-items-center'>
+                    <button disabled={!cartridgeData || storedCartridge || !infoCartridge?.name || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
                         Insert Cartridge
                     </button>
 
+                    <button hidden={!manageCartridge} disabled={!cartridgeData || !versionSelected || !storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRemoveCartridge}>
+                        Remove Cartridge
+                    </button>
+
+                    <button hidden={!manageCartridge} disabled={!cartridgeData || !newUserAddress || !storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendTransferCartridge}>
+                        Transfer Cartridge
+                    </button>
+                    
                     <button disabled={!ruleName || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
                         Create Rule
                     </button>
@@ -803,7 +1040,7 @@ function RivemuEditor() {
                 </div>
 
             {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
-            </main>
+            </div>
         </ThemeProvider>
     )
 }

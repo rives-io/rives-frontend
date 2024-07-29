@@ -3,6 +3,9 @@
 import { Contest } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
+import { useEffect, useState } from "react";
+import { envClient } from "../utils/clientEnv";
+import { tapes } from "../backend-libs/core/lib";
 
 
 // diff in seconds
@@ -41,6 +44,16 @@ export interface ContestCardInfo extends RuleInfo, Contest {
 export default function ContestCard({contest, cartridge}:{contest:ContestCardInfo, cartridge:CartridgeInfo}) {
     const isContest = contest.start && contest.end;
 
+    const [nTapes, setNTapes] = useState<number>();
+
+    useEffect(() => {
+        tapes({rule_id:contest.id,page:1,page_size:0}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}).then(
+            (tapeOut) => {
+                setNTapes(tapeOut.total);
+            }
+        );
+    }, [contest])
+
     return (
         <div onClick={() => isContest? window.open(`/contests/${contest.id}`, "_self"):null}
         className={`bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
@@ -48,7 +61,7 @@ export default function ContestCard({contest, cartridge}:{contest:ContestCardInf
 
             <div className="flex flex-col md:w-52">
                 <span className="pixelated-font text-lg">{contest.name}</span>
-                <span className="text-sm text-gray-400">{contest.n_tapes} Submissions</span>
+                <span className="text-sm text-gray-400">{nTapes} Submissions</span>
 
                 {
                     contestStatusMessage(contest)

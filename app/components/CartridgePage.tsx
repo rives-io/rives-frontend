@@ -119,9 +119,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
 
                         <Tab.Panels className="mt-2 overflow-auto custom-scrollbar">
                             <Tab.Panel className="">
-                                <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id}
-                                get_verification_outputs={selectedRule != undefined && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(selectedRule)) > -1}
-                                />
+                                <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id} />
                             </Tab.Panel>
 
                             <Tab.Panel className="">

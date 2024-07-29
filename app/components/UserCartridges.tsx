@@ -2,7 +2,7 @@
 
 
 import { useEffect, useState } from "react";
-import { getCartridges } from "../utils/util";
+import { cartridgeIdFromBytes, getCartridges } from "../utils/util";
 import { CartridgeInfo } from "../backend-libs/core/ifaces";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -107,7 +107,7 @@ export default function UserCartridges({address}:{address:string}) {
 
     useEffect(() => {
         CartridgesCreatedByProfile();
-        getUserCartridges(address).then(out => setCartridgesCollectedList(out.map((t,i) => t.slice(2))));
+        getUserCartridges(address).then(out => setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t))));
     }, [])
 
     useEffect(() => {

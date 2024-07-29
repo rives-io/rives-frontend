@@ -13,7 +13,7 @@ import { Input } from '@mui/base/Input';
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { extractTxError } from "../utils/util";
+import { extractTxError, formatCartridgeIdToBytes } from "../utils/util";
 
 const cartridgeAbi: any = cartridgeAbiFile;
 
@@ -115,6 +115,8 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
     // const [cartridgeOutput,setCartridgeOutput] = useState<VerificationOutput>(); // TODO: change to cartridge event
     const [unclaimedFees,setUnclaimedFees] = useState<BigNumber>();
 
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id).slice(2);
+
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
@@ -155,8 +157,8 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
     }, [ready,user,wallets])
 
     useEffect(() => {
-        if (cartridge_id) {
-            // getCartridgeInsetOutput(cartridge_id).then((out) => setCartridgeOutput(out))
+        if (cartridgeIdB32) {
+            // getCartridgeInsetOutput(cartridgeIdB32).then((out) => setCartridgeOutput(out))
             getCartridgeOwner(cartridge_id).then((out) => setCartridgeOwner(out))
             getTapeVerificationOutput(cartridge_id).then((out) => setTapeOutput(out))
         }
@@ -172,18 +174,18 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             setCartridgeExists(undefined);
             return;
         }
-        cartridgeContract.exists(`0x${cartridge_id}`).then((exists:boolean) => {
+        cartridgeContract.exists(`0x${cartridgeIdB32}`).then((exists:boolean) => {
             setCartridgeExists(exists);
             if (exists) {
-                cartridgeContract.getCurrentBuyPrice(`0x${cartridge_id}`,1).then((data:BigNumber[]) => {
+                cartridgeContract.getCurrentBuyPrice(`0x${cartridgeIdB32}`,1).then((data:BigNumber[]) => {
                     // const {total,fees,finalPrice} = data;
                     setBuyPrice(data[0]);
                 });
-                cartridgeContract.cartridgeBonds(`0x${cartridge_id}`).then((bond:any) => {
+                cartridgeContract.cartridgeBonds(`0x${cartridgeIdB32}`).then((bond:any) => {
                     setValidated(bond.eventData.slice(2).length > 0)
 
                     if (bond.bond.currentSupply.gt(0)) {
-                        cartridgeContract.getCurrentSellPrice(`0x${cartridge_id}`,1).then((data:BigNumber[]) => {
+                        cartridgeContract.getCurrentSellPrice(`0x${cartridgeIdB32}`,1).then((data:BigNumber[]) => {
                             setSellPrice(data[0]);
                         });
                     }
@@ -213,7 +215,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             setAmountOwned(undefined);
             return;
         }
-        cartridgeContract.balanceOf(signerAddress,`0x${cartridge_id}`).then((amount:BigNumber) => {
+        cartridgeContract.balanceOf(signerAddress,`0x${cartridgeIdB32}`).then((amount:BigNumber) => {
             setAmountOwned(amount);
         });
     }, [cartridgeContract,signerAddress,reload])
@@ -315,7 +317,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                 options.value = BigNumber.from(slippage);
             }
 
-            const tx = await cartridgeContract.buyCartridges(`0x${cartridge_id}`,amount,slippage,options);
+            const tx = await cartridgeContract.buyCartridges(`0x${cartridgeIdB32}`,amount,slippage,options);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
@@ -350,7 +352,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
                 return;
             }
 
-            const tx = await cartridgeContract.sellCartridges(`0x${cartridge_id}`,amount,slippage);
+            const tx = await cartridgeContract.sellCartridges(`0x${cartridgeIdB32}`,amount,slippage);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
@@ -384,7 +386,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
             // TODO: revert to cartridgeOutput._proof and payload
-            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridge_id}`,tapeOutput._payload,tapeOutput._proof);
+            const tx = await cartridgeContract.validateCartridge(envClient.DAPP_ADDR,`0x${cartridgeIdB32}`,tapeOutput._payload,tapeOutput._proof);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
@@ -411,7 +413,7 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await cartridgeContract.setCartridgeParams(`0x${cartridge_id}`);
+            const tx = await cartridgeContract.setCartridgeParams(`0x${cartridgeIdB32}`);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
@@ -436,12 +438,12 @@ function CartridgeAssetManager({cartridge_id,onChange}:{cartridge_id:string,onCh
             return;
         }
         if (state == MODAL_STATE.BUY) {
-            cartridgeContract.getCurrentBuyPrice(`0x${cartridge_id}`,value).then((data:BigNumber[]) => {
+            cartridgeContract.getCurrentBuyPrice(`0x${cartridgeIdB32}`,value).then((data:BigNumber[]) => {
                 setModalPreviewPrice(data[0]);
             });
         } else if (state == MODAL_STATE.SELL) {
             if (amountOwned?.lt(val)) return;
-            cartridgeContract.getCurrentSellPrice(`0x${cartridge_id}`,value).then((data:BigNumber[]) => {
+            cartridgeContract.getCurrentSellPrice(`0x${cartridgeIdB32}`,value).then((data:BigNumber[]) => {
                 setModalPreviewPrice(data[0]);
             });
         }

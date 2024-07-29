@@ -7,18 +7,13 @@ import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { TapesRequest, getTapes } from "../utils/util";
+import { TapesRequest, calculateTapeId, getTapes } from "../utils/util";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import TapeCard from "../components/TapeCard";
 import Loading from "../components/Loading";
 
 const DEFAULT_PAGE_SIZE = 12
-
-function getTapeId(tapeHex: string): string {
-  return sha256(ethers.utils.arrayify(tapeHex));
-}
-
 
 
 async function getScores(options:TapesRequest) {
@@ -202,7 +197,7 @@ export default function Tapes() {
               const user = verificationInput._msgSender;
               const player = `${user.slice(0, 6)}...${user.substring(user.length-4,user.length)}`;
               const timestamp = new Date(verificationInput._timestamp*1000).toLocaleDateString();
-              const tapeId = getTapeId(verificationInput.tape);
+              // const tapeId = calculateTapeId(verificationInput.rule_id, verificationInput.tape);
               const size = formatBytes((verificationInput.tape.length -2 )/2);
               
               return (

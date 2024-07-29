@@ -3,7 +3,7 @@ import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import { envClient } from "@/app/utils/clientEnv";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Contest as ContestClass, ContestStatus, getContestStatus } from "../../utils/common";
+import { Contest as ContestClass, ContestStatus, getContestStatus, RuleWithMetadata } from "../../utils/common";
 import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
 
@@ -49,7 +49,7 @@ const getContest = (rule_id:string) => {
   return null;
 }
 
-const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
+const getRule = async(rule_id:string):Promise<RuleWithMetadata|null> => {
   const rulesFound = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
   if (rulesFound.length == 0) return null;
@@ -100,7 +100,7 @@ export default async function Contest({ params }: { params: { contest_id: string
   const status = getContestStatus(contest);
   const contestIsOpen = status == ContestStatus.IN_PROGRESS;
   const game = await getGameInfo(contest.cartridge_id);
-  if (status == ContestStatus.VALIDATED) {
+  if (status == ContestStatus.FINISHED) {
     contestMetadata.winner = await getWinner(contest.cartridge_id,contest_id);
   }
 
@@ -135,8 +135,9 @@ export default async function Contest({ params }: { params: { contest_id: string
                 <h1 className="pixelated-font text-xl">Overview</h1>
 
                 <div className="grid grid-cols-2">
-                  <span className="text-gray-400">Submissions</span>
-                  <span>{contest.n_tapes}</span>
+                  {/* TODO: Get tapes */}
+                  {/* <span className="text-gray-400">Submissions</span>
+                  <span>{contest.n_tapes}</span> */}
 
                   <span className="text-gray-400">Status</span>
                   {contestStatusMessage(contest)}
@@ -161,9 +162,7 @@ export default async function Contest({ params }: { params: { contest_id: string
           <div className="flex flex-col gap-4 lg:col-span-4">
             <h1 className="pixelated-font text-xl">Leaderboard</h1>
     
-            <RuleLeaderboard cartridge_id={contest.cartridge_id} rule={contest.id} 
-              get_verification_outputs={contest != undefined && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(status) > -1 } 
-            />
+            <RuleLeaderboard cartridge_id={contest.cartridge_id} rule={contest.id} />
           </div>
         </div>
       </div>

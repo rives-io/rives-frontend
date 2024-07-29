@@ -2,6 +2,7 @@
 
 import Script from "next/script"
 import { useState, useImperativeHandle, forwardRef } from "react";
+import { InfoCartridge } from "../backend-libs/core/ifaces";
 
 export type RivemuRef = {
 	stop: () => void;
@@ -18,7 +19,7 @@ interface RivemuProps {
     tape?:Uint8Array,
     rivemu_on_frame(outcard: ArrayBuffer,frame: number,cycles: number,fps: number,
         cpu_cost: number,cpu_speed: number,cpu_usage: number,cpu_quota: number): void,
-    rivemu_on_begin(width: number, height: number, target_fps: number, total_frames: number): void,
+    rivemu_on_begin(width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array): void,
     rivemu_on_finish(rivlog: ArrayBuffer,outcard: ArrayBuffer,outhash: string): void
 };
 

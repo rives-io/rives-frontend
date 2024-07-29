@@ -6,7 +6,7 @@ import { VerifyPayload } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
-import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
+import { calculateTapeId, getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
 import rivesCheck from "@/public/rives_check.png";
 import { Twitter } from "@privy-io/react-auth";
@@ -52,12 +52,12 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
         }
     } else {
         userAddress = (tape as VerifyPayload)._msgSender.toLowerCase();
-        tapeId = sha256(ethers.utils.arrayify(((tape as VerifyPayload).tape)));
+        tapeId = calculateTapeId((tape as VerifyPayload).rule_id,(tape as VerifyPayload).tape);
     }
 
     const player = `${userAddress.slice(0, 6)}...${userAddress.substring(userAddress.length-4,userAddress.length)}`;
     const [playerName, setPlayerName] = useState<string|null>(userName);
-    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? tapeId:tapeTitle);
+    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? `...${tapeId.substring(56, 64)}`:tapeTitle);
     const [gifImage, setGifImage] = useState<string|null>(initialGifImageValue);
     const [gif, setGif] = useState<string|null>(initialGifValue);
     const [currentPrice,setCurrentPrice] = useState<string>();

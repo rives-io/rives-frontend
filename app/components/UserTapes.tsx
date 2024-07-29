@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getTapes } from "../utils/util";
+import { getTapes, tapeIdFromBytes } from "../utils/util";
 import { VerifyPayload } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -124,7 +124,7 @@ export default function UserTapes({address}:{address:string}) {
 
     useEffect(() => {
         TapesCreatedByProfile();
-        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => t.slice(2))));
+        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => tapeIdFromBytes(t))));
     }, [])
 
     useEffect(() => {

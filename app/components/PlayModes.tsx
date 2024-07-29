@@ -70,9 +70,7 @@ function PlayModes() {
                 ) : <></>
             }
             </div>
-            <RuleLeaderboard cartridge_id={selectedCartridge.id} rule={selectedRule?.id} 
-                get_verification_outputs={selectedRule != undefined && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(selectedRule)) > -1 } 
-            />
+            <RuleLeaderboard cartridge_id={selectedCartridge.id} rule={selectedRule?.id} />
         </div>
     )
 }
