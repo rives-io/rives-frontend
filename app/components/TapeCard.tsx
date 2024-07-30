@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
 import { calculateTapeId, getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
-import rivesCheck from "@/public/rives_check.png";
+import rivesCheck from "@/public/default_tape.png";
 import { Twitter } from "@privy-io/react-auth";
 import { User, getUsersByAddress } from "../utils/privyApi";
 import { BondInfo, getTapeBondInfo } from "../utils/assets";
@@ -22,7 +22,7 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|TapePreview}) {
+export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayload|TapePreview, creator?:User|null}) {
     let tape:VerifyPayload|TapePreview;
 
     if (typeof tapeInput == "string") {
@@ -73,14 +73,18 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
 
     useEffect(() => {
         if (!playerName) {
-            getUsersByAddress([userAddress]).then((userMapString) => {
-                const userMap:Record<string,User> = JSON.parse(userMapString);
-                const user = userMap[userAddress];
-    
-                if (user) {
-                    setPlayerName(user.name);
-                }
-            });
+            if (creator) {
+                setPlayerName(creator.name);
+            } else if (typeof creator === "undefined") {
+                getUsersByAddress([userAddress]).then((userMapString) => {
+                    const userMap:Record<string,User> = JSON.parse(userMapString);
+                    const user = userMap[userAddress];
+        
+                    if (user) {
+                        setPlayerName(user.name);
+                    }
+                });    
+            }
         }
         if (!(tape as TapePreview).title) {
             getTapeName(tapeId).then((tapeName) => {
@@ -154,6 +158,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                                 />
                             :
                                 <Image fill
+                                    className={`${!gifImage || gifImage.length == 0? "pixelated-img":""}`}
                                     style={{objectFit: "cover"}}
                                     src={!gifImage || gifImage.length == 0? rivesCheck:"data:image/jpeg;base64," + gifImage}
                                     alt={"Not found"}
@@ -168,7 +173,7 @@ export default function TapeCard({tapeInput}:{tapeInput:string|VerifyPayload|Tap
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
                         <span className="pixelated-font text-xs truncate">
-                            By: <button onClick={handleClick}
+                            By <button onClick={handleClick}
                                 className="pixelated-font text-rives-purple hover:underline">
                                     {
                                         playerName?

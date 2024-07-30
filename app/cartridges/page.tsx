@@ -1,5 +1,11 @@
+import { Metadata } from "next";
 import CartridgesList from "../components/CartridgesList";
 
+
+export const metadata: Metadata = {
+  title: 'Cartridges',
+  description: 'Cartridges',
+}
 
 export default async function Cartridges() {
     return (

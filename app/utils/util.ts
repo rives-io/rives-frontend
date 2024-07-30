@@ -3,26 +3,88 @@ import { ethers } from "ethers";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { cartridges, getOutputs } from "../backend-libs/core/lib";
+import { cartridges, getOutputs, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
-import { CartridgeInfo, CartridgesOutput, CartridgesPayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
+import { getUsersByAddress, User } from "./privyApi";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+
+export async function getContestWinner(cartridge_id:string, rule:string):Promise<string|undefined> {
+    const tags = ["score",cartridge_id,rule];
+    const tapes:Array<VerificationOutput> = (await getOutputs(
+        {
+            tags,
+            type: 'notice',
+            page_size: 1,
+            page: 1,
+            order_by: "value",
+            order_dir: "desc"
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL})).data;
+  
+    if (tapes.length == 0) return undefined
+    return tapes[0].user_address
+}
+
+// time in seconds
+export function formatTime(time:number):string {
+    let val:number;
+
+    if (time > 2592000) {
+        val = Math.round(time / 2592000);
+        return val == 1? `${val} month`:`${val} months`;
+    }
+    if (time > 604800) {
+        val = Math.round(time / 604800);
+        return val == 1? `${val} week`:`${val} weeks`;
+    }
+    if (time > 86400) {
+        val = Math.round(time / 86400);
+        return val == 1? `${val} day`:`${val} days`;
+    }
+    if (time > 3600) {
+        val = Math.round(time / 3600);
+      return val == 1? `${val} hour`:`${val} hours`;
+    }
+    if (time > 60) {
+        val = Math.round(time / 60);
+        return val == 1? `${val} minute`:`${val} minutes`;
+    }
+  
+    return `${time} seconds`
+}
+
+// time in seconds
+export function timeToDateUTCString(time:number) {
+
+    const date = new Date(time*1000);
+    return formatDate(date);
+}
+
 export function formatDate(date:Date) {
     const options:Intl.DateTimeFormatOptions = {
         year: "numeric",
-        month: "2-digit",
+        month: "short",
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit"
+        second: "2-digit",
+        hourCycle: "h23",
+        timeZone: "UTC",
+        timeZoneName: "short"
     }
     
-    return date.toLocaleString(undefined, options);
+    const dateString = date.toLocaleDateString("en-US", options);
+    let [month_day, year, time] = dateString.split(",");
+    const [month, day] = month_day.split(" ");
+    year = year.substring(1);
+
+    return `${month}/${day}/${year}, ${time}`;
 }
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {
@@ -353,4 +415,38 @@ export function formatTapeIdToBytes(id: string): string {
 
 export function calculateTapeId(ruleId:string, log: Uint8Array): string {
     return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
+}
+
+export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
+    let newUserAddresses:Set<string> = new Set();
+    for (let cartridge of cartridges) {
+        const userAddress = cartridge.user_address.toLowerCase();
+        if (!currUserMap[userAddress]) {
+            newUserAddresses.add(userAddress);
+        }
+    }
+
+    let newUserMap:Record<string, User> = {};
+    if (newUserAddresses.size > 0) {
+        newUserMap = JSON.parse(await getUsersByAddress(Array.from(newUserAddresses)));
+    }
+
+    return newUserMap;
+}
+
+export async function getUsersFromTapes(tapes:Array<VerifyPayloadProxy>, currUserMap:Record<string, User>) {
+    let newUserAddresses:Set<string> = new Set();
+    for (let tape of tapes) {
+        const userAddress = tape._msgSender.toLowerCase();
+        if (!currUserMap[userAddress]) {
+            newUserAddresses.add(userAddress);
+        }
+    }
+
+    let newUserMap:Record<string, User> = {};
+    if (newUserAddresses.size > 0) {
+        newUserMap = JSON.parse(await getUsersByAddress(Array.from(newUserAddresses)));
+    }
+
+    return newUserMap;
 }

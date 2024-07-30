@@ -7,7 +7,7 @@ import { cartridgeInfo, getOutputs, rules } from "../backend-libs/core/lib";
 import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
 import { Contest } from "../utils/common";
-import ContestCard, { ContestCardInfo } from "./ContestCard";
+import ContestCard from "./ContestCard";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 
 const knowContests = envClient.CONTESTS as Record<string,Contest>;
@@ -15,7 +15,7 @@ const contestsIds = Object.keys(knowContests);
 
 
 export default function UserContests({address}:{address:string}) {    
-    const [userContests, setUserContests] = useState<Array<ContestCardInfo>>([]);
+    const [userContests, setUserContests] = useState<Array<RuleInfo>>([]);
     const [cartridgeInfoMap, setCartridgeInfoMap] = useState<Record<string, CartridgeInfo>>({});
     
     const [contestsLoading, setContestsLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function UserContests({address}:{address:string}) {
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
         ).data;
 
-        let participatedContests:Array<ContestCardInfo> = [];
+        let participatedContests:Array<RuleInfo> = [];
         let participatedContestsCartridges:Record<string, CartridgeInfo> = {};
 
         for (let i = 0; i < contests.length; i++) {

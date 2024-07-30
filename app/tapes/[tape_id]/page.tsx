@@ -6,32 +6,33 @@ import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
 import TapeTitle from '@/app/components/TapeTitle';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
-import { getTapeName, ruleIdFromBytes } from '@/app/utils/util';
+import { getTapeName, ruleIdFromBytes, timeToDateUTCString } from '@/app/utils/util';
 import { ethers } from 'ethers';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import WarningIcon from '@mui/icons-material/Warning';
 
+// Make Next.JS revalidate the page every 30 seconds
+export const revalidate = 30;
 
 export async function generateMetadata({ params }: { params: { tape_id: string } }) {
     const imageUrl = `${envClient.GIF_SERVER_URL}/images/${params.tape_id}`;
+    const tapeName = await getTapeName(params.tape_id);
+    let title = tapeName? `${tapeName} | RIVES`:`${params.tape_id} | RIVES`;
+    const desc = tapeName? `Tape "${tapeName}"`:`Tape "${params.tape_id}"`;
+
     return {
+        title: title,
         openGraph: {
-            images: [imageUrl], 
-            siteName: 'rives.io',
-            title: 'RIVES',
-            description: 'RiscV Verifiable Entertainment System',
+            images: [imageUrl],
+            title: title,
+            description: desc
         },
-        // icons: {
-        //     icon: imageUrl,
-        //     shortcut: imageUrl,
-        //     apple: imageUrl,
-        // },
         twitter: {
             images: [imageUrl], 
-            title: 'RIVES',
-            description: 'RiscV Verifiable Entertainment System',
+            title: title,
             card: 'summary',
             creator: '@rives_io',
+            description: desc
         },
     }
 }
@@ -44,7 +45,15 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     ));
 
-    if (res.data.length == 0) return notFound();
+    if (res.data.length == 0) {
+        return (
+            <main className='flex justify-center items-center gap-2 px-4 h-svh text-center'>
+                <WarningIcon className='text-yellow-400' />
+                <p className='pixelated-font text-xl'>The requested tape is still being processed or does not exist.</p>
+                <WarningIcon className='text-yellow-400' />
+            </main>
+        );
+    }
     
     const tape:VerifyPayloadProxy = res.data[0];
 
@@ -86,39 +95,30 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                                 </Link>
                         }
                         </span>
-                        <span>Cartrige: {tapeCartridge.name}</span>
                     </div>
-
-                    {/* <div className='justify-center md:justify-end flex-1 self-center text-black flex gap-2'>
-                        <button className='bg-[#e04ec3] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
-                            ${0.09} Sell
-                        </button>
-
-                        <button className='bg-[#53fcd8] p-2 text-center font-bold w-32 h-10 hover:scale-105'>
-                            ${0.1} Buy
-                        </button>
-                    </div> */}
                 </div>
                 <TapeAssetsAndStats tape_id={params.tape_id} />
 
+                <div className='flex flex-col'>
+                    <h2 className={`pixelated-font text-3xl`}>Overview</h2>
+                    <div className="grid grid-cols-2 w-fit">
+                        <span className="text-gray-400">Cartrige</span>
+                        <Link className='text-rives-purple hover:underline' href={`/cartridges/${tapeCartridge.id}`}>{tapeCartridge.name}</Link>
 
-                <div>
-                    <div>
-                        Date: {new Date(tape._timestamp *1000).toLocaleString()}
+                        <span className="text-gray-400">Date</span>
+                        <span>{timeToDateUTCString(tape._timestamp)}</span>
+
+                        <span className="text-gray-400">Rule</span>
+                        {contest.name}
+
+                        <span className="text-gray-400">Score</span>
+                        {ethers.utils.formatUnits(tape.claimed_score, 0)}
                     </div>
-
-                    <div>
-                        Rule: {contest.name}
-                    </div>
-
-                    <div>
-                        Score: {ethers.utils.formatUnits(tape.claimed_score, 0)}
-                    </div>
-
                 </div>
 
+
                 <div className='flex justify-center'>
-                    <ContestCard contest={{...contest, prize: ""}} cartridge={tapeCartridge} />
+                    <ContestCard contest={contest} cartridge={tapeCartridge} />
                 </div>
             </div>
         </main>

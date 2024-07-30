@@ -5,9 +5,10 @@ import { Tab } from "@headlessui/react";
 import UserTapes from "./UserTapes";
 import UserContests from "./UserContests";
 import UserCartridges from "./UserCartridges";
+import { User } from "../utils/privyApi";
 
 
-export default function ProfileNavigation({address}:{address:string}) {
+export default function ProfileNavigation({address, twitterInfo}:{address:string, twitterInfo:User}) {
 
     return (
         <Tab.Group>
@@ -37,17 +38,17 @@ export default function ProfileNavigation({address}:{address:string}) {
                 </Tab>
             </Tab.List>
 
-            <Tab.Panels className="mt-2 overflow-auto custom-scrollbar">
+            <Tab.Panels className="mt-2 overflow-visible">
                 {/* <Tab.Panel className="">
                     Show User's Activity
                 </Tab.Panel> */}
 
                 <Tab.Panel className="flex flex-col gap-4">
-                    <UserTapes address={address} />
+                    <UserTapes address={address} twitterInfo={twitterInfo} />
                 </Tab.Panel>
 
                 <Tab.Panel className="">
-                    <UserCartridges address={address} />
+                    <UserCartridges address={address} twitterInfo={twitterInfo} />
                 </Tab.Panel>
 
                 <Tab.Panel className="">

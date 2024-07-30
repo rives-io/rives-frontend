@@ -4,7 +4,7 @@
 import { CartridgeInfo as Cartridge, RuleInfo } from '../backend-libs/core/ifaces';
 import Image from "next/image";
 import { Menu, Tab } from '@headlessui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RuleLeaderboard from './RuleLeaderboard';
 import { ContestStatus, getContestStatus } from '../utils/common';
@@ -13,32 +13,55 @@ import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
 import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
+import { timeToDateUTCString } from '../utils/util';
+import { getUsersByAddress, User } from '../utils/privyApi';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
+    const [creator, setCreator] = useState<User|null>(null);
 
     const status = !selectedRule? null:getContestStatus(selectedRule);
     const contestIsOpen = (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
     const [reload, setReload] = useState(0);
 
+    useEffect(() => {
+        getUsersByAddress([cartridge.user_address]).then((userMapString) => {
+            const userMap:Record<string,User> = JSON.parse(userMapString);
+            const user = userMap[cartridge.user_address.toLowerCase()];
+            if (user) setCreator(user);
+        })
+    }, []);
+
     return (
         <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
             <div className='cartridgePageCover flex justify-center relative'>
-                <Image fill style={{objectFit: "contain"}} quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
+                <Image className='pixelated-img' style={{objectFit: "contain"}} fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
             </div>
 
             <div className='w-full md:w-2/3 flex flex-col gap-2'>
                 <div className='flex flex-wrap gap-4'>
                     <div className='flex flex-col'>
                         <h1 className={`pixelated-font text-5xl`}>{cartridge.name}</h1>
-                        <div>
-                            <span className='pixelated-font me-2'>By:</span>
-                            <Link href={`/profile/${cartridge.user_address}`}
-                            className='hover:underline text-rives-purple pixelated-font break-all'
-                            >
-                                {cartridge.user_address}
-                            </Link>
+                        {
+                            !creator?
+                                <div>
+                                    <span className='pixelated-font me-2'>By:</span>
+                                    <Link href={`/profile/${cartridge.user_address}`}
+                                    className='hover:underline text-rives-purple pixelated-font break-all'
+                                    >
+                                        {cartridge.user_address}
+                                    </Link>
+                                </div>
+                            :
+                                <Link href={`/profile/${cartridge.user_address}`} className='flex items-center gap-2 w-fit hover:underline'>
+                                            <img width={48} height={48} src={creator.picture_url} className='rounded-full' alt='' />
+                                            <span title={cartridge.user_address}>{creator.name}</span>
+                                </Link>
+                        }
+                        <div className='flex'>
+                            <span className='pixelated-font me-2'>On:</span>
+                            <div>{timeToDateUTCString(cartridge.created_at)}</div>
                         </div>
                     </div>
 
@@ -56,6 +79,19 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                 <CartridgeStats cartridge_id={cartridge.id} reload={reload}/>
             </div>
 
+            <div className='w-full md:w-2/3 flex flex-col'>
+                <h2 className={`pixelated-font text-3xl`}>Summary</h2>
+                <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web',marginBottom: "4px"}}>
+                    {cartridge.info?.summary}
+                </pre>
+                <div className='flex flex-warp gap-2 items-center'>
+                    {
+                        cartridge.info?.tags.map((tag, index) => {
+                            return <span key={`${tag}-${index}`} className='pixelated-font py-1 px-2 rounded-full bg-rives-gray text-center text-sm'>{tag}</span>
+                        }) 
+                    }
+                </div>
+            </div>
 
             <div className='w-full md:w-2/3 flex flex-col'>
                 <h2 className={`pixelated-font text-3xl`}>Description</h2>
@@ -117,7 +153,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Tab>
                         </Tab.List>
 
-                        <Tab.Panels className="mt-2 overflow-auto custom-scrollbar">
+                        <Tab.Panels className="mt-2 overflow-visible">
                             <Tab.Panel className="">
                                 <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id} />
                             </Tab.Panel>
@@ -153,7 +189,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Tab.Panel> */}
 
                             <Tab.Panel className="">
-                                <CartridgeContests cartridgeId={cartridge.id} cartridge={cartridge} />
+                                <CartridgeContests cartridgeId={cartridge.id} cartridge={{...cartridge, user: creator || undefined}} />
                             </Tab.Panel>
                         </Tab.Panels>
                     </Tab.Group>

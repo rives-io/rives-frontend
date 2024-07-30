@@ -3,9 +3,15 @@ import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/i
 import { cartridgeInfo, rules, tapes, TapesOutput } from "../backend-libs/core/lib";
 import { Contest, getContestStatus, RuleWithMetadata } from "../utils/common";
 import ContestCard from "../components/ContestCard";
+import { Metadata } from "next";
+import { getUsersByAddress, User } from "../utils/privyApi";
 
 export const revalidate = 0 // revalidate always
 
+export const metadata: Metadata = {
+  title: 'Contests',
+  description: 'Contests',
+}
 
 const getRules = async (contests:Record<string,Contest>, onlyActive = false) => {
   const contestsRules:Array<RuleWithMetadata> = [];
@@ -40,6 +46,7 @@ export default async function Contests() {
   });
 
   let cartridgeInfoMap:Record<string, CartridgeInfo> = {};
+  let userAddresses:Set<string> = new Set();
   
   if (contests.length == 0) {
     return (
@@ -58,9 +65,11 @@ export default async function Contests() {
       );
 
       cartridgeInfoMap[cartridge.id] = cartridge;
+      userAddresses.add(cartridge.user_address);
     }
   }
 
+  const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
   return (
     <main>
@@ -69,8 +78,12 @@ export default async function Contests() {
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
+
+              const cartridgeCreatorAddr = cartridgeInfoMap[contest.cartridge_id].user_address.toLowerCase();
+              const cartridgeCreatorUser = userMap[cartridgeCreatorAddr] || null;
               return (
-                <ContestCard key={index} contest={contest} cartridge={cartridgeInfoMap[contest.cartridge_id]} />
+                <ContestCard key={index} contest={contest} 
+                cartridge={{...cartridgeInfoMap[contest.cartridge_id], user: cartridgeCreatorUser}} />
               )
             })
           }

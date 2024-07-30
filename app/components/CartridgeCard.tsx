@@ -12,7 +12,7 @@ import { ethers } from "ethers";
 import { BondInfo, getCartridgeBondInfo } from "../utils/assets";
 
 
-export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInfo, small?:boolean}) {
+export default function CartridgeCard({cartridge, small, creator}:{cartridge:CartridgeInfo, small?:boolean, creator?:User|null}) {
     const cartridge_creator = cartridge.user_address;
     const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
 
@@ -25,14 +25,18 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
     const [currentPrice,setCurrentPrice] = useState<string>();
 
     useEffect(() => {
-        getUsersByAddress([cartridge.user_address]).then((userMapString) => {
-            const userMap:Record<string,User> = JSON.parse(userMapString);
-            const user = userMap[cartridge.user_address.toLowerCase()];
-
-            if (user) {
-                setTwitterInfo(user);
-            }
-        });
+        if (creator) {
+            setTwitterInfo(creator);
+        } else if (typeof creator === "undefined") {
+            getUsersByAddress([cartridge.user_address]).then((userMapString) => {
+                const userMap:Record<string,User> = JSON.parse(userMapString);
+                const user = userMap[cartridge.user_address.toLowerCase()];
+    
+                if (user) {
+                    setTwitterInfo(user);
+                }
+            });    
+        }
 
         if (cartridge.id) {
             getCartridgeBondInfo(cartridge.id,true).then((bond: BondInfo|null) => {
@@ -85,7 +89,7 @@ export default function CartridgeCard({cartridge, small}:{cartridge:CartridgeInf
                 <div className="flex flex-col p-[2px] h-10 w-full">
                     <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
                     <span className="pixelated-font text-xs truncate">
-                        By: <button onClick={handleClick}
+                        By <button onClick={handleClick}
                             className="pixelated-font text-rives-purple hover:underline">
                                 {
                                     !twitterInfo?

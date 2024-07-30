@@ -33,7 +33,7 @@ import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage }
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
-import { cartridgeIdFromBytes, ruleIdFromBytes } from "../utils/util";
+import { cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
 
 let canvasPlaying = false;
 
@@ -263,7 +263,7 @@ function RivemuPlayer(
             setTape(out);
 
             const player = `${out._msgSender.slice(0, 6)}...${out._msgSender.substring(out._msgSender.length-4,out._msgSender.length)}`;
-            const timestamp = new Date(out._timestamp*1000).toLocaleDateString();
+            const timestamp = timeToDateUTCString(out._timestamp*1000);
             const size = formatBytes(out.tape.length);
             const currTapeInfo: TapeInfo = {player,timestamp,size};
 

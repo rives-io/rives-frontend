@@ -10,9 +10,9 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { DecodedIndexerOutput } from '../backend-libs/cartesapp/lib';
 import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
-import rivesCheck from "@/public/rives_check.png";
+import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
-import { tapeIdFromBytes } from '../utils/util';
+import { tapeIdFromBytes,timeToDateUTCString} from '../utils/util';
 
 const DEFAULT_PAGE_SIZE = 10;
 let total_pages = 1;
@@ -195,7 +195,7 @@ function RuleLeaderboard({cartridge_id, rule}:{
     if (tapePayloads.length == 0) {
         return (
             <div className='relative text-center'>
-                <span>No tapes!</span>
+                <span className='pixelated-font'>No tapes</span>
             </div>
         )
     }
@@ -228,7 +228,6 @@ function RuleLeaderboard({cartridge_id, rule}:{
                         tapePayloads.map((tape, index) => {
                             const verification_outputs = tape instanceof VerificationOutput;
                             const tapets = verification_outputs ? tape.timestamp : tape._timestamp;
-                            const tapeDate = new Date(Number(tapets)*1000);
                             const sender = verification_outputs ? tape.user_address : tape._msgSender;
                             const tapeId = verification_outputs ? tapeIdFromBytes(tape.tape_id) : getTapeId(tape.tape);
                             const score = verification_outputs ? tape.score.toString() : "-";
@@ -247,18 +246,18 @@ function RuleLeaderboard({cartridge_id, rule}:{
                                     {
                                         !user?
                                             <td className='flex items-center gap-2'>
-                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full' alt='Nop' />
+                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='Nop' />
                                                 <span className='break-all' title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
                                             </td>
                                         :
                                             <td className='flex items-center gap-2'>
-                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='Nop' />
+                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='Nop' />
                                                 <span title={sender}>{user.name}</span>
                                             </td>
                                     }
 
-                                    <td title={tapeDate.toLocaleString()} className="">
-                                        {tapeDate.toLocaleDateString()} {tapeDate.toLocaleTimeString()}
+                                    <td>
+                                        {timeToDateUTCString(Number(tapets))}
                                     </td>
                                     <td className=''>{score}</td>
                                 </tr>

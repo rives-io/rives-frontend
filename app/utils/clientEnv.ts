@@ -38,6 +38,10 @@ export const envClient = envsafe({
     input: process.env.NEXT_PUBLIC_ASSETS_BLOCK,
     desc: "(Earliest) assets deployment block number (hex)."
   }),
+  DEPLOYMENT_URL: url({
+    input: process.env.NEXT_PUBLIC_DEPLOYMENT_URL,
+    desc: "Deployment URL for the frontend. It is used to compose the openGraph URL of images."
+  }),
   WORLD_ADDRESS: str({
     input: process.env.NEXT_PUBLIC_WORLD_ADDRESS,
     desc: "Mud world ETH address."

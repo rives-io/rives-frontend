@@ -6,15 +6,15 @@ import { rules } from "../backend-libs/core/lib";
 import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
 import { Contest } from "../utils/common";
-import ContestCard, { ContestCardInfo } from "./ContestCard";
-import { CartridgeInfo } from "../backend-libs/core/ifaces";
+import ContestCard, { CartridgeWithUser } from "./ContestCard";
+import { RuleInfo } from "../backend-libs/core/ifaces";
 
 const knowContests = envClient.CONTESTS as Record<string,Contest>;
 const contestsIds = Object.keys(knowContests);
 
 
-export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:string, cartridge:CartridgeInfo}) {    
-    const [cartridgeContests, setCartridgeContests] = useState<Array<ContestCardInfo>|null>(null);
+export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:string, cartridge:CartridgeWithUser}) {    
+    const [cartridgeContests, setCartridgeContests] = useState<Array<RuleInfo>|null>(null);
     
     const [contestsLoading, setContestsLoading] = useState(false);
 
