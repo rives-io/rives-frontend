@@ -101,20 +101,21 @@ export default async function Contest({ params }: { params: { contest_id: string
   if (status == ContestStatus.VALIDATED) {
     contestMetadata.winner = await getContestWinner(contest.cartridge_id,contest_id);
     if (contestMetadata.winner) {
+      contestMetadata.winner = contestMetadata.winner.toLowerCase();
       userAddresses.add(contestMetadata.winner);
     }
   }
 
   const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
-  if (contestMetadata.winner && userMap[contestMetadata.winner.toLowerCase()]) {
+  if (contestMetadata.winner && userMap[contestMetadata.winner]) {
     winnerUser = userMap[contestMetadata.winner];
   }
 
   if (userMap[contestCreatorAddr]) user = userMap[contestCreatorAddr];
 
   return (
-    <main className="flex justify-center">
-      <div className="container">
+    <main>
+      <section>
         <div className="w-full flex flex-wrap items-center bg-black p-4 gap-2 md:gap-8 lg:gap-20">
           <CartridgeCard cartridge={game} small={true} creator={userMap[game.user_address.toLowerCase()] || null} />
 
@@ -209,7 +210,7 @@ export default async function Contest({ params }: { params: { contest_id: string
             />
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

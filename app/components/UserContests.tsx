@@ -90,15 +90,16 @@ export default function UserContests({address}:{address:string}) {
                     userContests.length == 0?
                         <div className="text-center pixelated-font">No Contests</div>
                     :
-                        <div className="flex flex-wrap gap-4">
-                            {
-                                userContests.map((contest, index) => {
-                                    return (
-                                        <ContestCard key={index} contest={contest} cartridge={cartridgeInfoMap[contest.cartridge_id]} />
-                                    )
-                                })
-                            }
-
+                        <div className="flex justify-center">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                {
+                                    userContests.map((contest, index) => {
+                                        return (
+                                            <ContestCard key={index} contest={contest} cartridge={cartridgeInfoMap[contest.cartridge_id]} />
+                                        )
+                                    })
+                                }
+                            </div>
                         </div>
             }
         </div>

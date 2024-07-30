@@ -169,15 +169,16 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
                         <Loading msg="Loading Created Tapes" />
                     :
                         <>
-                            <div className="flex flex-wrap gap-4 justify-evenly md:justify-start">
-                                {
-                                    tapesCreated[tapesCreatedPage-1]?.map((tape, index) => {
-                                        return (
-                                            <TapeCard key={`${tapesCreatedPage}-${index}`} tapeInput={tape} creator={twitterInfo? twitterInfo:null} />
-                                        )
-                                    })
-                                }
-
+                            <div className="flex justify-center">
+                                <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4">
+                                    {
+                                        tapesCreated[tapesCreatedPage-1]?.map((tape, index) => {
+                                            return (
+                                                <TapeCard key={`${tapesCreatedPage}-${index}`} tapeInput={tape} creator={twitterInfo? twitterInfo:null} />
+                                            )
+                                        })
+                                    }
+                                </div>
                             </div>
 
                             {
@@ -212,15 +213,16 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
                     tapesCollectedLoading?
                         <Loading msg="Loading Created Tapes" />
                     : <>
-                        <div className="flex flex-wrap gap-4">
-                            {
-                                tapesCollect[tapesCollectedPage-1]?.map((tape, index) => {
-                                    return (
-                                        <TapeCard key={`${tapesCollectedPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
-                                    )
-                                })
-                            }
-
+                        <div className="flex justify-center">
+                            <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4">
+                                {
+                                    tapesCollect[tapesCollectedPage-1]?.map((tape, index) => {
+                                        return (
+                                            <TapeCard key={`${tapesCollectedPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
+                                        )
+                                    })
+                                }
+                            </div>
                         </div>
 
                         {

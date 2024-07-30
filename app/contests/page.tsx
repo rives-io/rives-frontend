@@ -75,8 +75,8 @@ export default async function Contests() {
 
   return (
     <main>
-      <section className="w-full flex justify-center">
-        <div className="flex flex-wrap gap-4 w-[95%] sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
+      <section className="flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;

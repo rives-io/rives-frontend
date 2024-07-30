@@ -150,15 +150,16 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                         <Loading msg="Loading Created Cartridges" />
                     :
                         <>
-                            <div className="flex flex-wrap gap-4 justify-evenly md:justify-start">
-                                {
-                                    cartridgesCreated[cartridgesCreatedPage-1]?.map((cartridge, index) => {
-                                        return (
-                                            <CartridgeCard key={`${cartridgesCreatedPage}-${index}`} cartridge={cartridge} creator={twitterInfo? twitterInfo:null} />
-                                        )
-                                    })
-                                }
-
+                            <div className="flex justify-center">
+                                <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4">
+                                    {
+                                        cartridgesCreated[cartridgesCreatedPage-1]?.map((cartridge, index) => {
+                                            return (
+                                                <CartridgeCard key={`${cartridgesCreatedPage}-${index}`} cartridge={cartridge} creator={twitterInfo? twitterInfo:null} />
+                                            )
+                                        })
+                                    }                                
+                                </div>
                             </div>
 
                             {
@@ -195,15 +196,16 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                         <Loading msg="Loading Created Cartridges" />
                     :
                     <>
-                        <div className="flex flex-wrap gap-4">
-                            {
-                                cartridgesCollect[cartridgesCollectedPage-1]?.map((cartridge, index) => {
-                                    return (
-                                        <CartridgeCard key={`${cartridgesCollectedPage}-${index}`} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null} />
-                                    )
-                                })
-                            }
-
+                        <div className="flex justify-center">
+                            <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4">
+                                {
+                                    cartridgesCollect[cartridgesCollectedPage-1]?.map((cartridge, index) => {
+                                        return (
+                                            <CartridgeCard key={`${cartridgesCollectedPage}-${index}`} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null} />
+                                        )
+                                    })
+                                }
+                            </div>
                         </div>
 
                         {

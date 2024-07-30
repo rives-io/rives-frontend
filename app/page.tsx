@@ -99,92 +99,85 @@ export default async function Home() {
   const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
   return (
-    <main className="px-4">
-      <div className='flex flex-col items-center mb-8 space-y-8'>
-        <div className='w-full lg:w-[80%]'>
+    <main>
+      <section>
+        <div className='flex flex-col mb-8 space-y-8'>
           <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
+
+          <div className="flex flex-wrap justify-between md:justify-start gap-2">
+            {
+              cartridges.map((cartridge, index) => {
+                return <CartridgeCard key={index} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null}/>
+              })
+            }
+
+          </div>
+
         </div>
 
-        <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
-          {
-            cartridges.map((cartridge, index) => {
-              return <CartridgeCard key={index} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null}/>
-            })
-          }
-
-        </div>
-
-      </div>
-
-      <div className='flex flex-col items-center mb-8 space-y-8'>
-        <div className='w-full lg:w-[80%]'>
+        <div className='flex flex-col mb-8 space-y-8'>
           <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
+
+          <div className="flex flex-wrap justify-between md:justify-start gap-2">
+            {
+              tapes.map((tape, index) => {
+                return <TapeCard key={index} tapeInput={JSON.stringify(tape)} creator={userMap[tape._msgSender.toLowerCase()] || null} />
+              })
+            }
+          </div>
+            
         </div>
 
-        <div className="flex flex-wrap justify-between md:justify-start gap-2 w-full lg:w-[80%]">
+
+        <div className='flex flex-col mb-8 space-y-8'>
+          <h1 className={`text-4xl pixelated-font`}>Contests Live</h1>
+
           {
-            tapes.map((tape, index) => {
-              return <TapeCard key={index} tapeInput={JSON.stringify(tape)} creator={userMap[tape._msgSender.toLowerCase()] || null} />
-            })
+              contests.length == 0?
+                <div className="text-center pixelated-font">No Contests Running</div>
+              :
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {
+                  contests.map((contest, index) => {
+                    return <ContestCard 
+                    key={`${contest.id}-${index}`} 
+                    contest={contest} 
+                    cartridge={{...contestCartridges[contest.id], user: userMap[contestCartridges[contest.id].user_address.toLowerCase()]}} 
+                    />
+                  })
+                }
+              </div>
           }
         </div>
-          
-      </div>
 
-
-      <div className='flex flex-col items-center mb-8 space-y-8'>
-        <div className='w-full lg:w-[80%]'>
-          <h1 className={`text-4xl pixelated-font`}>Contests Live</h1>
-        </div>
-
-        {
-            contests.length == 0?
-              <div className="text-center pixelated-font">No Contests Running</div>
-            :
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full lg:w-[80%]'>
-              {
-                contests.map((contest, index) => {
-                  return <ContestCard 
-                  key={`${contest.id}-${index}`} 
-                  contest={contest} 
-                  cartridge={{...contestCartridges[contest.id], user: userMap[contestCartridges[contest.id].user_address.toLowerCase()]}} 
-                  />
-                })
-              }
-            </div>
-        }
-      </div>
-
-      <div className='flex flex-col items-center mb-8 space-y-8'>
-        <div className='w-full lg:w-[80%]'>
+        <div className='flex flex-col mb-8 space-y-8'>
           <h1 className={`text-4xl pixelated-font`}>Stats</h1>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-center'>
+
+            <div className='p-8 bg-rives-gray flex flex-col'>
+              <span className={`text-3xl pixelated-font`}>Total Cartridges Created</span>
+              <span className={`text-5xl pixelated-font`}>{total_cartridges}</span>
+            </div>
+
+            <div className='p-8 bg-rives-gray flex flex-col'>
+              <span className={`text-3xl pixelated-font`}>Total Tapes Created</span>
+              <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
+            </div>
+
+            <div className='p-8 bg-rives-gray flex flex-col'>
+              <span className={`text-3xl pixelated-font`}>Total Cartridges Collected</span>
+              <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
+            </div>
+
+            <div className='p-8 bg-rives-gray flex flex-col'>
+              <span className={`text-3xl pixelated-font`}>Total Tapes Collected</span>
+              <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
+            </div>
+          </div>
+
         </div>
-
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-center w-full lg:w-[80%]'>
-
-          <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Cartridges Created</span>
-            <span className={`text-5xl pixelated-font`}>{total_cartridges}</span>
-          </div>
-
-          <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Tapes Created</span>
-            <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
-          </div>
-
-          <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Cartridges Collected</span>
-            <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
-          </div>
-
-          <div className='p-8 bg-rives-gray flex flex-col'>
-            <span className={`text-3xl pixelated-font`}>Total Tapes Collected</span>
-            <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
-          </div>
-        </div>
-
-      </div>
-
+      </section>
     </main>
   )
 }

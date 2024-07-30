@@ -132,7 +132,11 @@ body {
   }
 
   main {
-    @apply !pb-[164px] !pt-[96px];
+    @apply !pb-[164px] !pt-[96px] grid grid-cols-1 justify-items-center;
+  }
+
+  section {
+    @apply w-full sm:w-[80%] px-2 md:px-0;
   }
 
   .container {
