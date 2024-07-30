@@ -7,7 +7,7 @@ import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
 import { calculateTapeId, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
 import { ContractReceipt, ethers } from "ethers";
-import { VerifyPayload } from "../backend-libs/core/ifaces";
+import { VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification, verify } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
@@ -177,7 +177,7 @@ function GameplaySubmitter() {
         // submit the gameplay
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
-        const inputData: VerifyPayload = {
+        const inputData: VerifyPayloadProxy = {
             rule_id: formatRuleIdToBytes(gameplay.rule_id),
             outcard_hash: '0x' + gameplay.outcard.hash,
             tape: ethers.utils.hexlify(gameplay.log),
@@ -187,7 +187,11 @@ function GameplaySubmitter() {
         }
         try {
             setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
-            const receipt:ContractReceipt = await verify(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL}) as ContractReceipt;
+            const receipt:ContractReceipt = await verify(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            }) as ContractReceipt;
         } catch (error) {
             console.log(error)
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});

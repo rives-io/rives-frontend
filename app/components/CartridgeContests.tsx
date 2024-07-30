@@ -19,15 +19,17 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
     const [contestsLoading, setContestsLoading] = useState(false);
 
     const contestsByCartridge = async () => {
-        setContestsLoading(true);
+        if (contestsIds.length > 0) {
+            setContestsLoading(true);
 
-        const contests = (await rules(
-            {ids: contestsIds, cartridge_id: cartridgeId},
-            {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
-        ).data;
+            const contests = (await rules(
+                {ids: contestsIds, cartridge_id: cartridgeId},
+                {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
+            ).data;
 
-        setCartridgeContests(contests);
-        setContestsLoading(false);
+            setCartridgeContests(contests);
+            setContestsLoading(false);
+}
     }
 
     useEffect(() => {

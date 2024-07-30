@@ -1,6 +1,6 @@
 "use client"
 
-import { getOutputs, VerificationOutput, VerifyPayloadInput } from '../backend-libs/core/lib';
+import { getOutputs, VerificationOutput, VerifyPayloadProxyInput } from '../backend-libs/core/lib';
 import {  ethers } from "ethers";
 import { envClient } from '../utils/clientEnv';
 import React, { useEffect, useState } from 'react';
@@ -112,7 +112,7 @@ function tapesBoardFallback() {
 
 function RuleLeaderboard({cartridge_id, rule}:{
     cartridge_id:string, rule: string | undefined}) {
-    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadInput[]|VerificationOutput[]|null>(null);
+    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadProxyInput[]|VerificationOutput[]|null>(null);
     const [addressUserMap, setAddressUserMap] = useState<Record<string, User>>({});
 
     // pagenation state

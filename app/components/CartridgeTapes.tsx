@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getTapes } from "../utils/util";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
@@ -12,7 +12,7 @@ import Loading from "./Loading";
 
 
 export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string, ruleId?:string}) {
-    const [tapes, setTapes] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapes, setTapes] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesPage, setTapesPage] = useState({curr: 0, atEnd: false});
         
     const [tapesPageToLoad, setTapesPageToLoad] = useState(1);
@@ -65,7 +65,6 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
     }, [])
 
     useEffect(() => {
-        console.log("rule changed");
         setTapes([]);
         setTapesPage({curr: 0, atEnd: false});
         setTotalTapesPages(-1);
@@ -76,7 +75,6 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
     }, [ruleId])
 
     useEffect(() => {
-        console.log("running tapesByCartridge")
         tapesByCartridge();
     }, [tapesPageToLoad, reload])
 

@@ -6,21 +6,8 @@
  */
 
 export interface _Master_ {
-  IndexerPayload: IndexerPayload;
   IndexerOutput: IndexerOutput;
-}
-export interface IndexerPayload {
-  tags?: string[];
-  type?: string;
-  msg_sender?: string;
-  timestamp_gte?: number;
-  timestamp_lte?: number;
-  module?: string;
-  input_index?: number;
-  order_by?: string;
-  order_dir?: string;
-  page?: number;
-  page_size?: number;
+  IndexerPayload: IndexerPayload;
 }
 export interface IndexerOutput {
   data: OutputIndex[];
@@ -33,4 +20,19 @@ export interface OutputIndex {
   class_name: string;
   input_index: number;
   output_index?: number;
+  dapp_address?: string;
+}
+export interface IndexerPayload {
+  tags?: string[];
+  type?: string;
+  msg_sender?: string;
+  timestamp_gte?: number;
+  timestamp_lte?: number;
+  module?: string;
+  input_index?: number;
+  dapp_address?: string;
+  order_by?: string;
+  order_dir?: string;
+  page?: number;
+  page_size?: number;
 }

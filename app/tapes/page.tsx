@@ -5,9 +5,9 @@ import {  ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
-import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayload } from "../backend-libs/core/lib";
+import { cartridgeInfo, getOutputs, rules, RulesOutput, VerificationOutput, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { envClient } from "../utils/clientEnv";
-import { TapesRequest, calculateTapeId, getTapes } from "../utils/util";
+import { TapesRequest, getTapes } from "../utils/util";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import TapeCard from "../components/TapeCard";
@@ -50,7 +50,7 @@ interface TapesPagination extends TapesRequest {
 }
 
 export default function Tapes() {
-  const [verificationInputs, setVerificationInputs] = useState<Array<VerifyPayload>|null>(null);
+  const [verificationInputs, setVerificationInputs] = useState<Array<VerifyPayloadProxy>|null>(null);
   const [gifs, setGifs] = useState<Record<string,string>>({});
   const [imgs, setImgs] = useState<Record<string,string>>({});
   const [cartridgeInfoMap, setCartridgeInfoMap] = useState<Record<string, CartridgeInfo>>({});

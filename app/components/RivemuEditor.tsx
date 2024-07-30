@@ -31,7 +31,7 @@ import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
 import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge, transferCartridge, formatInCard } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { CartridgeInfo, RuleInfo, InfoCartridge, RuleData, InsertCartridgePayload, RemoveCartridgePayload, TransferCartridgePayload, CartridgesPayload, FormatInCardPayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, RuleInfo, InfoCartridge, RuleDataProxy, InsertCartridgePayloadProxy, RemoveCartridgePayloadProxy, TransferCartridgePayloadProxy, CartridgesPayload, FormatInCardPayload } from "../backend-libs/core/ifaces";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
@@ -531,11 +531,15 @@ function RivemuEditor() {
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
 
-        const inputData: InsertCartridgePayload = {
+        const inputData: InsertCartridgePayloadProxy = {
             data: ethers.utils.hexlify(cartridgeData)
         }
         try {
-            await insertCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            await insertCartridge(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            });
             setStoredCartridge(true);
             setInfoCartridge(undefined);
         } catch (error) {
@@ -603,7 +607,7 @@ function RivemuEditor() {
         // submit rule
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
-        const inputData: RuleData = {
+        const inputData: RuleDataProxy = {
             cartridge_id:formatCartridgeIdToBytes(cartridgeId),
             name:ruleName,
             description:ruleDescription||"",
@@ -620,7 +624,11 @@ function RivemuEditor() {
             save_tapes:ruleSaveTapes||false
         }
         try {
-            await createRule(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            await createRule(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            });
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
@@ -661,11 +669,15 @@ function RivemuEditor() {
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
 
-        const inputData: RemoveCartridgePayload = {
+        const inputData: RemoveCartridgePayloadProxy = {
             id: formatCartridgeIdToBytes(versionSelected.id)
         }
         try {
-            await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            });
             selectCartridge(null);
             setVersionSelected(null);
         } catch (error) {
@@ -708,12 +720,16 @@ function RivemuEditor() {
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
 
-        const inputData: TransferCartridgePayload = {
+        const inputData: TransferCartridgePayloadProxy = {
             id: formatCartridgeIdToBytes(selectedCartridge.id),
             new_user_address:newUserAddress
         }
         try {
-            await transferCartridge(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+            await transferCartridge(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            });
             selectCartridge(null);
             setNewUserAddress(undefined);
         } catch (error) {

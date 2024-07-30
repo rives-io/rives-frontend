@@ -52,12 +52,12 @@ const MAX_SPLITTABLE_OUTPUT_SIZE = 4194247;
 export async function insertCartridge(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.InsertCartridgePayload,
+    inputData: ifaces.InsertCartridgePayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: InsertCartridgePayload = new InsertCartridgePayload(inputData);
+    const data: InsertCartridgePayloadProxy = new InsertCartridgePayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.InsertCartridgePayload>(client,dappAddress,'0x5eab7461',data, options)
+    const result = await genericAdvanceInput<ifaces.InsertCartridgePayloadProxy>(client,dappAddress,'0x5eab7461',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -67,12 +67,12 @@ export async function insertCartridge(
 export async function removeCartridge(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.RemoveCartridgePayload,
+    inputData: ifaces.RemoveCartridgePayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: RemoveCartridgePayload = new RemoveCartridgePayload(inputData);
+    const data: RemoveCartridgePayloadProxy = new RemoveCartridgePayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.RemoveCartridgePayload>(client,dappAddress,'0x436046ac',data, options)
+    const result = await genericAdvanceInput<ifaces.RemoveCartridgePayloadProxy>(client,dappAddress,'0x436046ac',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -82,12 +82,12 @@ export async function removeCartridge(
 export async function transferCartridge(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.TransferCartridgePayload,
+    inputData: ifaces.TransferCartridgePayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: TransferCartridgePayload = new TransferCartridgePayload(inputData);
+    const data: TransferCartridgePayloadProxy = new TransferCartridgePayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.TransferCartridgePayload>(client,dappAddress,'0x0f38d9d7',data, options)
+    const result = await genericAdvanceInput<ifaces.TransferCartridgePayloadProxy>(client,dappAddress,'0x0f38d9d7',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -97,12 +97,12 @@ export async function transferCartridge(
 export async function createRule(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.RuleData,
+    inputData: ifaces.RuleDataProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: RuleData = new RuleData(inputData);
+    const data: RuleDataProxy = new RuleDataProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.RuleData>(client,dappAddress,'0xf65ad264',data, options)
+    const result = await genericAdvanceInput<ifaces.RuleDataProxy>(client,dappAddress,'0xf65ad264',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -112,12 +112,12 @@ export async function createRule(
 export async function verify(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.VerifyPayload,
+    inputData: ifaces.VerifyPayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: VerifyPayload = new VerifyPayload(inputData);
+    const data: VerifyPayloadProxy = new VerifyPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.VerifyPayload>(client,dappAddress,'0xdb690895',data, options)
+    const result = await genericAdvanceInput<ifaces.VerifyPayloadProxy>(client,dappAddress,'0xdb690895',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -127,12 +127,12 @@ export async function verify(
 export async function registerExternalVerification(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.VerifyPayload,
+    inputData: ifaces.VerifyPayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: VerifyPayload = new VerifyPayload(inputData);
+    const data: VerifyPayloadProxy = new VerifyPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.VerifyPayload>(client,dappAddress,'0xa98dfd7f',data, options)
+    const result = await genericAdvanceInput<ifaces.VerifyPayloadProxy>(client,dappAddress,'0xa98dfd7f',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -142,12 +142,12 @@ export async function registerExternalVerification(
 export async function externalVerification(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.ExternalVerificationPayload,
+    inputData: ifaces.ExternalVerificationPayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: ExternalVerificationPayload = new ExternalVerificationPayload(inputData);
+    const data: ExternalVerificationPayloadProxy = new ExternalVerificationPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.ExternalVerificationPayload>(client,dappAddress,'0x5c0e5b17',data, options)
+    const result = await genericAdvanceInput<ifaces.ExternalVerificationPayloadProxy>(client,dappAddress,'0x1f25d69c',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -157,12 +157,42 @@ export async function externalVerification(
 export async function awardWinners(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.AwardWinnerTapesPayload,
+    inputData: ifaces.AwardWinnerTapesPayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: AwardWinnerTapesPayload = new AwardWinnerTapesPayload(inputData);
+    const data: AwardWinnerTapesPayloadProxy = new AwardWinnerTapesPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.AwardWinnerTapesPayload>(client,dappAddress,'0xb07b85a5',data, options)
+    const result = await genericAdvanceInput<ifaces.AwardWinnerTapesPayloadProxy>(client,dappAddress,'0xb07b85a5',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
+export async function cleanTapes(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.CleanTapesPayloadProxy,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: CleanTapesPayloadProxy = new CleanTapesPayloadProxy(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.CleanTapesPayloadProxy>(client,dappAddress,'0x9ab37ddf',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
+export async function setOperatorAddress(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.SetOperatorPayload,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: SetOperatorPayload = new SetOperatorPayload(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.SetOperatorPayload>(client,dappAddress,'0xe1e9bc95',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -298,6 +328,17 @@ export async function operatorAddress(
     return output;
 }
 
+export async function proxyAddress(
+    inputData: ifaces.EmptyClass,
+    options?:QueryOptions
+):Promise<InspectReport|any> {
+    const route = 'core/proxy_address';
+    const data: EmptyClass = new EmptyClass(inputData);
+    const output: InspectReport = await genericInspect<ifaces.EmptyClass>(data,route,options);
+    if (options?.decode) { return decodeToModel(output,options.decodeModel || "json"); }
+    return output;
+}
+
 
 /*
  * Indexer Query
@@ -333,74 +374,114 @@ export function exportToModel(data: any, modelName: string): string {
     return exporter(data);
 }
 
-export class RemoveCartridgePayloadInput extends Input<ifaces.RemoveCartridgePayload> { constructor(data: CartesiInput) { super(models['RemoveCartridgePayload'],data); } }
-export function decodeToRemoveCartridgePayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): RemoveCartridgePayloadInput {
-    return new RemoveCartridgePayloadInput(output as CartesiInput);
+export class InsertCartridgePayloadProxyInput extends Input<ifaces.InsertCartridgePayloadProxy> { constructor(data: CartesiInput) { super(models['InsertCartridgePayloadProxy'],data,true); } }
+export function decodeToInsertCartridgePayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): InsertCartridgePayloadProxyInput {
+    return new InsertCartridgePayloadProxyInput(output as CartesiInput);
 }
 
-export class RemoveCartridgePayload extends IOData<ifaces.RemoveCartridgePayload> { constructor(data: ifaces.RemoveCartridgePayload, validate: boolean = true) { super(models['RemoveCartridgePayload'],data,validate); } }
-export function exportToRemoveCartridgePayload(data: ifaces.RemoveCartridgePayload): string {
-    const dataToExport: RemoveCartridgePayload = new RemoveCartridgePayload(data);
+export class InsertCartridgePayloadProxy extends IOData<ifaces.InsertCartridgePayloadProxy> { constructor(data: ifaces.InsertCartridgePayloadProxy, validate: boolean = true) { super(models['InsertCartridgePayloadProxy'],data,validate); } }
+export function exportToInsertCartridgePayloadProxy(data: ifaces.InsertCartridgePayloadProxy): string {
+    const dataToExport: InsertCartridgePayloadProxy = new InsertCartridgePayloadProxy(data);
     return dataToExport.export();
 }
-export class VerifyPayloadInput extends Input<ifaces.VerifyPayload> { constructor(data: CartesiInput) { super(models['VerifyPayload'],data); } }
-export function decodeToVerifyPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): VerifyPayloadInput {
-    return new VerifyPayloadInput(output as CartesiInput);
+export class RemoveCartridgePayloadProxyInput extends Input<ifaces.RemoveCartridgePayloadProxy> { constructor(data: CartesiInput) { super(models['RemoveCartridgePayloadProxy'],data,true); } }
+export function decodeToRemoveCartridgePayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): RemoveCartridgePayloadProxyInput {
+    return new RemoveCartridgePayloadProxyInput(output as CartesiInput);
 }
 
-export class VerifyPayload extends IOData<ifaces.VerifyPayload> { constructor(data: ifaces.VerifyPayload, validate: boolean = true) { super(models['VerifyPayload'],data,validate); } }
-export function exportToVerifyPayload(data: ifaces.VerifyPayload): string {
-    const dataToExport: VerifyPayload = new VerifyPayload(data);
+export class RemoveCartridgePayloadProxy extends IOData<ifaces.RemoveCartridgePayloadProxy> { constructor(data: ifaces.RemoveCartridgePayloadProxy, validate: boolean = true) { super(models['RemoveCartridgePayloadProxy'],data,validate); } }
+export function exportToRemoveCartridgePayloadProxy(data: ifaces.RemoveCartridgePayloadProxy): string {
+    const dataToExport: RemoveCartridgePayloadProxy = new RemoveCartridgePayloadProxy(data);
     return dataToExport.export();
 }
-export class TransferCartridgePayloadInput extends Input<ifaces.TransferCartridgePayload> { constructor(data: CartesiInput) { super(models['TransferCartridgePayload'],data); } }
-export function decodeToTransferCartridgePayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): TransferCartridgePayloadInput {
-    return new TransferCartridgePayloadInput(output as CartesiInput);
+export class TransferCartridgePayloadProxyInput extends Input<ifaces.TransferCartridgePayloadProxy> { constructor(data: CartesiInput) { super(models['TransferCartridgePayloadProxy'],data,true); } }
+export function decodeToTransferCartridgePayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): TransferCartridgePayloadProxyInput {
+    return new TransferCartridgePayloadProxyInput(output as CartesiInput);
 }
 
-export class TransferCartridgePayload extends IOData<ifaces.TransferCartridgePayload> { constructor(data: ifaces.TransferCartridgePayload, validate: boolean = true) { super(models['TransferCartridgePayload'],data,validate); } }
-export function exportToTransferCartridgePayload(data: ifaces.TransferCartridgePayload): string {
-    const dataToExport: TransferCartridgePayload = new TransferCartridgePayload(data);
+export class TransferCartridgePayloadProxy extends IOData<ifaces.TransferCartridgePayloadProxy> { constructor(data: ifaces.TransferCartridgePayloadProxy, validate: boolean = true) { super(models['TransferCartridgePayloadProxy'],data,validate); } }
+export function exportToTransferCartridgePayloadProxy(data: ifaces.TransferCartridgePayloadProxy): string {
+    const dataToExport: TransferCartridgePayloadProxy = new TransferCartridgePayloadProxy(data);
     return dataToExport.export();
 }
-export class AwardWinnerTapesPayloadInput extends Input<ifaces.AwardWinnerTapesPayload> { constructor(data: CartesiInput) { super(models['AwardWinnerTapesPayload'],data); } }
-export function decodeToAwardWinnerTapesPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): AwardWinnerTapesPayloadInput {
-    return new AwardWinnerTapesPayloadInput(output as CartesiInput);
+export class RuleDataProxyInput extends Input<ifaces.RuleDataProxy> { constructor(data: CartesiInput) { super(models['RuleDataProxy'],data,true); } }
+export function decodeToRuleDataProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): RuleDataProxyInput {
+    return new RuleDataProxyInput(output as CartesiInput);
 }
 
-export class AwardWinnerTapesPayload extends IOData<ifaces.AwardWinnerTapesPayload> { constructor(data: ifaces.AwardWinnerTapesPayload, validate: boolean = true) { super(models['AwardWinnerTapesPayload'],data,validate); } }
-export function exportToAwardWinnerTapesPayload(data: ifaces.AwardWinnerTapesPayload): string {
-    const dataToExport: AwardWinnerTapesPayload = new AwardWinnerTapesPayload(data);
+export class RuleDataProxy extends IOData<ifaces.RuleDataProxy> { constructor(data: ifaces.RuleDataProxy, validate: boolean = true) { super(models['RuleDataProxy'],data,validate); } }
+export function exportToRuleDataProxy(data: ifaces.RuleDataProxy): string {
+    const dataToExport: RuleDataProxy = new RuleDataProxy(data);
     return dataToExport.export();
 }
-export class InsertCartridgePayloadInput extends Input<ifaces.InsertCartridgePayload> { constructor(data: CartesiInput) { super(models['InsertCartridgePayload'],data); } }
-export function decodeToInsertCartridgePayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): InsertCartridgePayloadInput {
-    return new InsertCartridgePayloadInput(output as CartesiInput);
+export class VerifyPayloadProxyInput extends Input<ifaces.VerifyPayloadProxy> { constructor(data: CartesiInput) { super(models['VerifyPayloadProxy'],data,true); } }
+export function decodeToVerifyPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): VerifyPayloadProxyInput {
+    return new VerifyPayloadProxyInput(output as CartesiInput);
 }
 
-export class InsertCartridgePayload extends IOData<ifaces.InsertCartridgePayload> { constructor(data: ifaces.InsertCartridgePayload, validate: boolean = true) { super(models['InsertCartridgePayload'],data,validate); } }
-export function exportToInsertCartridgePayload(data: ifaces.InsertCartridgePayload): string {
-    const dataToExport: InsertCartridgePayload = new InsertCartridgePayload(data);
+export class VerifyPayloadProxy extends IOData<ifaces.VerifyPayloadProxy> { constructor(data: ifaces.VerifyPayloadProxy, validate: boolean = true) { super(models['VerifyPayloadProxy'],data,validate); } }
+export function exportToVerifyPayloadProxy(data: ifaces.VerifyPayloadProxy): string {
+    const dataToExport: VerifyPayloadProxy = new VerifyPayloadProxy(data);
     return dataToExport.export();
 }
-export class RuleDataInput extends Input<ifaces.RuleData> { constructor(data: CartesiInput) { super(models['RuleData'],data); } }
-export function decodeToRuleDataInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): RuleDataInput {
-    return new RuleDataInput(output as CartesiInput);
+export class ExternalVerificationPayloadProxyInput extends Input<ifaces.ExternalVerificationPayloadProxy> { constructor(data: CartesiInput) { super(models['ExternalVerificationPayloadProxy'],data,true); } }
+export function decodeToExternalVerificationPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): ExternalVerificationPayloadProxyInput {
+    return new ExternalVerificationPayloadProxyInput(output as CartesiInput);
 }
 
-export class RuleData extends IOData<ifaces.RuleData> { constructor(data: ifaces.RuleData, validate: boolean = true) { super(models['RuleData'],data,validate); } }
-export function exportToRuleData(data: ifaces.RuleData): string {
-    const dataToExport: RuleData = new RuleData(data);
+export class ExternalVerificationPayloadProxy extends IOData<ifaces.ExternalVerificationPayloadProxy> { constructor(data: ifaces.ExternalVerificationPayloadProxy, validate: boolean = true) { super(models['ExternalVerificationPayloadProxy'],data,validate); } }
+export function exportToExternalVerificationPayloadProxy(data: ifaces.ExternalVerificationPayloadProxy): string {
+    const dataToExport: ExternalVerificationPayloadProxy = new ExternalVerificationPayloadProxy(data);
     return dataToExport.export();
 }
-export class ExternalVerificationPayloadInput extends Input<ifaces.ExternalVerificationPayload> { constructor(data: CartesiInput) { super(models['ExternalVerificationPayload'],data); } }
-export function decodeToExternalVerificationPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): ExternalVerificationPayloadInput {
-    return new ExternalVerificationPayloadInput(output as CartesiInput);
+export class AwardWinnerTapesPayloadProxyInput extends Input<ifaces.AwardWinnerTapesPayloadProxy> { constructor(data: CartesiInput) { super(models['AwardWinnerTapesPayloadProxy'],data,true); } }
+export function decodeToAwardWinnerTapesPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): AwardWinnerTapesPayloadProxyInput {
+    return new AwardWinnerTapesPayloadProxyInput(output as CartesiInput);
 }
 
-export class ExternalVerificationPayload extends IOData<ifaces.ExternalVerificationPayload> { constructor(data: ifaces.ExternalVerificationPayload, validate: boolean = true) { super(models['ExternalVerificationPayload'],data,validate); } }
-export function exportToExternalVerificationPayload(data: ifaces.ExternalVerificationPayload): string {
-    const dataToExport: ExternalVerificationPayload = new ExternalVerificationPayload(data);
+export class AwardWinnerTapesPayloadProxy extends IOData<ifaces.AwardWinnerTapesPayloadProxy> { constructor(data: ifaces.AwardWinnerTapesPayloadProxy, validate: boolean = true) { super(models['AwardWinnerTapesPayloadProxy'],data,validate); } }
+export function exportToAwardWinnerTapesPayloadProxy(data: ifaces.AwardWinnerTapesPayloadProxy): string {
+    const dataToExport: AwardWinnerTapesPayloadProxy = new AwardWinnerTapesPayloadProxy(data);
+    return dataToExport.export();
+}
+export class CleanTapesPayloadProxyInput extends Input<ifaces.CleanTapesPayloadProxy> { constructor(data: CartesiInput) { super(models['CleanTapesPayloadProxy'],data,true); } }
+export function decodeToCleanTapesPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): CleanTapesPayloadProxyInput {
+    return new CleanTapesPayloadProxyInput(output as CartesiInput);
+}
+
+export class CleanTapesPayloadProxy extends IOData<ifaces.CleanTapesPayloadProxy> { constructor(data: ifaces.CleanTapesPayloadProxy, validate: boolean = true) { super(models['CleanTapesPayloadProxy'],data,validate); } }
+export function exportToCleanTapesPayloadProxy(data: ifaces.CleanTapesPayloadProxy): string {
+    const dataToExport: CleanTapesPayloadProxy = new CleanTapesPayloadProxy(data);
+    return dataToExport.export();
+}
+export class SetOperatorPayloadInput extends Input<ifaces.SetOperatorPayload> { constructor(data: CartesiInput) { super(models['SetOperatorPayload'],data); } }
+export function decodeToSetOperatorPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetOperatorPayloadInput {
+    return new SetOperatorPayloadInput(output as CartesiInput);
+}
+
+export class SetOperatorPayload extends IOData<ifaces.SetOperatorPayload> { constructor(data: ifaces.SetOperatorPayload, validate: boolean = true) { super(models['SetOperatorPayload'],data,validate); } }
+export function exportToSetOperatorPayload(data: ifaces.SetOperatorPayload): string {
+    const dataToExport: SetOperatorPayload = new SetOperatorPayload(data);
+    return dataToExport.export();
+}
+export class CartridgePayloadSplittableInput extends Input<ifaces.CartridgePayloadSplittable> { constructor(data: CartesiInput) { super(models['CartridgePayloadSplittable'],data); } }
+export function decodeToCartridgePayloadSplittableInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): CartridgePayloadSplittableInput {
+    return new CartridgePayloadSplittableInput(output as CartesiInput);
+}
+
+export class CartridgePayloadSplittable extends IOData<ifaces.CartridgePayloadSplittable> { constructor(data: ifaces.CartridgePayloadSplittable, validate: boolean = true) { super(models['CartridgePayloadSplittable'],data,validate); } }
+export function exportToCartridgePayloadSplittable(data: ifaces.CartridgePayloadSplittable): string {
+    const dataToExport: CartridgePayloadSplittable = new CartridgePayloadSplittable(data);
+    return dataToExport.export();
+}
+export class CartridgePayloadInput extends Input<ifaces.CartridgePayload> { constructor(data: CartesiInput) { super(models['CartridgePayload'],data); } }
+export function decodeToCartridgePayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): CartridgePayloadInput {
+    return new CartridgePayloadInput(output as CartesiInput);
+}
+
+export class CartridgePayload extends IOData<ifaces.CartridgePayload> { constructor(data: ifaces.CartridgePayload, validate: boolean = true) { super(models['CartridgePayload'],data,validate); } }
+export function exportToCartridgePayload(data: ifaces.CartridgePayload): string {
+    const dataToExport: CartridgePayload = new CartridgePayload(data);
     return dataToExport.export();
 }
 export class CartridgesPayloadInput extends Input<ifaces.CartridgesPayload> { constructor(data: CartesiInput) { super(models['CartridgesPayload'],data); } }
@@ -423,6 +504,36 @@ export function exportToGetCartridgeTagsPayload(data: ifaces.GetCartridgeTagsPay
     const dataToExport: GetCartridgeTagsPayload = new GetCartridgeTagsPayload(data);
     return dataToExport.export();
 }
+export class GetCartridgeAuthorsPayloadInput extends Input<ifaces.GetCartridgeAuthorsPayload> { constructor(data: CartesiInput) { super(models['GetCartridgeAuthorsPayload'],data); } }
+export function decodeToGetCartridgeAuthorsPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetCartridgeAuthorsPayloadInput {
+    return new GetCartridgeAuthorsPayloadInput(output as CartesiInput);
+}
+
+export class GetCartridgeAuthorsPayload extends IOData<ifaces.GetCartridgeAuthorsPayload> { constructor(data: ifaces.GetCartridgeAuthorsPayload, validate: boolean = true) { super(models['GetCartridgeAuthorsPayload'],data,validate); } }
+export function exportToGetCartridgeAuthorsPayload(data: ifaces.GetCartridgeAuthorsPayload): string {
+    const dataToExport: GetCartridgeAuthorsPayload = new GetCartridgeAuthorsPayload(data);
+    return dataToExport.export();
+}
+export class GetRulesPayloadInput extends Input<ifaces.GetRulesPayload> { constructor(data: CartesiInput) { super(models['GetRulesPayload'],data); } }
+export function decodeToGetRulesPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetRulesPayloadInput {
+    return new GetRulesPayloadInput(output as CartesiInput);
+}
+
+export class GetRulesPayload extends IOData<ifaces.GetRulesPayload> { constructor(data: ifaces.GetRulesPayload, validate: boolean = true) { super(models['GetRulesPayload'],data,validate); } }
+export function exportToGetRulesPayload(data: ifaces.GetRulesPayload): string {
+    const dataToExport: GetRulesPayload = new GetRulesPayload(data);
+    return dataToExport.export();
+}
+export class GetRuleTagsPayloadInput extends Input<ifaces.GetRuleTagsPayload> { constructor(data: CartesiInput) { super(models['GetRuleTagsPayload'],data); } }
+export function decodeToGetRuleTagsPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetRuleTagsPayloadInput {
+    return new GetRuleTagsPayloadInput(output as CartesiInput);
+}
+
+export class GetRuleTagsPayload extends IOData<ifaces.GetRuleTagsPayload> { constructor(data: ifaces.GetRuleTagsPayload, validate: boolean = true) { super(models['GetRuleTagsPayload'],data,validate); } }
+export function exportToGetRuleTagsPayload(data: ifaces.GetRuleTagsPayload): string {
+    const dataToExport: GetRuleTagsPayload = new GetRuleTagsPayload(data);
+    return dataToExport.export();
+}
 export class GetTapesPayloadInput extends Input<ifaces.GetTapesPayload> { constructor(data: CartesiInput) { super(models['GetTapesPayload'],data); } }
 export function decodeToGetTapesPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetTapesPayloadInput {
     return new GetTapesPayloadInput(output as CartesiInput);
@@ -443,26 +554,6 @@ export function exportToFormatInCardPayload(data: ifaces.FormatInCardPayload): s
     const dataToExport: FormatInCardPayload = new FormatInCardPayload(data);
     return dataToExport.export();
 }
-export class CartridgePayloadInput extends Input<ifaces.CartridgePayload> { constructor(data: CartesiInput) { super(models['CartridgePayload'],data); } }
-export function decodeToCartridgePayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): CartridgePayloadInput {
-    return new CartridgePayloadInput(output as CartesiInput);
-}
-
-export class CartridgePayload extends IOData<ifaces.CartridgePayload> { constructor(data: ifaces.CartridgePayload, validate: boolean = true) { super(models['CartridgePayload'],data,validate); } }
-export function exportToCartridgePayload(data: ifaces.CartridgePayload): string {
-    const dataToExport: CartridgePayload = new CartridgePayload(data);
-    return dataToExport.export();
-}
-export class CartridgePayloadSplittableInput extends Input<ifaces.CartridgePayloadSplittable> { constructor(data: CartesiInput) { super(models['CartridgePayloadSplittable'],data); } }
-export function decodeToCartridgePayloadSplittableInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): CartridgePayloadSplittableInput {
-    return new CartridgePayloadSplittableInput(output as CartesiInput);
-}
-
-export class CartridgePayloadSplittable extends IOData<ifaces.CartridgePayloadSplittable> { constructor(data: ifaces.CartridgePayloadSplittable, validate: boolean = true) { super(models['CartridgePayloadSplittable'],data,validate); } }
-export function exportToCartridgePayloadSplittable(data: ifaces.CartridgePayloadSplittable): string {
-    const dataToExport: CartridgePayloadSplittable = new CartridgePayloadSplittable(data);
-    return dataToExport.export();
-}
 export class EmptyClassInput extends Input<ifaces.EmptyClass> { constructor(data: CartesiInput) { super(models['EmptyClass'],data); } }
 export function decodeToEmptyClassInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): EmptyClassInput {
     return new EmptyClassInput(output as CartesiInput);
@@ -471,36 +562,6 @@ export function decodeToEmptyClassInput(output: CartesiReport | CartesiNotice | 
 export class EmptyClass extends IOData<ifaces.EmptyClass> { constructor(data: ifaces.EmptyClass, validate: boolean = true) { super(models['EmptyClass'],data,validate); } }
 export function exportToEmptyClass(data: ifaces.EmptyClass): string {
     const dataToExport: EmptyClass = new EmptyClass(data);
-    return dataToExport.export();
-}
-export class GetRuleTagsPayloadInput extends Input<ifaces.GetRuleTagsPayload> { constructor(data: CartesiInput) { super(models['GetRuleTagsPayload'],data); } }
-export function decodeToGetRuleTagsPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetRuleTagsPayloadInput {
-    return new GetRuleTagsPayloadInput(output as CartesiInput);
-}
-
-export class GetRuleTagsPayload extends IOData<ifaces.GetRuleTagsPayload> { constructor(data: ifaces.GetRuleTagsPayload, validate: boolean = true) { super(models['GetRuleTagsPayload'],data,validate); } }
-export function exportToGetRuleTagsPayload(data: ifaces.GetRuleTagsPayload): string {
-    const dataToExport: GetRuleTagsPayload = new GetRuleTagsPayload(data);
-    return dataToExport.export();
-}
-export class GetRulesPayloadInput extends Input<ifaces.GetRulesPayload> { constructor(data: CartesiInput) { super(models['GetRulesPayload'],data); } }
-export function decodeToGetRulesPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetRulesPayloadInput {
-    return new GetRulesPayloadInput(output as CartesiInput);
-}
-
-export class GetRulesPayload extends IOData<ifaces.GetRulesPayload> { constructor(data: ifaces.GetRulesPayload, validate: boolean = true) { super(models['GetRulesPayload'],data,validate); } }
-export function exportToGetRulesPayload(data: ifaces.GetRulesPayload): string {
-    const dataToExport: GetRulesPayload = new GetRulesPayload(data);
-    return dataToExport.export();
-}
-export class GetCartridgeAuthorsPayloadInput extends Input<ifaces.GetCartridgeAuthorsPayload> { constructor(data: CartesiInput) { super(models['GetCartridgeAuthorsPayload'],data); } }
-export function decodeToGetCartridgeAuthorsPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): GetCartridgeAuthorsPayloadInput {
-    return new GetCartridgeAuthorsPayloadInput(output as CartesiInput);
-}
-
-export class GetCartridgeAuthorsPayload extends IOData<ifaces.GetCartridgeAuthorsPayload> { constructor(data: ifaces.GetCartridgeAuthorsPayload, validate: boolean = true) { super(models['GetCartridgeAuthorsPayload'],data,validate); } }
-export function exportToGetCartridgeAuthorsPayload(data: ifaces.GetCartridgeAuthorsPayload): string {
-    const dataToExport: GetCartridgeAuthorsPayload = new GetCartridgeAuthorsPayload(data);
     return dataToExport.export();
 }
 export class CartridgeInfo extends Output<ifaces.CartridgeInfo> { constructor(output: CartesiReport | InspectReport) { super(models['CartridgeInfo'],output); } }
@@ -569,61 +630,93 @@ export function decodeToTapeAward(output: CartesiReport | CartesiNotice | Cartes
  */
 
 export const models: Models = {
-    'RemoveCartridgePayload': {
-        ioType:IOType.mutationPayload,
-        abiTypes:['bytes32'],
-        params:['id'],
-        decoder: decodeToRemoveCartridgePayloadInput,
-        exporter: exportToRemoveCartridgePayload,
-        validator: ajv.compile<ifaces.RemoveCartridgePayload>(JSON.parse('{"title": "RemoveCartridgePayload", "type": "object", "properties": {"id": {"type": "string", "format": "binary"}}, "required": ["id"]}'.replaceAll('integer','string","format":"biginteger')))
-    },
-    'VerifyPayload': {
-        ioType:IOType.mutationPayload,
-        abiTypes:['bytes32', 'bytes32', 'bytes', 'int', 'bytes32[]', 'bytes'],
-        params:['rule_id', 'outcard_hash', 'tape', 'claimed_score', 'tapes', 'in_card'],
-        decoder: decodeToVerifyPayloadInput,
-        exporter: exportToVerifyPayload,
-        validator: ajv.compile<ifaces.VerifyPayload>(JSON.parse('{"title": "VerifyPayload", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}, "outcard_hash": {"type": "string", "format": "binary"}, "tape": {"type": "string", "format": "binary"}, "claimed_score": {"type": "integer"}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}, "in_card": {"type": "string", "format": "binary"}}, "required": ["rule_id", "outcard_hash", "tape", "claimed_score", "tapes", "in_card"]}'.replaceAll('integer','string","format":"biginteger')))
-    },
-    'TransferCartridgePayload': {
-        ioType:IOType.mutationPayload,
-        abiTypes:['bytes32', 'address'],
-        params:['id', 'new_user_address'],
-        decoder: decodeToTransferCartridgePayloadInput,
-        exporter: exportToTransferCartridgePayload,
-        validator: ajv.compile<ifaces.TransferCartridgePayload>(JSON.parse('{"title": "TransferCartridgePayload", "type": "object", "properties": {"id": {"type": "string", "format": "binary"}, "new_user_address": {"type": "string"}}, "required": ["id", "new_user_address"]}'.replaceAll('integer','string","format":"biginteger')))
-    },
-    'AwardWinnerTapesPayload': {
-        ioType:IOType.mutationPayload,
-        abiTypes:['bytes32', 'uint'],
-        params:['rule_id', 'tapes_to_award'],
-        decoder: decodeToAwardWinnerTapesPayloadInput,
-        exporter: exportToAwardWinnerTapesPayload,
-        validator: ajv.compile<ifaces.AwardWinnerTapesPayload>(JSON.parse('{"title": "AwardWinnerTapesPayload", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}, "tapes_to_award": {"type": "integer"}}, "required": ["rule_id", "tapes_to_award"]}'.replaceAll('integer','string","format":"biginteger')))
-    },
-    'InsertCartridgePayload': {
+    'InsertCartridgePayloadProxy': {
         ioType:IOType.mutationPayload,
         abiTypes:['bytes'],
         params:['data'],
-        decoder: decodeToInsertCartridgePayloadInput,
-        exporter: exportToInsertCartridgePayload,
-        validator: ajv.compile<ifaces.InsertCartridgePayload>(JSON.parse('{"title": "InsertCartridgePayload", "type": "object", "properties": {"data": {"type": "string", "format": "binary"}}, "required": ["data"]}'.replaceAll('integer','string","format":"biginteger')))
+        decoder: decodeToInsertCartridgePayloadProxyInput,
+        exporter: exportToInsertCartridgePayloadProxy,
+        validator: ajv.compile<ifaces.InsertCartridgePayloadProxy>(JSON.parse('{"title": "InsertCartridgePayloadProxy", "type": "object", "properties": {"data": {"type": "string", "format": "binary"}}, "required": ["data"]}'.replaceAll('integer','string","format":"biginteger')))
     },
-    'RuleData': {
+    'RemoveCartridgePayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32'],
+        params:['id'],
+        decoder: decodeToRemoveCartridgePayloadProxyInput,
+        exporter: exportToRemoveCartridgePayloadProxy,
+        validator: ajv.compile<ifaces.RemoveCartridgePayloadProxy>(JSON.parse('{"title": "RemoveCartridgePayloadProxy", "type": "object", "properties": {"id": {"type": "string", "format": "binary"}}, "required": ["id"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'TransferCartridgePayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32', 'address'],
+        params:['id', 'new_user_address'],
+        decoder: decodeToTransferCartridgePayloadProxyInput,
+        exporter: exportToTransferCartridgePayloadProxy,
+        validator: ajv.compile<ifaces.TransferCartridgePayloadProxy>(JSON.parse('{"title": "TransferCartridgePayloadProxy", "type": "object", "properties": {"id": {"type": "string", "format": "binary"}, "new_user_address": {"type": "string"}}, "required": ["id", "new_user_address"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'RuleDataProxy': {
         ioType:IOType.mutationPayload,
         abiTypes:['bytes32', 'string', 'string', 'string', 'bytes', 'string', 'uint', 'uint', 'string[]', 'bytes32[]', 'bool', 'bool', 'bool', 'bool'],
         params:['cartridge_id', 'name', 'description', 'args', 'in_card', 'score_function', 'start', 'end', 'tags', 'tapes', 'allow_tapes', 'allow_in_card', 'save_tapes', 'save_out_cards'],
-        decoder: decodeToRuleDataInput,
-        exporter: exportToRuleData,
-        validator: ajv.compile<ifaces.RuleData>(JSON.parse('{"title": "RuleData", "type": "object", "properties": {"cartridge_id": {"type": "string", "format": "binary"}, "name": {"type": "string"}, "description": {"type": "string"}, "args": {"type": "string"}, "in_card": {"type": "string", "format": "binary"}, "score_function": {"type": "string"}, "start": {"type": "integer"}, "end": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}, "allow_tapes": {"type": "boolean"}, "allow_in_card": {"type": "boolean"}, "save_tapes": {"type": "boolean"}, "save_out_cards": {"type": "boolean"}}, "required": ["cartridge_id", "name", "description", "args", "in_card", "score_function", "start", "end", "tags", "tapes", "allow_tapes", "allow_in_card", "save_tapes", "save_out_cards"]}'.replaceAll('integer','string","format":"biginteger')))
+        decoder: decodeToRuleDataProxyInput,
+        exporter: exportToRuleDataProxy,
+        validator: ajv.compile<ifaces.RuleDataProxy>(JSON.parse('{"title": "RuleDataProxy", "type": "object", "properties": {"cartridge_id": {"type": "string", "format": "binary"}, "name": {"type": "string"}, "description": {"type": "string"}, "args": {"type": "string"}, "in_card": {"type": "string", "format": "binary"}, "score_function": {"type": "string"}, "start": {"type": "integer"}, "end": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}, "allow_tapes": {"type": "boolean"}, "allow_in_card": {"type": "boolean"}, "save_tapes": {"type": "boolean"}, "save_out_cards": {"type": "boolean"}}, "required": ["cartridge_id", "name", "description", "args", "in_card", "score_function", "start", "end", "tags", "tapes", "allow_tapes", "allow_in_card", "save_tapes", "save_out_cards"]}'.replaceAll('integer','string","format":"biginteger')))
     },
-    'ExternalVerificationPayload': {
+    'VerifyPayloadProxy': {
         ioType:IOType.mutationPayload,
-        abiTypes:['address[]', 'bytes32[]', 'bytes32[]', 'uint256[]', 'uint256[]', 'int256[]', 'uint256[]', 'bytes[]', 'bytes32[][]'],
-        params:['user_addresses', 'rule_ids', 'tape_ids', 'tape_input_indexes', 'tape_timestamps', 'scores', 'error_codes', 'outcards', 'tapes'],
-        decoder: decodeToExternalVerificationPayloadInput,
-        exporter: exportToExternalVerificationPayload,
-        validator: ajv.compile<ifaces.ExternalVerificationPayload>(JSON.parse('{"title": "ExternalVerificationPayload", "type": "object", "properties": {"user_addresses": {"type": "array", "items": {"type": "string"}}, "rule_ids": {"type": "array", "items": {"type": "string", "format": "binary"}}, "tape_ids": {"type": "array", "items": {"type": "string", "format": "binary"}}, "tape_input_indexes": {"type": "array", "items": {"type": "integer"}}, "tape_timestamps": {"type": "array", "items": {"type": "integer"}}, "scores": {"type": "array", "items": {"type": "integer"}}, "error_codes": {"type": "array", "items": {"type": "integer"}}, "outcards": {"type": "array", "items": {"type": "string", "format": "binary"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}}, "required": ["user_addresses", "rule_ids", "tape_ids", "tape_input_indexes", "tape_timestamps", "scores", "error_codes", "outcards", "tapes"]}'.replaceAll('integer','string","format":"biginteger')))
+        abiTypes:['bytes32', 'bytes32', 'bytes', 'int', 'bytes32[]', 'bytes'],
+        params:['rule_id', 'outcard_hash', 'tape', 'claimed_score', 'tapes', 'in_card'],
+        decoder: decodeToVerifyPayloadProxyInput,
+        exporter: exportToVerifyPayloadProxy,
+        validator: ajv.compile<ifaces.VerifyPayloadProxy>(JSON.parse('{"title": "VerifyPayloadProxy", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}, "outcard_hash": {"type": "string", "format": "binary"}, "tape": {"type": "string", "format": "binary"}, "claimed_score": {"type": "integer"}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}, "in_card": {"type": "string", "format": "binary"}}, "required": ["rule_id", "outcard_hash", "tape", "claimed_score", "tapes", "in_card"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'ExternalVerificationPayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32[]', 'int256[]', 'uint256[]', 'bytes[]', 'bytes32[][]'],
+        params:['tape_ids', 'scores', 'error_codes', 'outcards', 'tapes'],
+        decoder: decodeToExternalVerificationPayloadProxyInput,
+        exporter: exportToExternalVerificationPayloadProxy,
+        validator: ajv.compile<ifaces.ExternalVerificationPayloadProxy>(JSON.parse('{"title": "ExternalVerificationPayloadProxy", "type": "object", "properties": {"tape_ids": {"type": "array", "items": {"type": "string", "format": "binary"}}, "scores": {"type": "array", "items": {"type": "integer"}}, "error_codes": {"type": "array", "items": {"type": "integer"}}, "outcards": {"type": "array", "items": {"type": "string", "format": "binary"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}}, "required": ["tape_ids", "scores", "error_codes", "outcards", "tapes"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'AwardWinnerTapesPayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32', 'uint'],
+        params:['rule_id', 'tapes_to_award'],
+        decoder: decodeToAwardWinnerTapesPayloadProxyInput,
+        exporter: exportToAwardWinnerTapesPayloadProxy,
+        validator: ajv.compile<ifaces.AwardWinnerTapesPayloadProxy>(JSON.parse('{"title": "AwardWinnerTapesPayloadProxy", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}, "tapes_to_award": {"type": "integer"}}, "required": ["rule_id", "tapes_to_award"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'CleanTapesPayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32'],
+        params:['rule_id'],
+        decoder: decodeToCleanTapesPayloadProxyInput,
+        exporter: exportToCleanTapesPayloadProxy,
+        validator: ajv.compile<ifaces.CleanTapesPayloadProxy>(JSON.parse('{"title": "CleanTapesPayloadProxy", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}}, "required": ["rule_id"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'SetOperatorPayload': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['address'],
+        params:['new_operator_address'],
+        decoder: decodeToSetOperatorPayloadInput,
+        exporter: exportToSetOperatorPayload,
+        validator: ajv.compile<ifaces.SetOperatorPayload>(JSON.parse('{"title": "SetOperatorPayload", "type": "object", "properties": {"new_operator_address": {"type": "string"}}, "required": ["new_operator_address"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'CartridgePayloadSplittable': {
+        ioType:IOType.queryPayload,
+        abiTypes:[],
+        params:['id', 'part'],
+        decoder: decodeToCartridgePayloadSplittableInput,
+        exporter: exportToCartridgePayloadSplittable,
+        validator: ajv.compile<ifaces.CartridgePayloadSplittable>(JSON.parse('{"title": "CartridgePayloadSplittable", "type": "object", "properties": {"id": {"type": "string"}, "part": {"type": "integer"}}, "required": ["id"]}'))
+    },
+    'CartridgePayload': {
+        ioType:IOType.queryPayload,
+        abiTypes:[],
+        params:['id'],
+        decoder: decodeToCartridgePayloadInput,
+        exporter: exportToCartridgePayload,
+        validator: ajv.compile<ifaces.CartridgePayload>(JSON.parse('{"title": "CartridgePayload", "type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}'))
     },
     'CartridgesPayload': {
         ioType:IOType.queryPayload,
@@ -641,53 +734,13 @@ export const models: Models = {
         exporter: exportToGetCartridgeTagsPayload,
         validator: ajv.compile<ifaces.GetCartridgeTagsPayload>(JSON.parse('{"title": "GetCartridgeTagsPayload", "type": "object", "properties": {"name": {"type": "string"}}}'))
     },
-    'GetTapesPayload': {
+    'GetCartridgeAuthorsPayload': {
         ioType:IOType.queryPayload,
         abiTypes:[],
-        params:['cartridge_id', 'rule_id', 'id', 'user_address', 'ids', 'timestamp_lte', 'timestamp_gte', 'page', 'page_size', 'order_by', 'order_dir', 'tags', 'tags_or', 'full'],
-        decoder: decodeToGetTapesPayloadInput,
-        exporter: exportToGetTapesPayload,
-        validator: ajv.compile<ifaces.GetTapesPayload>(JSON.parse('{"title": "GetTapesPayload", "type": "object", "properties": {"cartridge_id": {"type": "string"}, "rule_id": {"type": "string"}, "id": {"type": "string"}, "user_address": {"type": "string"}, "ids": {"type": "array", "items": {"type": "string"}}, "timestamp_lte": {"type": "integer"}, "timestamp_gte": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "order_by": {"type": "string"}, "order_dir": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}, "tags_or": {"type": "boolean"}, "full": {"type": "boolean"}}}'))
-    },
-    'FormatInCardPayload': {
-        ioType:IOType.queryPayload,
-        abiTypes:[],
-        params:['rule_id', 'cartridge_id', 'in_card', 'tapes'],
-        decoder: decodeToFormatInCardPayloadInput,
-        exporter: exportToFormatInCardPayload,
-        validator: ajv.compile<ifaces.FormatInCardPayload>(JSON.parse('{"title": "FormatInCardPayload", "type": "object", "properties": {"rule_id": {"type": "string"}, "cartridge_id": {"type": "string"}, "in_card": {"type": "string"}, "tapes": {"type": "array", "items": {"type": "string"}}}}'))
-    },
-    'CartridgePayload': {
-        ioType:IOType.queryPayload,
-        abiTypes:[],
-        params:['id'],
-        decoder: decodeToCartridgePayloadInput,
-        exporter: exportToCartridgePayload,
-        validator: ajv.compile<ifaces.CartridgePayload>(JSON.parse('{"title": "CartridgePayload", "type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}'))
-    },
-    'CartridgePayloadSplittable': {
-        ioType:IOType.queryPayload,
-        abiTypes:[],
-        params:['id', 'part'],
-        decoder: decodeToCartridgePayloadSplittableInput,
-        exporter: exportToCartridgePayloadSplittable,
-        validator: ajv.compile<ifaces.CartridgePayloadSplittable>(JSON.parse('{"title": "CartridgePayloadSplittable", "type": "object", "properties": {"id": {"type": "string"}, "part": {"type": "integer"}}, "required": ["id"]}'))
-    },
-    'EmptyClass': {
-        ioType:IOType.queryPayload,
-        abiTypes:[],
-        params:[],
-        decoder: decodeToEmptyClassInput,
-        exporter: exportToEmptyClass,
-        validator: ajv.compile<ifaces.EmptyClass>(JSON.parse('{"title": "EmptyClass", "type": "object", "properties": {}}'))
-    },
-    'GetRuleTagsPayload': {
-        ioType:IOType.queryPayload,
-        abiTypes:[],
-        params:['name', 'cartridge_id'],
-        decoder: decodeToGetRuleTagsPayloadInput,
-        exporter: exportToGetRuleTagsPayload,
-        validator: ajv.compile<ifaces.GetRuleTagsPayload>(JSON.parse('{"title": "GetRuleTagsPayload", "type": "object", "properties": {"name": {"type": "string"}, "cartridge_id": {"type": "string"}}}'))
+        params:['name'],
+        decoder: decodeToGetCartridgeAuthorsPayloadInput,
+        exporter: exportToGetCartridgeAuthorsPayload,
+        validator: ajv.compile<ifaces.GetCartridgeAuthorsPayload>(JSON.parse('{"title": "GetCartridgeAuthorsPayload", "type": "object", "properties": {"name": {"type": "string"}}}'))
     },
     'GetRulesPayload': {
         ioType:IOType.queryPayload,
@@ -697,13 +750,37 @@ export const models: Models = {
         exporter: exportToGetRulesPayload,
         validator: ajv.compile<ifaces.GetRulesPayload>(JSON.parse('{"title": "GetRulesPayload", "type": "object", "properties": {"cartridge_id": {"type": "string"}, "id": {"type": "string"}, "ids": {"type": "array", "items": {"type": "string"}}, "active_ts": {"type": "integer"}, "has_start": {"type": "boolean"}, "has_end": {"type": "boolean"}, "created_by": {"type": "string"}, "name": {"type": "string"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "order_by": {"type": "string"}, "order_dir": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}, "tags_or": {"type": "boolean"}, "full": {"type": "boolean"}}}'))
     },
-    'GetCartridgeAuthorsPayload': {
+    'GetRuleTagsPayload': {
         ioType:IOType.queryPayload,
         abiTypes:[],
-        params:['name'],
-        decoder: decodeToGetCartridgeAuthorsPayloadInput,
-        exporter: exportToGetCartridgeAuthorsPayload,
-        validator: ajv.compile<ifaces.GetCartridgeAuthorsPayload>(JSON.parse('{"title": "GetCartridgeAuthorsPayload", "type": "object", "properties": {"name": {"type": "string"}}}'))
+        params:['name', 'cartridge_id'],
+        decoder: decodeToGetRuleTagsPayloadInput,
+        exporter: exportToGetRuleTagsPayload,
+        validator: ajv.compile<ifaces.GetRuleTagsPayload>(JSON.parse('{"title": "GetRuleTagsPayload", "type": "object", "properties": {"name": {"type": "string"}, "cartridge_id": {"type": "string"}}}'))
+    },
+    'GetTapesPayload': {
+        ioType:IOType.queryPayload,
+        abiTypes:[],
+        params:['cartridge_id', 'rule_id', 'id', 'user_address', 'ids', 'timestamp_lte', 'timestamp_gte', 'rank_lte', 'rank_gte', 'page', 'page_size', 'order_by', 'order_dir', 'tags', 'tags_or', 'full'],
+        decoder: decodeToGetTapesPayloadInput,
+        exporter: exportToGetTapesPayload,
+        validator: ajv.compile<ifaces.GetTapesPayload>(JSON.parse('{"title": "GetTapesPayload", "type": "object", "properties": {"cartridge_id": {"type": "string"}, "rule_id": {"type": "string"}, "id": {"type": "string"}, "user_address": {"type": "string"}, "ids": {"type": "array", "items": {"type": "string"}}, "timestamp_lte": {"type": "integer"}, "timestamp_gte": {"type": "integer"}, "rank_lte": {"type": "integer"}, "rank_gte": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "order_by": {"type": "string"}, "order_dir": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}, "tags_or": {"type": "boolean"}, "full": {"type": "boolean"}}}'))
+    },
+    'FormatInCardPayload': {
+        ioType:IOType.queryPayload,
+        abiTypes:[],
+        params:['rule_id', 'cartridge_id', 'in_card', 'tapes'],
+        decoder: decodeToFormatInCardPayloadInput,
+        exporter: exportToFormatInCardPayload,
+        validator: ajv.compile<ifaces.FormatInCardPayload>(JSON.parse('{"title": "FormatInCardPayload", "type": "object", "properties": {"rule_id": {"type": "string"}, "cartridge_id": {"type": "string"}, "in_card": {"type": "string"}, "tapes": {"type": "array", "items": {"type": "string"}}}}'))
+    },
+    'EmptyClass': {
+        ioType:IOType.queryPayload,
+        abiTypes:[],
+        params:[],
+        decoder: decodeToEmptyClassInput,
+        exporter: exportToEmptyClass,
+        validator: ajv.compile<ifaces.EmptyClass>(JSON.parse('{"title": "EmptyClass", "type": "object", "properties": {}}'))
     },
     'CartridgeInfo': {
         ioType:IOType.report,
@@ -752,7 +829,7 @@ export const models: Models = {
         abiTypes:[],
         params:['data', 'total', 'page'],
         decoder: decodeToTapesOutput,
-        validator: ajv.compile<ifaces.TapesOutput>(JSON.parse('{"title": "TapesOutput", "type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/TapeInfo"}}, "total": {"type": "integer"}, "page": {"type": "integer"}}, "required": ["data", "total", "page"], "definitions": {"TapeInfo": {"title": "TapeInfo", "type": "object", "properties": {"id": {"type": "string"}, "cartridge_id": {"type": "string"}, "rule_id": {"type": "string"}, "user_address": {"type": "string"}, "timestamp": {"type": "integer"}, "input_index": {"type": "integer"}, "score": {"type": "integer"}, "verified": {"type": "boolean"}, "in_card": {"type": "string", "format": "binary"}, "data": {"type": "string", "format": "binary"}, "out_card": {"type": "string", "format": "binary"}, "tapes": {"type": "array", "items": {"type": "string"}}}, "required": ["id", "cartridge_id", "rule_id", "user_address", "timestamp"]}}}'))
+        validator: ajv.compile<ifaces.TapesOutput>(JSON.parse('{"title": "TapesOutput", "type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/TapeInfo"}}, "total": {"type": "integer"}, "page": {"type": "integer"}}, "required": ["data", "total", "page"], "definitions": {"TapeInfo": {"title": "TapeInfo", "type": "object", "properties": {"id": {"type": "string"}, "cartridge_id": {"type": "string"}, "rule_id": {"type": "string"}, "user_address": {"type": "string"}, "timestamp": {"type": "integer"}, "input_index": {"type": "integer"}, "score": {"type": "integer"}, "rank": {"type": "integer"}, "verified": {"type": "boolean"}, "in_card": {"type": "string", "format": "binary"}, "data": {"type": "string", "format": "binary"}, "out_card": {"type": "string", "format": "binary"}, "tapes": {"type": "array", "items": {"type": "string"}}}, "required": ["id", "cartridge_id", "rule_id", "user_address", "timestamp"]}}}'))
     },
     'CartridgeEvent': {
         ioType:IOType.notice,

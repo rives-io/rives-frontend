@@ -1,5 +1,5 @@
 import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
-import { cartridgeInfo, getOutputs, rules, VerifyPayload } from '@/app/backend-libs/core/lib';
+import { cartridgeInfo, getOutputs, rules, VerifyPayloadProxy } from '@/app/backend-libs/core/lib';
 import ContestCard from '@/app/components/ContestCard';
 import RivemuPlayer from '@/app/components/RivemuPlayer';
 import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
@@ -46,7 +46,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
     if (res.data.length == 0) return notFound();
     
-    const tape:VerifyPayload = res.data[0];
+    const tape:VerifyPayloadProxy = res.data[0];
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];

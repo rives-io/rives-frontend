@@ -42,8 +42,8 @@ export interface ContestCardInfo extends RuleInfo, Contest {
 }
 
 export default function ContestCard({contest, cartridge}:{contest:ContestCardInfo, cartridge:CartridgeInfo}) {
-    const isContest = contest.start && contest.end;
-
+    const contests = envClient.CONTESTS as Record<string,Contest>;
+    const isContest = contest.start && contest.end && contests[contest.id] != undefined;
     const [nTapes, setNTapes] = useState<number>();
 
     useEffect(() => {

@@ -24,7 +24,7 @@ export function SelectedCartridgeProvider({ children }:{ children: React.ReactNo
     }
 
     const fetchingCartridgeInfo = () => {
-        setSelectedCartridge({id: "", created_at: 0, name: "", user_address: "", authors: [], fetching: true});
+        setSelectedCartridge({id: "", created_at: 0, updated_at: 0, name: "", user_address: "", authors: [], fetching: true});
     }
 
     return (

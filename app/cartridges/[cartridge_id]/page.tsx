@@ -13,8 +13,6 @@ export default async function Cartridge({ params }: { params: { cartridge_id: st
         {cartridge_id: cartridge.last_version},
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}
     )).data;
-    console.log("rules",cartridgeRules)
-
 
     return (
         <CartridgePage cartridge={cartridge} rulesInfo={cartridgeRules} ></CartridgePage>

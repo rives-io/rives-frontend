@@ -7,7 +7,7 @@ import { useEffect, useState, Fragment } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { Contract, ContractReceipt, ethers, BigNumber, PayableOverrides } from "ethers";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayload, cartridgeInfo, getOutputs, CartridgeInfo } from "../backend-libs/core/lib";
+import { VerificationOutput, cartridgeInfo, getOutputs, CartridgeInfo } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { Input } from '@mui/base/Input';
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"

@@ -26,7 +26,7 @@ import TextField from '@mui/material/TextField';
 import { GIF_FRAME_FREQ, gameplayContext } from "../play/GameplayContextProvider";
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayload, cartridge, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
+import { VerificationOutput, VerifyPayloadProxy, cartridge, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
 import { FormatInCardPayload, InfoCartridge, RuleInfo } from "../backend-libs/core/ifaces";
 import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
@@ -124,8 +124,8 @@ const getScore = async (tapeId:string):Promise<string> => {
     return out[0].score.toString();
 }
 
-const getTapePayload = async (tapeId:string):Promise<VerifyPayload> => {
-    const replayLogs:Array<VerifyPayload> = (await getOutputs(
+const getTapePayload = async (tapeId:string):Promise<VerifyPayloadProxy> => {
+    const replayLogs:Array<VerifyPayloadProxy> = (await getOutputs(
         {
             tags: ["tape",tapeId],
             type: 'input'
@@ -148,7 +148,7 @@ function RivemuPlayer(
     // rivemu state
     const [cartridgeData, setCartridgeData] = useState<Uint8Array>();
     const [rule, setRule] = useState<RuleInfo>();
-    const [tape, setTape] = useState<VerifyPayload>();
+    const [tape, setTape] = useState<VerifyPayloadProxy>();
     const [tapeInfo, setTapeInfo] = useState<TapeInfo>();
     const [entropy, setEntropy] = useState<string>("entropy");
     const [currScore, setCurrScore] = useState<number>();
@@ -224,7 +224,6 @@ function RivemuPlayer(
                 decodeModel:"bytes",
                 method:"POST"
         }).then(out => {
-            console.log("incard formatted",out)
             setInCard(out);
         });
 
@@ -256,7 +255,7 @@ function RivemuPlayer(
 
     const loadTape = (tapeId:string,loadRuleFromTape:boolean) => {
         setLoadingMessage("Loading tape");
-        getTapePayload(tapeId).then((out: VerifyPayload) => {
+        getTapePayload(tapeId).then((out: VerifyPayloadProxy) => {
             if (!out) {
                 setErrorMessage("Tape not found")
                 return
