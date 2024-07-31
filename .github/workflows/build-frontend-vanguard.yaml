@@ -9,6 +9,7 @@ env:
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
+    environment: Vanguard
 
     permissions:
       packages: write
@@ -17,6 +18,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up .env
+        env:
+          DOT_ENV_VARIABLES: >-
+            INVITE_CODE_KEY
+            NEXT_PUBLIC_ASSETS_BLOCK
+            NEXT_PUBLIC_CARTESI_NODE_URL
+            NEXT_PUBLIC_CARTRIDGE_CONTRACT
+            NEXT_PUBLIC_CONTESTS
+            NEXT_PUBLIC_DAPP_ADDR
+            NEXT_PUBLIC_DEPLOYMENT_URL
+            NEXT_PUBLIC_GIF_SERVER_URL
+            NEXT_PUBLIC_NETWORK_CHAIN_ID
+            NEXT_PUBLIC_OPERATOR_ADDR
+            NEXT_PUBLIC_TAPE_CONTRACT
+            PRIVY_APP_ID
+            PRIVY_APP_SECRET
+          INVITE_CODE_KEY: ${{ secrets.INVITE_CODE_KEY }}
+          NEXT_PUBLIC_ASSETS_BLOCK: ${{ vars.NEXT_PUBLIC_ASSETS_BLOCK }}
+          NEXT_PUBLIC_CARTESI_NODE_URL: ${{ vars.NEXT_PUBLIC_CARTESI_NODE_URL }}
+          NEXT_PUBLIC_CARTRIDGE_CONTRACT: ${{ vars.NEXT_PUBLIC_CARTRIDGE_CONTRACT }}
+          NEXT_PUBLIC_CONTESTS: ${{ vars.NEXT_PUBLIC_CONTESTS }}
+          NEXT_PUBLIC_DAPP_ADDR: ${{ vars.NEXT_PUBLIC_DAPP_ADDR }}
+          NEXT_PUBLIC_DEPLOYMENT_URL: ${{ vars.NEXT_PUBLIC_DEPLOYMENT_URL }}
+          NEXT_PUBLIC_GIF_SERVER_URL: ${{ vars.NEXT_PUBLIC_GIF_SERVER_URL }}
+          NEXT_PUBLIC_NETWORK_CHAIN_ID: ${{ vars.NEXT_PUBLIC_NETWORK_CHAIN_ID }}
+          NEXT_PUBLIC_OPERATOR_ADDR: ${{ vars.NEXT_PUBLIC_OPERATOR_ADDR }}
+          NEXT_PUBLIC_TAPE_CONTRACT: ${{ vars.NEXT_PUBLIC_TAPE_CONTRACT }}
+          PRIVY_APP_ID: ${{ vars.PRIVY_APP_ID }}
+          PRIVY_APP_SECRET: ${{ secrets.PRIVY_APP_SECRET }}
+        run: |
+          rm .env
+          for var in $DOT_ENV_VARIABLES; do
+            echo $var=${!var} >> .env
+          done
+          echo Final .env:
+          cat .env
+
       - name: Build image
         run: >-
           docker build . --tag $IMAGE_NAME
@@ -24,7 +62,6 @@ jobs:
           --label "org.opencontainers.image.title=$IMAGE_NAME"
           --label "org.opencontainers.image.description=RIVES Frontend"
           --label "org.opencontainers.image.source=https://github.com/rives-io/rives-frontend"
-          --build-arg "NETWORK=vanguard"
 
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin

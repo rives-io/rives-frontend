@@ -16,8 +16,7 @@ const getCartridgeData = async (cartridgeId:string) => {
       {
           decode:true,
           decodeModel:"bytes",
-          cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-          cache:"force-cache"
+          cartesiNodeUrl: envClient.CARTESI_NODE_URL
       }
   );
   

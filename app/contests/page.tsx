@@ -1,9 +1,17 @@
 import { envClient } from "@/app/utils/clientEnv";
 import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/ifaces";
 import { cartridgeInfo, rules } from "../backend-libs/core/lib";
-import { Contest, ContestStatus, getContestStatus, getContestStatusMessage } from "../utils/common";
-import Link from "next/link";
-import Image from "next/image";
+import { Contest, getContestStatus } from "../utils/common";
+import ContestCard from "../components/ContestCard";
+import { Metadata } from "next";
+import { getUsersByAddress, User } from "../utils/privyApi";
+
+export const revalidate = 0 // revalidate always
+
+export const metadata: Metadata = {
+  title: 'Contests',
+  description: 'Contests',
+}
 
 interface RuleWithMetadata extends RuleInfo, Contest {}
 
@@ -40,6 +48,7 @@ export default async function Contests() {
   });
 
   let cartridgeInfoMap:Record<string, CartridgeInfo> = {};
+  let userAddresses:Set<string> = new Set();
   
   if (contests.length == 0) {
     return (
@@ -54,54 +63,29 @@ export default async function Contests() {
     if (!cartridgeInfoMap[contests[i].cartridge_id]) {
       const cartridge:CartridgeInfo = await cartridgeInfo(
         {id:contests[i].cartridge_id},
-        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"}
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
       );
 
       cartridgeInfoMap[cartridge.id] = cartridge;
+      userAddresses.add(cartridge.user_address);
     }
   }
 
-  // const currDate = new Date().getTime()/1000; // divide by 1000 to convert from miliseconds to seconds
-
+  const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
   return (
     <main>
-      <section className="py-16 my-8 w-full flex justify-center">
-        <div className="flex flex-col space-y-8 w-[95%] sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
+      <section className="flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
-              return (
-                <Link key={index} href={`/contests/${contest.id}`}
-                  className="bg-gray-400 flex items-center space-x-2 p-4 border-2 border-transparent hover:border-white"
-                >
-    
-                  <Image alt={"Cover " + cartridgeInfoMap[contest.cartridge_id].name}
-                    id="canvas-cover"
-                    width={120}
-                    height={120}
-                    style={{
-                        imageRendering: "pixelated",
-                    }}
-                    src={cartridgeInfoMap[contest.cartridge_id].cover? `data:image/png;base64,${cartridgeInfoMap[contest.cartridge_id].cover}`:"/logo.png"}
-                  />
-                  
-                  <div className="flex flex-col items-center lg:flex-row lg:space-x-2 lg:grow">
-                    <span className="text-xl md:text-2xl lg:w-[60%]">{contest.name}</span>
-                    
-                    <div className="flex flex-col text-xs md:text-base self-start lg:w-[40%]">
-                      <div className="flex ">
-                        <span>Prize:</span>
-                        <span className="ms-3 md:ms-4">{contest.prize}</span>
-                      </div>
 
-                      <div className="flex flex-wrap">
-                        <span>Status:</span>
-                        <span>{getContestStatusMessage(getContestStatus(contest))}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+              const cartridgeCreatorAddr = cartridgeInfoMap[contest.cartridge_id].user_address.toLowerCase();
+              const cartridgeCreatorUser = userMap[cartridgeCreatorAddr] || null;
+              return (
+                <ContestCard key={index} contest={contest} 
+                cartridge={{...cartridgeInfoMap[contest.cartridge_id], user: cartridgeCreatorUser}} />
               )
             })
           }

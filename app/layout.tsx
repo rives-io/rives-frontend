@@ -1,13 +1,19 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/app/components/Navbar';
-import {Web3OnboardProviderClient} from './utils/web3OnboardProvider';
-import { fontPressStart2P } from './utils/font';
 import Footer from './components/Footer';
+import PrivyProviders from './utils/privyProvider';
+import { envClient } from './utils/clientEnv';
+
 
 export const metadata: Metadata = {
-  title: 'RiVES',
-  description: 'RiscV Verifiable Entertainment System',
+  metadataBase: new URL(envClient.DEPLOYMENT_URL),
+  title: {
+    template: "%s | RIVES",
+    default: "RIVES"
+  },
+  description: 'RISC-V Verifiable Entertainment System',
+
 }
 
 export default function RootLayout({
@@ -18,13 +24,13 @@ export default function RootLayout({
 
   return (
     <html lang="en-US">
-      <Web3OnboardProviderClient>
-        <body className={fontPressStart2P.className}>
+      <body>
+        <PrivyProviders>
           <Navbar></Navbar>
           {children}
           <Footer></Footer>
-        </body>
-      </Web3OnboardProviderClient>
+        </PrivyProviders>
+      </body>
     </html>
   )
 }

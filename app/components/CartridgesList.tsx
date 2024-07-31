@@ -1,13 +1,14 @@
 "use client"
 
 
-import { cache, useContext, useEffect, useState } from 'react';
+import { cache, useEffect, useState } from 'react';
 import { cartridges as cartridgerequest} from "../backend-libs/core/lib";
 import { envClient } from '../utils/clientEnv';
 import CartridgeCard from './CartridgeCard';
 import { CartridgeInfo } from '../backend-libs/core/ifaces';
-import RivesLogo from "../components/svg/RivesLogo";
-import { selectedCartridgeContext } from '../cartridges/selectedCartridgeProvider';
+import Loading from './Loading';
+import { User } from '../utils/privyApi';
+import { getUsersFromCartridges } from '../utils/util';
 
 
 
@@ -16,8 +17,7 @@ interface CartridgesRequest {
     pageSize:number,
     atEnd:boolean,
     fetching:boolean,
-    requestedCartridgedFound:boolean,   // marks if the requested cartridge was found in one of the pages
-    tgs?:string[],      // can be used to filter by cartridge tags
+    tags?:string[],      // can be used to filter by cartridge tags
     authors?:string[]   // can be used to filter by cartridge authors
 }
 
@@ -25,45 +25,24 @@ interface CartridgesRequest {
 const getCartridges = cache(async (cartridgesRequestOptions:CartridgesRequest) => {
 	const cartridges: any[] = (await cartridgerequest(
         {...cartridgesRequestOptions, get_cover: true },
-        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"})
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
     ).data;
 
     return cartridges;
 })
 
-function listLoaderFallback() {
-	const arr = Array.from(Array(8).keys());
-	return (
-		<>
-            {
-                arr.map((num, index) => {
-                    return (
-						<div key={index} className="w-48 h-64 grid grid-cols-1 p-2 bg-black animate-pulse">
-							<RivesLogo className="place-self-start" style={{width:50}}/>
-							<div className="w-fill h-36 bg-gray-500 relative"></div>
-							<div className="place-self-end p-1 bg-gray-500 flex flex-col w-full h-16"></div>
-						</div>
-					)
-                })
-            }
-        </>
-	)
-}
 
-function CartridgesList({requestedCartridge}:{requestedCartridge?:CartridgeInfo}) {
-    const [cartridges, setCartridges] = useState<Array<CartridgeInfo>|null>(requestedCartridge? [requestedCartridge]:null);
+function CartridgesList() {
+    const [cartridges, setCartridges] = useState<Array<CartridgeInfo>|null>(null);
     const [cartridgesRequestOptions, setCartridgesRequestOptions] = useState<CartridgesRequest>(
-        {currentPage: 1, pageSize: 10, requestedCartridgedFound: false, atEnd: false, fetching: false}
+        {currentPage: 1, pageSize: 12, atEnd: false, fetching: false}
     );
-    const {changeCartridge} = useContext(selectedCartridgeContext);
+    const [userMap, setUserMap] = useState<Record<string, User>>({});
 
 
     useEffect(() => {
         const getFirstPage = async () => {
             await nextPage();
-
-            // selects the requestedCartridge
-            if (requestedCartridge) changeCartridge(requestedCartridge);
         }
     
         getFirstPage();
@@ -81,16 +60,8 @@ function CartridgesList({requestedCartridge}:{requestedCartridge?:CartridgeInfo}
             return;
         }
 
-        let found = cartridgesRequestOptions.requestedCartridgedFound;
-        if (!found && requestedCartridge) {
-            for (let i = 0; i < newCartridges.length; i++) {
-                if (newCartridges[i].id.toLowerCase() == requestedCartridge.id.toLowerCase()) {
-                    found = true;
-                    newCartridges.splice(i,1); // remove cartridge "i" because it is the requestedCartridge
-                    break;
-                }
-            }
-        }
+        const newUserMap:Record<string, User> = await getUsersFromCartridges(newCartridges, userMap);
+        if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
 
         if (cartridges) setCartridges([...cartridges, ...newCartridges]);
         else setCartridges(newCartridges);
@@ -98,13 +69,16 @@ function CartridgesList({requestedCartridge}:{requestedCartridge?:CartridgeInfo}
         setCartridgesRequestOptions({...cartridgesRequestOptions, 
             currentPage: cartridgesRequestOptions.currentPage+1, 
             fetching: false,
-            requestedCartridgedFound: found,
             atEnd: newCartridges.length < cartridgesRequestOptions.pageSize
         });
     }
 
-    if (cartridgesRequestOptions.fetching || !cartridges || (requestedCartridge && cartridges?.length == 1)) {
-        return listLoaderFallback();
+    if (cartridgesRequestOptions.fetching || !cartridges) {
+        return (
+            <div className='col-span-full flex justify-center'>
+                <Loading msg='Loading Cartridges' />
+            </div>
+        )
     }
 
     if (cartridges.length == 0) {
@@ -117,7 +91,7 @@ function CartridgesList({requestedCartridge}:{requestedCartridge?:CartridgeInfo}
                 cartridges?.map((cartridge: CartridgeInfo, index: number) => {
                     return (
                         <div key={index}>
-                            <CartridgeCard cartridge={cartridge} />
+                            <CartridgeCard cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null} />
                         </div>
                     );
                 })

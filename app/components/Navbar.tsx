@@ -3,71 +3,66 @@
 import Link from 'next/link'
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from 'react'
-import { useConnectWallet, useSetChain } from '@web3-onboard/react';
-import RivesLogo from './svg/RivesLogo';
+import rivesLogo from '@/public/logo.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Menu } from '@headlessui/react'
+import { usePrivy } from '@privy-io/react-auth';
+import Image from 'next/image';
 
 function Navbar() {
     const pathname = usePathname();
-    const [{ wallet, connecting }, connect, disconnect] = useConnectWallet();
-    const [{ chains, connectedChain }, setChain] = useSetChain();
-    const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span>Connect</span>);
+    const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl pixelated-font`}>Connect</span>);
+    const {ready, authenticated, login, user} = usePrivy();
+    // Disable login when Privy is not ready or the user is already authenticated
+    const disableLogin = !ready || (ready && authenticated);
 
-    useEffect(() => {
-        if (!connectedChain) return;
-
-        chains.forEach((chain) => {
-            if (connectedChain.id == chain.id) return;
-        })
-
-        setChain({chainId: chains[0].id});
-
-      }, [connectedChain])
+    const onMyProfile = (ready && authenticated) && pathname.startsWith("/profile") && user?.wallet?.address.toLowerCase() == pathname.split("/")[2]?.toLowerCase();
 
 
     useEffect(() => {
-        if (connecting) {
-            setConnectButtonTxt(<span>Connecting</span>);
-        } else if (wallet) {
-            const currAddress = wallet.accounts[0].address;
-
-            setConnectButtonTxt(
-                <>
-                    <span>Disconnect</span>
-                    <span className='text-[10px] opacity-50'>
-                        {currAddress.slice(0, 6)}...{currAddress.slice(currAddress.length-4)}
-                    </span>
-                </>
-                
-            );
-        } else {
-            setConnectButtonTxt(<span>Connect</span>);
+        if (!user) {
+            setConnectButtonTxt(<span className={`text-sm md:text-xl pixelated-font`}>Connect</span>);
+            return;
         }
-    }, [connecting, wallet])
+
+        const userAddress = user.wallet?.address;
+
+        if (!userAddress) return;
+
+        setConnectButtonTxt(
+            <Link href={`/profile/${userAddress}`} className={`text-sm md:text-xl pixelated-font`}>Profile</Link>
+        );
+    }, [user])
 
     return (
         <header className='header'>
-            <Link href={"/"} className={`min-w-24 grid grid-cols-1 items-center navbar-item ${pathname === "/" ? "lg:link-active" : "" }`}>
-                <RivesLogo className="w-full min-w-16 max-w-28" />
+            <Link href={"/"} className={`min-w-24 grid grid-cols-1 items-center navbar-item ${pathname === "/" ? "md:link-active" : "" }`}>
+                <div className='w-28 h-16'>
+                    <Image
+                        src={rivesLogo}
+                        quality={100}
+                        alt='rives logo'
+                    />
+                </div>
             </Link>
 
-            <Link href={"/cartridges"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "lg:link-active" : "" }`}>
-                <p>Cartridges</p>
+            <Link href={"/cartridges"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/cartridges") ? "md:link-active" : "" }`}>
+                <span className={`text-xl pixelated-font`}>Cartridges</span>
             </Link>
 
-            <Link href={"/contests"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "lg:link-active" : "" }`}>
-                Contests
+            <Link href={"/contests"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/contests") ? "md:link-active" : "" }`}>
+            <span className={`text-xl pixelated-font`}>Contests</span>
             </Link>
 
-            <Link href={"/tapes"} className={`hidden lg:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "lg:link-active" : "" }`}>
-                Tapes
+            <Link href={"/tapes"} className={`hidden md:grid grid-cols-1 h-full items-center navbar-item ${pathname.startsWith("/tapes") ? "md:link-active" : "" }`}>
+                <span className={`text-xl pixelated-font`}>Tapes</span>
             </Link>
 
-            <div className='hidden lg:flex flex-1 justify-end h-full'>
-                <button className='navbar-item' disabled={connecting}
-                    onClick={() => (wallet ? disconnect(wallet) : connect())}
-                    title={wallet? wallet.accounts[0].address:""}
+            <div className='hidden md:flex flex-1 justify-end h-full'>
+                <button className={`navbar-item ${onMyProfile? "md:link-active" : "" }`}
+                    disabled={!ready}
+                    onClick={!disableLogin?login:undefined}
+                    title={user?.wallet?.address}
                 >
                     <div className='flex flex-col justify-center h-full'>
                         {connectButtonTxt}
@@ -75,7 +70,7 @@ function Navbar() {
                 </button>
             </div>
 
-            <Menu as="div" className="lg:hidden navbar-item ms-auto">
+            <Menu as="div" className="md:hidden navbar-item ms-auto">
                 <Menu.Button className="h-full flex flex-col justify-center"><MenuIcon className='text-5xl' /></Menu.Button>
                 <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                     <div className="px-1 py-1 ">
@@ -84,7 +79,7 @@ function Navbar() {
                                 <Link 
                                 href={"/cartridges"} 
                                 className={`${pathname === "/cartridges" || active? 'bg-rives-purple text-white' : 'text-black' 
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Cartridges
                                 </Link>
                             )}
@@ -97,7 +92,7 @@ function Navbar() {
                                 <Link 
                                 href={"/contests"} 
                                 className={`${pathname === "/contests" || active ? 'bg-rives-purple text-white' : 'text-black'
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Contests
                                 </Link>
                             )}
@@ -110,7 +105,7 @@ function Navbar() {
                                 <Link 
                                 href={"/tapes"} 
                                 className={`${pathname === "/tapes" || active ? 'bg-rives-purple text-white' : 'text-black'
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}>
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}>
                                     Tapes
                                 </Link>
                             )}
@@ -124,9 +119,9 @@ function Navbar() {
                                     <button 
                                     className={`${active ? 'bg-rives-purple text-white' : 'text-black'
                                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`} 
-                                    disabled={connecting}
-                                    onClick={() => (wallet ? disconnect(wallet) : connect())}
-                                    title={wallet? wallet.accounts[0].address:""}
+                                    disabled={!ready}
+                                    onClick={!disableLogin?login:undefined}
+                                    title={user?.wallet?.address}
                                     >
                                         <div className='flex flex-col justify-center h-full'>
                                             {connectButtonTxt}

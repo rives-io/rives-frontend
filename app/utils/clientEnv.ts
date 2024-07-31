@@ -21,5 +21,25 @@ export const envClient = envsafe({
   CONTESTS: json({
     input: process.env.NEXT_PUBLIC_CONTESTS,
     desc: "Contests json list."
+  }),
+  TAPE_CONTRACT_ADDR: str({
+    input: process.env.NEXT_PUBLIC_TAPE_CONTRACT,
+    desc: "Tape asset ETH address."
+  }),
+  CARTRIDGE_CONTRACT_ADDR: str({
+    input: process.env.NEXT_PUBLIC_CARTRIDGE_CONTRACT,
+    desc: "Cartridge asset ETH address."
+  }),
+  OPERATOR_ADDR: str({
+    input: process.env.NEXT_PUBLIC_OPERATOR_ADDR,
+    desc: "Operator ETH address."
+  }),
+  ASSETS_BLOCK: str({
+    input: process.env.NEXT_PUBLIC_ASSETS_BLOCK,
+    desc: "(Earliest) assets deployment block number (hex)."
+  }),
+  DEPLOYMENT_URL: url({
+    input: process.env.NEXT_PUBLIC_DEPLOYMENT_URL,
+    desc: "Deployment URL for the frontend. It is used to compose the openGraph URL of images."
   })
 })

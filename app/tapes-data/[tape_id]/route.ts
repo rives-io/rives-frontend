@@ -19,8 +19,7 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
       {
           decode:true,
           decodeModel:"RulesOutput",
-          cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-          cache:"force-cache"
+          cartesiNodeUrl: envClient.CARTESI_NODE_URL
       }
   );
   

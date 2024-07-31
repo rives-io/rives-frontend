@@ -26,18 +26,35 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
-@font-face {
-  font-family: 'monogram';
-  src: url("https://menez.io/css/font/monogram-extended.ttf") format('truetype');
-  font-style: normal;
-  size-adjust: 125%;
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/Iosevka/11.1.1/iosevka/iosevka.min.css');
+* {
+  font-family: 'Iosevka Web', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
-@font-face {
-  font-family: 'monogram';
-  src: url("https://menez.io/css/font/monogram-extended-italic.ttf") format('truetype');
-  font-style: italic;
-  size-adjust: 125%;
+
+.pixelated-font{
+  text-transform: uppercase;
+  letter-spacing: -0.125em;
+  font-weight: normal;
+  font-family: 'Silkscreen';
 }
+
+.pixelated-font::first-letter {
+  margin-left: -0.12em;
+}
+
+.pixelated-img {
+  /* position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; */
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,6 +64,7 @@ body {
     --foreground-rgb: 0,0,0;
     --foreground-rgb-muted: rgba(241, 245, 249, 0.6);
     --background-start-rgb: 36, 36, 36;
+    --background: #2e2e30;
     --background-end-rgb: 105, 105, 105;
     --background-end-rgba0: rgba(100, 100, 100, 0.4);
     --highlight-text-start-hex: #ed479a;
@@ -59,9 +77,6 @@ body {
   }
 }
 
-/* * {
-  font-family: "monogram";
-} */
 
 html {
   position: relative;
@@ -69,25 +84,63 @@ html {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background-color: rgb(var(--background-start-rgb));
+  /* color: rgb(var(--foreground-rgb)); */
+  color: white;
+  /* background-color: rgb(var(--background-start-rgb)); */
+  background-color: var(--background);
 }
 
 .rainbow-background {
   background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,154,0,1) 10%, rgba(208,222,33,1) 20%, rgba(79,220,74,1) 30%, rgba(63,218,216,1) 40%, rgba(47,201,226,1) 50%, rgba(28,127,238,1) 60%, rgba(95,21,242,1) 70%, rgba(186,12,248,1) 80%, rgba(251,7,217,1) 90%);
 }
 
+.crop-logo {
+  height: 100%;
+  clip-path: polygon(50% 100%, 100% 100%, 100% 100%);
+}
+
+.cartridgeBorder { 
+  border: 16px solid transparent;
+  border-image-source: url(../public/cartridge_border.png);
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-image-width: 1;
+  border-image-slice: 32 fill;
+}
+
+.tapeBorder {
+  border: 42px solid transparent;
+  border-image-source: url(../public/tape_border.png);
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-image-width: 1;
+  border-image-slice: 84 fill;
+}
+
+
 @layer utilities {
   .bg-rives-purple {
     @apply bg-[var(--highlight-text-end-hex)]
   }
 
-  .first-section {
-    @apply mx-auto pb-16 !pt-[126px] px-8 flex flex-col items-center;
+  .bg-rives-gray {
+    @apply bg-[#403f47];
   }
 
-  .second-section {
-    @apply pb-16 !pt-[64px] flex flex-col sm:mb-16;
+  .text-rives-purple {
+    @apply text-[var(--highlight-text-end-hex)]
+  }
+
+  main {
+    @apply !pb-[164px] !pt-[96px] grid grid-cols-1 justify-items-center;
+  }
+
+  section {
+    @apply w-full sm:w-[80%] px-2 md:px-0;
+  }
+
+  .container {
+    @apply w-full md:w-2/3 px-4 md:px-0;
   }
 
   .custom-scrollbar {
@@ -173,11 +226,11 @@ body {
   }
 
   .header {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap absolute top-0 z-10;
+    @apply w-full h-16 bg-black flex absolute top-0 z-10;
   }
 
   .footer {
-    @apply w-full h-16 bg-[var(--highlight-text-end-hex)] flex flex-wrap justify-evenly  items-center absolute bottom-0;
+    @apply w-full h-fit p-2 bg-black absolute bottom-0;
   }
 
   .link-active {
@@ -185,7 +238,7 @@ body {
   }
 
   .navbar-item {
-    @apply px-6 hover:bg-[rgb(var(--background-start-rgb))] hover:text-white;
+    @apply px-6 hover:bg-[rgb(var(--background-start-rgb))];
   }
 
   .btn {
@@ -198,9 +251,17 @@ body {
     cursor: not-allowed;
   }
 
-  /* .gameplay-screen {
-    @apply w-[640px] h-[480px] md:w-[720px] md:h-[540px] lg:w-[960px] lg:h-[720px];
-  } */
+  .zoom-btn {
+    @apply text-center hover:scale-105 disabled:cursor-not-allowed disabled:scale-100 disabled:opacity-70;
+  }
+
+  .assets-btn {
+    @apply p-2 font-bold w-48 h-10;
+  }
+
+  .dialog-btn {
+    @apply font-bold uppercase text-sm px-6 py-2 ml-1;
+  }
 
   .gameplay-section {
     @apply gameplay-screen fixed z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
@@ -208,6 +269,14 @@ body {
 
   .vertical-option-tabs-header {
     @apply flex flex-col space-y-1 bg-gray-400 bg-opacity-40 p-1;
+  }
+
+  .tab-navigation-item {
+    @apply p-4 bg-black text-white hover:tab-navigation-item-selected;
+  }
+
+  .tab-navigation-item-selected {
+    @apply bg-[rgb(var(--background-start-rgb))];
   }
 }
 
@@ -225,6 +294,11 @@ body {
   height: 360px;
 }
 
+.cartridgePageCover {
+  width: 512px;
+  height: 512px;
+}
+
 /* consider height to see Score max-height 768 +64  */
 @media screen and (max-height: 832px)  {
   .gameplay-screen {
@@ -233,6 +307,10 @@ body {
   }
   .screen-controls {
     width: 512px;
+  }
+  .cartridgePageCover {
+    max-width: 384px;
+    max-height: 384px;
   }
 }
 
@@ -243,6 +321,10 @@ body {
   }
   .screen-controls {
     width: 512px;
+  }
+  .cartridgePageCover {
+    max-width: 384px;
+    max-height: 384px;
   }
 }
 
@@ -255,6 +337,10 @@ body {
   .screen-controls {
     width: 256px;
   }
+  .cartridgePageCover {
+    max-width: 256px;
+    max-height: 256px;
+  }
 }
 
 @media screen and (max-width: 512px)  {
@@ -264,6 +350,10 @@ body {
   }
   .screen-controls {
     width: 256px;
+  }
+  .cartridgePageCover {
+    max-width: 256px;
+    max-height: 256px;
   }
 }
 

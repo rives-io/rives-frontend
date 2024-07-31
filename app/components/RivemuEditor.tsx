@@ -4,7 +4,7 @@ import React from 'react'
 import { Parser } from "expr-eval";
 import { ethers } from "ethers";
 import { useState, useEffect, useRef } from "react";
-import { useConnectWallet } from '@web3-onboard/react';
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -72,8 +72,7 @@ const getCartridgeData = async (cartridgeId:string):Promise<Uint8Array> => {
         {
             decode:true,
             decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -107,8 +106,7 @@ const getRules = async (cartridge_id:string):Promise<RuleInfo[]> => {
         {
             decode:true,
             decodeModel:"RulesOutput",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -157,7 +155,8 @@ function RivemuEditor() {
     const filter = createFilterOptions<string>();
 
     // signer
-    const [{ wallet }] = useConnectWallet();
+    const {user, ready, connectWallet} = usePrivy();
+    const {wallets} = useWallets();
 
     const rivemuRef = useRef<RivemuRef>(null);
     
@@ -171,13 +170,15 @@ function RivemuEditor() {
     }, []);
 
     useEffect(() => {
-        if (!wallet) {
+        if (!ready) return;
+
+        if (!user) {
             setEntropy("entropy");
         }
         else {
-            setEntropy(generateEntropy(wallet.accounts[0].address.toLowerCase(), rule?.id || ""));
+            setEntropy(generateEntropy(user.wallet!.address.toLowerCase(), rule?.id || ""));
         }
-    },[wallet]);
+    },[user]);
 
     useEffect(() => {
         if (cartridgesComboOpen && cartridgeList.length == 0) {
@@ -209,7 +210,6 @@ function RivemuEditor() {
                 decode:true,
                 decodeModel:"RuleTagsOutput",
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
             }
         ).then( (out:RuleTagsOutput) => {
             setRuleCartridgeTags(out.tags);
@@ -336,7 +336,7 @@ function RivemuEditor() {
                 } catch (e) {
                     rivemuRef.current?.stop();
                     console.log(e);
-                    setErrorFeedback({message:"Error parsing score", severity: "error", dismissible: true});
+                    setErrorFeedback({message:"Error parsing score", severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
                 }
             } else {
                 setCurrScore(outcard_json.score);
@@ -421,12 +421,12 @@ function RivemuEditor() {
     async function sendCartridge() {
 
         if (!cartridgeData) {
-            setErrorFeedback({message:"No cartridge data", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         if (storedCartridge) {
-            setErrorFeedback({message:"Cartridge is already stored", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge is already stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         
@@ -434,23 +434,31 @@ function RivemuEditor() {
             {id:sha256(cartridgeData)},
             {
                 decode:true,
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
         console.log(out)
 
         if (out) {
-            setErrorFeedback({message:"Cartridge already inserted", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge already inserted", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {connectWallet(); setErrorFeedback(undefined)}
+                }
+            );
             return;
         }
 
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
+
         const inputData: InsertCartridgePayload = {
             data: ethers.utils.hexlify(cartridgeData)
         }
@@ -460,7 +468,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
@@ -468,25 +476,24 @@ function RivemuEditor() {
     async function sendRule() {
 
         if (!cartridgeData) {
-            setErrorFeedback({message:"No rule name", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No rule name", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         const cartridgeId = sha256(cartridgeData);
         const out: CartridgeInfo = await cartridgeInfo(
             {id:cartridgeId},
             {
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
 
         if (!out) {
-            setErrorFeedback({message:"Cartridge not inserted yet", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge not inserted yet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
         if (!ruleName) {
-            setErrorFeedback({message:"Invalid rule name", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Invalid rule name", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
@@ -497,22 +504,31 @@ function RivemuEditor() {
             {
                 decode:true,
                 decodeModel:"RulesOutput",
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-                cache:"force-cache"
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL
             }
         );
 
         if (existingRules.total > 0) {
-            setErrorFeedback({message:"Rule with this name already exists", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Rule with this name already exists", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
             return;
         }
 
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        // submit the gameplay
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: RuleData = {
             cartridge_id:"0x"+cartridgeId,
             name:ruleName,
@@ -530,7 +546,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
@@ -538,26 +554,29 @@ function RivemuEditor() {
     async function sendRemoveCartridge() {
 
         if (!storedCartridge) {
-            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
         
         if (!selectedCartridge) {
-            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true});
+            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
-        if (wallet.accounts[0].address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
-            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true});
+        if (wallet.address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
+            setErrorFeedback({message:"Not the user who submitted the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
+
         const inputData: RemoveCartridgePayload = {
             id: selectedCartridge.id
         }
@@ -567,7 +586,7 @@ function RivemuEditor() {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
     }
@@ -773,21 +792,17 @@ function RivemuEditor() {
                          InputLabelProps={{ shrink: true }} />
 
                     <div className='grid grid-cols-2 gap-2 justify-items-center'>
-                    <button disabled={!cartridgeData || storedCartridge || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
+                    <button disabled={!cartridgeData || storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendCartridge}>
                         Insert Cartridge
                     </button>
 
-                    <button className="btn mt-2 text-[10px] shadow" onClick={sendRemoveCartridge} hidden={!wallet || !selectedCartridge || wallet.accounts[0].address.toLowerCase() != selectedCartridge.user_address.toLowerCase()}>
-                        Remove Cartridge
-                    </button>
-
-                    <button disabled={!ruleName || !wallet} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
+                    <button disabled={!ruleName || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
                         Create Rule
                     </button>
                     </div>
                 </div>
 
-            {errorFeedback ? <ErrorModal error={errorFeedback} dissmissFunction={() => {setErrorFeedback(undefined)}} /> : <></>}
+            {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
             </main>
         </ThemeProvider>
     )

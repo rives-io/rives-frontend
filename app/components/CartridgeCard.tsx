@@ -4,55 +4,103 @@
 
 import Image from "next/image";
 import { CartridgeInfo } from "../backend-libs/core/ifaces"
-import { cartridgeInfo } from "@/app/backend-libs/core/lib";
-import { envClient } from "../utils/clientEnv";
-import RivesLogo from "./svg/RivesLogo";
-import { useContext } from "react";
-import { selectedCartridgeContext } from "../cartridges/selectedCartridgeProvider";
+import rivesLogo from '@/public/logo_cutted.png';
+import Link from "next/link";
+import { User, getUsersByAddress } from "../utils/privyApi";
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import { BondInfo, getCartridgeBondInfo } from "../utils/assets";
 
 
+export default function CartridgeCard({cartridge, small, creator}:{cartridge:CartridgeInfo, small?:boolean, creator?:User|null}) {
+    const cartridge_creator = cartridge.user_address;
+    const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
 
-export default function CartridgeCard({cartridge}:{cartridge:CartridgeInfo}) {
-    const {changeCartridge, fetchingCartridgeInfo} = useContext(selectedCartridgeContext);
     
-    const handleCartridgeSelection = async (e:React.MouseEvent<HTMLElement>) => {
-        fetchingCartridgeInfo();
-        const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge.id}, {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL, cache:"force-cache"})
-		changeCartridge(cartridgeWithInfo);
-	}
+    const cartridgeSize = small? "w-36 h-52":"w-44 h-60";
+    const cartridgeLogoSize = small? "w-12 ":"w-16"
+    const cartridgeCoverSize = small? "w-32 h-32":"w-40 h-40";
+
+    const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
+    const [currentPrice,setCurrentPrice] = useState<string>();
+
+    useEffect(() => {
+        if (creator) {
+            setTwitterInfo(creator);
+        } else if (typeof creator === "undefined") {
+            getUsersByAddress([cartridge.user_address]).then((userMapString) => {
+                const userMap:Record<string,User> = JSON.parse(userMapString);
+                const user = userMap[cartridge.user_address.toLowerCase()];
+    
+                if (user) {
+                    setTwitterInfo(user);
+                }
+            });    
+        }
+
+        if (cartridge.id) {
+            getCartridgeBondInfo(cartridge.id,true).then((bond: BondInfo|null) => {
+                if (bond && bond.buyPrice)
+                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+            });
+        }
+    }, [])
+
+    function handleClick(e:React.MouseEvent<HTMLElement>) {
+        e.preventDefault();
+        window.open(`/profile/${cartridge.user_address}`,"_self");
+    }
 
     return (
-        <button className="w-48 h-64 grid grid-cols-1 p-2 bg-gray-400 hover:bg-rives-purple text-start" onClick={handleCartridgeSelection}>
-            <RivesLogo className="place-self-start" style={{width:50}}/>
-            
-            <div className="w-fill h-36 bg-black relative">
-                <Image fill 
-                src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}/>
-            </div>
+        <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col hover:scale-110`}>
 
-            <div className="p-1 place-self-end bg-gray-600 flex flex-col text-white w-full h-16">
-                <span className="text-sm">
-                    {cartridge.name}
-                </span>
+            <div className="flex items-stretch">
+                <div className='w-fit h-8'>
+                    <div className={`${cartridgeLogoSize} h-4 relative`}>
+                    <Image fill
+                        src={rivesLogo}
+                        quality={100}
+                        alt='rives logo'
+                        className="-mt-2 -ms-2"
+                    />
 
-                {
-                    cartridge.authors.length > 0?
-                        <span title={cartridge.authors.toString()} className="text-[8px] break-words">
-                            By
-                            {
-                                cartridge.authors.map((author, index) => {
-                                    const authors_length = cartridge.authors.length;
-                                    return (
-                                            ` ${author}${index != authors_length-1? ",":""}`
-                                    )
-                                })
-                            }
-                        </span>
-                    :
-                        <></>
-                }
+                    </div>
+                </div>
+
+                {currentPrice ? <div className="flex flex-1 justify-end text-wrap -me-2">
+                    <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-2">
+                        {currentPrice}
+                    </div>
+                    
+                </div> : <></>}
 
             </div>
-        </button>
+
+            <div className="w-fill -mt-[16px] -mx-2  justify-center">
+                <div className={`${cartridgeCoverSize} grid grid-cols-1 place-content-center bg-black relative`}>
+                    <Image fill
+                        style={{objectFit: "cover"}}
+                        src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}
+                    />
+                </div>
+            </div>
+
+            <div className="flex h-10 w-fill -mx-2 ">
+                <div className="flex flex-col p-[2px] h-10 w-full">
+                    <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
+                    <span className="pixelated-font text-xs truncate">
+                        By <button onClick={handleClick}
+                            className="pixelated-font text-rives-purple hover:underline">
+                                {
+                                    !twitterInfo?
+                                        formatedCreatorAddr
+                                    :
+                                        twitterInfo.name
+                                }
+                            </button>
+                    </span>
+                </div>
+            </div>
+        </Link>
     )
 }

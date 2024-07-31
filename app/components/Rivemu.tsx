@@ -167,7 +167,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
                     <div className="text-white">No Cartridge...</div>
                 </div>
             :<canvas
-                className='gameplay-screen border border-gray-500 bg-black'
+                className='gameplay-screen border border-[#131415] bg-black'
                 id="canvas"
                 onContextMenu={(e) => e.preventDefault()}
                 tabIndex={-1}

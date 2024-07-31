@@ -5,15 +5,13 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { useConnectWallet } from "@web3-onboard/react";
-import { insertTapeGif, insertTapeImage } from "../utils/util";
+import { insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
 import { sha256 } from "js-sha256";
 import { ContractReceipt, ethers } from "ethers";
 import { VerifyPayload } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification } from "../backend-libs/core/lib";
-import { Dialog, Transition } from '@headlessui/react'
-import Image from "next/image";
+import { Dialog, Transition } from '@headlessui/react';
 import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";
 import { cartridgeInfo } from '../backend-libs/core/lib';
@@ -22,6 +20,8 @@ import { CartridgeInfo as Cartridge } from "../backend-libs/core/ifaces";
 // @ts-ignore
 import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import TapeCard from "./TapeCard";
 
 
 enum MODAL_STATE {
@@ -84,7 +84,11 @@ function calculateTapeId(log: Uint8Array): string {
 
 function GameplaySubmitter() {
     const {player, gameplay, getGifParameters, clearGifFrames} = useContext(gameplayContext);
-    const [{ wallet }, connect] = useConnectWallet();
+    const {user, ready, connectWallet} = usePrivy();
+    const {wallets} = useWallets();
+    
+    const tapeId = gameplay? calculateTapeId(gameplay.log):"";
+    const [tapeTitle, setTapeTitle] = useState("");
     const [tapeURL, setTapeURL] = useState("");
     const [gifImg, setGifImg] = useState("");
     const [img, setImg] = useState("");
@@ -102,16 +106,21 @@ function GameplaySubmitter() {
         setModalState({...modalState, isOpen: true})
     }
 
+    function onTapeTitleChange(e: React.FormEvent<HTMLInputElement>) {
+        setTapeTitle(e.currentTarget.value);
+    }
+
     useEffect(() => {
         // show warning message if user is not connected
-        if (!wallet) {
+        if (ready && !user) {
             const error:ERROR_FEEDBACK = {
                 severity: "alert",
                 message: "You need to be connect for your gameplay to be saved!",
-                dismissible: true
+                dismissible: true,
+                dissmissFunction: () => setErrorFeedback(undefined)
             };
             setErrorFeedback(error);
-        } else if (player.length > 0 && (wallet.accounts[0].address.toLowerCase() != player)) {
+        } else if (player.length > 0 && (wallets[0].address.toLowerCase() != player)) {
             const error:ERROR_FEEDBACK = {
                 severity: "warning",
                 message: `You need to send the gameplay using the same account used to play (${player.slice(0,6)}...${player.slice(player.length-4)})!`,
@@ -121,7 +130,7 @@ function GameplaySubmitter() {
         } else {
             setErrorFeedback(undefined);
         }
-    }, [wallet])
+    }, [user])
 
     useEffect(() => {
         if (!gameplay) {
@@ -153,17 +162,26 @@ function GameplaySubmitter() {
             return;
         }
 
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
         if (!wallet) {
-            alert("Connect first to upload a gameplay log.");
-            await connect();
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
+            return;
         }
 
         // get cartridgeInfo asynchronously
-        cartridgeInfo({id:gameplay.cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL,cache:"force-cache"})
+        cartridgeInfo({id:gameplay.cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
         .then(setGameInfo);
 
         // submit the gameplay
-        const signer = new ethers.providers.Web3Provider(wallet!.provider, 'any').getSigner();
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: VerifyPayload = {
             rule_id: '0x' + gameplay.rule_id,
             outcard_hash: '0x' + gameplay.outcard.hash,
@@ -178,26 +196,29 @@ function GameplaySubmitter() {
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
 
-        const gameplay_id = calculateTapeId(gameplay.log);
+        //const gameplay_id = calculateTapeId(gameplay.log);
         try {
             if (img && img.length > 0) {
-                await insertTapeImage(gameplay_id, img);
+                await insertTapeImage(tapeId, img);
             }
             if (gifImg && gifImg.length > 0) {
-                await insertTapeGif(gameplay_id, gifImg);
+                await insertTapeGif(tapeId, gifImg);
+            }
+            if (tapeTitle.length > 0) {
+                await insertTapeName(tapeId, tapeTitle);
             }
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("failed to fetch") > -1) errorMsg = "Error storing gif";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true});
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
         }
         if (typeof window !== "undefined") {
-            setTapeURL(`${window.location.origin}/tapes/${gameplay_id}`);
+            setTapeURL(`${window.location.origin}/tapes/${tapeId}`);
         }
         
         setModalState({...modalState, state: MODAL_STATE.SUBMITTED});
@@ -210,23 +231,30 @@ function GameplaySubmitter() {
         if (modalState.state == MODAL_STATE.SUBMIT) {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
                         Submit your Gameplay
                     </Dialog.Title>
+
+                    <div className="mt-4 flex space-x-2">
+                        <label className="pixelated-font">Title: </label>
+                        <input onChange={onTapeTitleChange} type="text" maxLength={20} className="pixelated-font p-1 text-black" placeholder="Awesome Tape" value={tapeTitle} />
+                    </div>
+
                     <div className="mt-4 text-center">
-                        <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/>
+                        {/* <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/> */}
+                        <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
                     </div>
     
                     <div className="flex pb-2 mt-4">
                         <button
-                        className={`bg-red-500 text-white font-bold uppercase text-sm px-6 py-2 border border-red-500 hover:text-red-500 hover:bg-transparent`}
+                        className={`dialog-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
                             Cancel
                         </button>
                         <button
-                        className={`bg-emerald-500 text-white font-bold uppercase text-sm px-6 py-2 ml-1 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent`}
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
                         type="button"
                         onClick={submitLog}
                         >
@@ -238,7 +266,7 @@ function GameplaySubmitter() {
         } else if (modalState.state == MODAL_STATE.SUBMITTING) {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 pixelated-font">
                         Submitting Gameplay
                     </Dialog.Title>
         
@@ -251,15 +279,19 @@ function GameplaySubmitter() {
         } else {
             modalBodyContent = (
                 <>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 pixelated-font">
                         Gameplay Submitted!
                     </Dialog.Title>
 
                     <div className="mt-4 text-center">
-                        <button className="place-self-center" title='Tape' onClick={() => window.open(`${tapeURL}`, "_blank", "noopener,noreferrer")}>
-                            <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/>
-                        </button>
+                        {
+                            !gameplay?
+                                <></>
+                            :
+                                <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
+                        }
                     </div>
+
                     <div className="mt-4 flex flex-col space-y-2">
                         <TwitterShareButton
                         url={tapeURL}
@@ -278,7 +310,7 @@ function GameplaySubmitter() {
                             
                         </TwitterShareButton>
 
-                        <button className="bg-emerald-500 text-white p-3 border border-emerald-500 hover:text-emerald-500 hover:bg-transparent"
+                        <button className="dialog-btn bg-emerald-400 text-black"
                         onClick={closeModal}
                         >
                             Done
@@ -296,7 +328,7 @@ function GameplaySubmitter() {
     }
 
     if (errorFeedback) {
-        return <ErrorModal error={errorFeedback} dissmissFunction={() => {setErrorFeedback(undefined)}} />;
+        return <ErrorModal error={errorFeedback} />;
     }
 
 
@@ -335,7 +367,7 @@ function GameplaySubmitter() {
             </Transition>
             {
                 modalState.state != MODAL_STATE.NOT_PREPARED? 
-                    <button className="btn mt-2 fixed text-[10px] shadow right-5 bottom-20 z-20" onClick={() => {openModal()}}>
+                    <button className="zoom-btn dialog-btn mt-2 fixed text-[10px] bg-rives-purple shadow right-5 bottom-20 z-20" onClick={() => {openModal()}}>
                         Open Submit
                     </button>
                 : 

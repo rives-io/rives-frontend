@@ -3,7 +3,6 @@
 import { Parser } from "expr-eval";
 import { ethers } from "ethers";
 import { useContext, useState, useEffect, useRef } from "react";
-import { useConnectWallet } from '@web3-onboard/react';
 
 import RestartIcon from '@mui/icons-material/RestartAlt';
 import StopIcon from '@mui/icons-material/Stop';
@@ -22,7 +21,9 @@ import Rivemu, { RivemuRef } from "./Rivemu";
 import { RuleInfo } from "../backend-libs/core/ifaces";
 import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
 import Image from "next/image";
-import rivesLogo from '../../public/rives64px.png';
+import rivesLogo from '../../public/logo.png';
+import { usePrivy } from "@privy-io/react-auth";
+import { timeToDateUTCString } from "../utils/util";
 
 
 export interface TapeInfo {
@@ -42,8 +43,7 @@ const getCartridgeData = async (cartridgeId:string) => {
         {
             decode:true,
             decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -77,8 +77,7 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
         {
             decode:true,
             decodeModel:"RulesOutput",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL,
-            cache:"force-cache"
+            cartesiNodeUrl: envClient.CARTESI_NODE_URL
         }
     );
     
@@ -114,6 +113,7 @@ const getTapePayload = async (tapeId:string):Promise<VerifyPayload> => {
 function RivemuPlayer(
         {rule_id, tape_id}:
         {rule_id?:string, tape_id?:string}) {
+            
     const {setGameplayOwner, setGameplayLog, setGifResolution, addGifFrame} = useContext(gameplayContext);
 
     const isTape = tape_id? true:false;
@@ -138,23 +138,23 @@ function RivemuPlayer(
     const [restarting, setRestarting] = useState(false);
 
     // signer
-    const [{ wallet }] = useConnectWallet();
-    const [signerAddress, setSignerAddress] = useState<string|null>(wallet? wallet.accounts[0].address.toLowerCase(): null);
+    const {user, ready} = usePrivy();
+    const [signerAddress, setSignerAddress] = useState<string|null>(user && user.wallet? user.wallet.address.toLowerCase(): null);
 
     const rivemuRef = useRef<RivemuRef>(null);
 
     useEffect(() => {
-        if (!isTape){
-            if (!wallet) {
+        if (!isTape && ready){
+            if (!user || !user.wallet) {
                 setSignerAddress(null);
                 if (!isTape && rule_id) setEntropy("entropy");
             }
             else {
-                setSignerAddress(wallet.accounts[0].address.toLowerCase());
-                if (rule_id) setEntropy(generateEntropy(wallet.accounts[0].address.toLowerCase(), rule_id));
+                setSignerAddress(user.wallet.address.toLowerCase());
+                if (rule_id) setEntropy(generateEntropy(user.wallet.address.toLowerCase(), rule_id));
             }
         }
-    },[wallet]);
+    },[user]);
 
     useEffect(() => {
         if (rule_id) {
@@ -205,7 +205,7 @@ function RivemuPlayer(
             setTape(out);
 
             const player = `${out._msgSender.slice(0, 6)}...${out._msgSender.substring(out._msgSender.length-4,out._msgSender.length)}`;
-            const timestamp = new Date(out._timestamp*1000).toLocaleDateString();
+            const timestamp = timeToDateUTCString(out._timestamp*1000);
             const size = formatBytes(out.tape.length);
             const currTapeInfo: TapeInfo = {player,timestamp,size};
 
@@ -409,33 +409,6 @@ function RivemuPlayer(
     };
     return (
         <section className="flex flex-col items-center justify-center">
-            <div className="flex flex-col items-center text-center">
-                <span className="text-white" >Play mode: {rule?.name}</span>
-                {isTape && tapeInfo ? 
-                        <span className="text-xs text-white">
-                            Tape from {tapeInfo.player} on {tapeInfo.timestamp} {tapeInfo.score ? "with score "+tapeInfo.score : ""} ({tapeInfo.size})
-                        </span>
-                    : 
-                        <></>
-                }
-                {
-                    !isTape && cstatus && cstatus != ContestStatus.INVALID?
-                        <span className="text-xs text-white">Contest Status: {getContestStatusMessage(cstatus)}</span>
-                    : 
-                        <></>}
-                
-                { 
-                            !rule_id? 
-                                <span>&emsp;</span>
-                            : 
-                                currScore == undefined? 
-                                    <span>&emsp;</span>
-                                : 
-                                    <span className={`text-white ${currScore > 1000000000? "text-xs":"text-sm"}`}>
-                                        Score: {currScore}
-                                    </span>
-                }
-            </div>
             <div>
                 <div className='grid grid-cols-3 bg-gray-500 p-2 text-center screen-controls'>
                     <div className="flex justify-start gap-2">
@@ -465,8 +438,8 @@ function RivemuPlayer(
 
                     </div>
 
-                    <div className="">
-                        
+                    <div className={`pixelated-font ${currScore && currScore > 1000000000? "text-xs":"text-sm"}`}>
+                        {currScore}
                     </div>
 
                     <div className="flex justify-end gap-2">
