@@ -18,7 +18,7 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
             {
                 !twitterInfo?
                     <div className="flex items-center gap-4">
-                        <Image width={72} height={72} src={rivesCheck} className='rounded-full pixelated-img' alt='Nop' />
+                        <Image width={72} height={72} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
                         <div className="flex flex-col gap-2">
                             <div title={address} className="flex flex-col">
                                 {formated_addr}
@@ -40,7 +40,7 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
                     </div>
                 :
                     <div className="flex items-center gap-4">
-                        <img width={72} height={72} src={twitterInfo.picture_url.replace("_normal", "_bigger")} className='rounded-full' alt='Nop' />
+                        <img width={72} height={72} src={twitterInfo.picture_url.replace("_normal", "_bigger")} className='rounded-full' alt='' />
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-col">
                                 <span>{twitterInfo.name}</span>

@@ -38,20 +38,21 @@ export default async function ProfilePage({ params }: { params: { address: strin
     
     
     return (
-        <main className="w-full flex flex-col items-center gap-8 px-4 md:px-0">
-            <div className="flex flex-wrap gap-8 items-center justify-center">
-                <div className="flex flex-col gap-2">
-                    <ProfileOptions address={params.address} twitterInfo={twitterInfo} />
-                    <TapeFeesManager address={params.address} />
-                    <CartridgeFeesManager address={params.address} />
+        <main>
+            <section className="flex flex-col items-center gap-8">
+                <div className="flex flex-wrap gap-8 items-center justify-center">
+                    <div className="flex flex-col gap-2">
+                        <ProfileOptions address={params.address} twitterInfo={twitterInfo} />
+                        <TapeFeesManager address={params.address} />
+                        <CartridgeFeesManager address={params.address} />
+                    </div>
+                    <ProfileSummary address={params.address} />
                 </div>
-                <ProfileSummary address={params.address} />
-            </div>
-            
-            <div className="w-full md:w-2/3 flex flex-col gap-2">
-                <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
-            </div>
-
+                
+                <div className="w-full flex flex-col gap-2">
+                    <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
+                </div>
+            </section>
         </main>
     )
 }

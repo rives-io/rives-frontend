@@ -103,15 +103,17 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
                     </div>
                 :
                     <>
-                        <div className="flex flex-wrap gap-4 justify-evenly md:justify-center">
-                            {
-                                tapes[tapesPage-1]?.map((tape, index) => {
-                                    return (
-                                        <TapeCard key={`${tapesPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
-                                    )
-                                })
-                            }
+                        <div className="flex justify-center">
+                            <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4">
+                                {
+                                    tapes[tapesPage-1]?.map((tape, index) => {
+                                        return (
+                                            <TapeCard key={`${tapesPage}-${index}`} tapeInput={tape} creator={userMap[tape._msgSender.toLowerCase()] || null} />
+                                        )
+                                    })
+                                }
 
+                            </div>
                         </div>
 
                         {

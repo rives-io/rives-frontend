@@ -70,57 +70,59 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
 
     return (
-        <main className="grid grid-cols-1 justify-items-center justify-center w-full gap-4 px-4 md:px-0 ">
-            <RivemuPlayer tape_id={params.tape_id}/>
+        <main>
+            <section className='flex flex-col items-center gap-4'>
+                <RivemuPlayer tape_id={params.tape_id}/>
 
-            <div className='w-full md:w-2/3 flex flex-col gap-4'>
-                <div className='flex flex-wrap gap-4'>
-                    <div className='flex flex-col w-fit'>
-                        <TapeTitle tapeId={params.tape_id} tapeName={tapeName} />
-                        <span className='text-sm md:text-base truncate'>
-                        {
-                            !user?
-                                <div>
-                                    <span className='pixelated-font me-2'>By:</span>
-                                    <Link href={`/profile/${tape._msgSender}`}
-                                    className='hover:underline text-rives-purple pixelated-font break-all'
-                                    >
-                                        {tape._msgSender}
+                <div className='w-full flex flex-col gap-4'>
+                    <div className='flex flex-wrap gap-4'>
+                        <div className='flex flex-col w-fit'>
+                            <TapeTitle tapeId={params.tape_id} tapeName={tapeName} />
+                            <span className='text-sm md:text-base truncate'>
+                            {
+                                !user?
+                                    <div>
+                                        <span className='pixelated-font me-2'>By:</span>
+                                        <Link href={`/profile/${tape._msgSender}`}
+                                        className='hover:underline text-rives-purple pixelated-font break-all'
+                                        >
+                                            {tape._msgSender}
+                                        </Link>
+                                    </div>
+                                :
+                                    <Link href={`/profile/${tape._msgSender}`} className='flex items-center gap-2 w-fit hover:underline'>
+                                        <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='' />
+                                        <span title={tape._msgSender}>{user.name}</span>
                                     </Link>
-                                </div>
-                            :
-                                <Link href={`/profile/${tape._msgSender}`} className='flex items-center gap-2 w-fit hover:underline'>
-                                    <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full' alt='Nop' />
-                                    <span title={tape._msgSender}>{user.name}</span>
-                                </Link>
-                        }
-                        </span>
+                            }
+                            </span>
+                        </div>
+                    </div>
+                    <TapeAssetsAndStats tape_id={params.tape_id} />
+
+                    <div className='flex flex-col'>
+                        <h2 className={`pixelated-font text-3xl`}>Overview</h2>
+                        <div className="grid grid-cols-2 w-fit">
+                            <span className="text-gray-400">Cartrige</span>
+                            <Link className='text-rives-purple hover:underline' href={`/cartridges/${tapeCartridge.id}`}>{tapeCartridge.name}</Link>
+
+                            <span className="text-gray-400">Date</span>
+                            <span>{timeToDateUTCString(tape._timestamp)}</span>
+
+                            <span className="text-gray-400">Rule</span>
+                            {contest.name}
+
+                            <span className="text-gray-400">Score</span>
+                            {ethers.utils.formatUnits(tape.claimed_score, 0)}
+                        </div>
+                    </div>
+
+
+                    <div className='flex justify-center'>
+                        <ContestCard contest={contest} cartridge={tapeCartridge} />
                     </div>
                 </div>
-                <TapeAssetsAndStats tape_id={params.tape_id} />
-
-                <div className='flex flex-col'>
-                    <h2 className={`pixelated-font text-3xl`}>Overview</h2>
-                    <div className="grid grid-cols-2 w-fit">
-                        <span className="text-gray-400">Cartrige</span>
-                        <Link className='text-rives-purple hover:underline' href={`/cartridges/${tapeCartridge.id}`}>{tapeCartridge.name}</Link>
-
-                        <span className="text-gray-400">Date</span>
-                        <span>{timeToDateUTCString(tape._timestamp)}</span>
-
-                        <span className="text-gray-400">Rule</span>
-                        {contest.name}
-
-                        <span className="text-gray-400">Score</span>
-                        {ethers.utils.formatUnits(tape.claimed_score, 0)}
-                    </div>
-                </div>
-
-
-                <div className='flex justify-center'>
-                    <ContestCard contest={contest} cartridge={tapeCartridge} />
-                </div>
-            </div>
+            </section>
         </main>
     )
 }

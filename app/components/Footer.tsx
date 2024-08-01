@@ -13,7 +13,7 @@ function Footer() {
         <div className='flex flex-col'>
           <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/blog/"}>Blog</Link>
           <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/docs/category/riv/"}>Documentation</Link>
-          <Link className='pixelated-font hover:text-rives-purple' href={"/upload-cartridges"}>Upload Cartridge</Link>
+          {/* <Link className='pixelated-font hover:text-rives-purple' href={"/upload-cartridges"}>Upload Cartridge</Link> */}
           <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/"}>rives.io</Link>
         </div>
 

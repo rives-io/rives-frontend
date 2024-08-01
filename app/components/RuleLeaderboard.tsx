@@ -246,12 +246,12 @@ function RuleLeaderboard({cartridge_id, rule}:{
                                     {
                                         !user?
                                             <td className='flex items-center gap-2'>
-                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='Nop' />
+                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
                                                 <span className='break-all' title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
                                             </td>
                                         :
                                             <td className='flex items-center gap-2'>
-                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='Nop' />
+                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
                                                 <span title={sender}>{user.name}</span>
                                             </td>
                                     }
