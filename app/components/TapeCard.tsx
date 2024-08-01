@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
@@ -22,8 +22,8 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayload|TapePreview, creator?:User|null}) {
-    let tape:VerifyPayload|TapePreview;
+export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayloadProxy|TapePreview, creator?:User|null}) {
+    let tape:VerifyPayloadProxy|TapePreview;
 
     if (typeof tapeInput == "string") {
         tape = JSON.parse(tapeInput);
@@ -51,8 +51,8 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
             userName = tape.twitterInfo.name;
         }
     } else {
-        userAddress = (tape as VerifyPayload)._msgSender.toLowerCase();
-        tapeId = calculateTapeId((tape as VerifyPayload).rule_id,(tape as VerifyPayload).tape);
+        userAddress = (tape as VerifyPayloadProxy)._msgSender.toLowerCase();
+        tapeId = calculateTapeId((tape as VerifyPayloadProxy).rule_id,(tape as VerifyPayloadProxy).tape);
     }
 
     const player = `${userAddress.slice(0, 6)}...${userAddress.substring(userAddress.length-4,userAddress.length)}`;
