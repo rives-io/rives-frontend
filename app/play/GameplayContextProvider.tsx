@@ -25,7 +25,9 @@ export interface Gameplay {
     log: Uint8Array,
     outcard: Outcard,
     score?: number,
-    rule_id: string
+    rule_id: string,
+    tapes?: string[],
+    in_card?: Uint8Array
 }
 
 export interface GifParameters {

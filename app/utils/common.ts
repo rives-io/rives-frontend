@@ -6,7 +6,8 @@ export const SOCIAL_MEDIA_HASHTAGS = [];
 export interface Contest {
   // rule_id:string,
   // start:number,
-  // end:number,
+  // n_tapes?:number,
+  // n_verified?:number,
   prize:string,
   winner?:string
 }
@@ -14,17 +15,19 @@ export interface Contest {
 export enum ContestStatus {
   IN_PROGRESS,
   NOT_INITIATED,
-  VALIDATED,
+  // VALIDATED,
   FINISHED,
   INVALID,
 }
+
+export interface RuleWithMetadata extends RuleInfo, Contest {}
 
 export const getContestStatus = (rule: RuleInfo): ContestStatus => {
   if (rule.start == undefined || rule.end == undefined) return ContestStatus.INVALID;
   const currentTs = Math.floor((new Date()).valueOf()/1000);
   if (currentTs < rule.start) return ContestStatus.NOT_INITIATED;
   if (currentTs < rule.end) return ContestStatus.IN_PROGRESS;
-  if (rule.n_tapes == rule.n_verified) return ContestStatus.VALIDATED;
+  // if (rule.n_tapes == rule.n_verified) return ContestStatus.VALIDATED;
   return ContestStatus.FINISHED
 }
 
@@ -35,7 +38,7 @@ export const getContestStatusMessage = (status: ContestStatus): string => {
     case ContestStatus.NOT_INITIATED:
       return "Upcomming";
     case ContestStatus.FINISHED:
-    case ContestStatus.VALIDATED:
+    // case ContestStatus.VALIDATED:
       return "Finished";
   
     default:

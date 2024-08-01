@@ -1,6 +1,6 @@
 # Makefile
 
-RIV_VERSION := 0.3-rc12
+RIV_VERSION := 0.3-rc16
 
 run-dev: node_modules
 	npm run dev

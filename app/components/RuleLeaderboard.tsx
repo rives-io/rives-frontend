@@ -1,6 +1,6 @@
 "use client"
 
-import { getOutputs, VerificationOutput, VerifyPayloadInput } from '../backend-libs/core/lib';
+import { getOutputs, VerificationOutput, VerifyPayloadProxyInput } from '../backend-libs/core/lib';
 import {  ethers } from "ethers";
 import { envClient } from '../utils/clientEnv';
 import React, { useEffect, useState } from 'react';
@@ -12,17 +12,17 @@ import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
 import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
-import { timeToDateUTCString } from '../utils/util';
+import { tapeIdFromBytes,timeToDateUTCString} from '../utils/util';
 
 const DEFAULT_PAGE_SIZE = 10;
 let total_pages = 1;
 
 const getGeneralVerificationPayloads = async (
-cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
+cartridge_id:string, rule:string, page:number//, getVerificationOutputs: boolean
 ):Promise<DecodedIndexerOutput> => {
     let res:DecodedIndexerOutput;
     
-    if (getVerificationOutputs) {
+    // if (getVerificationOutputs) {
         const tags = ["score", cartridge_id, rule];
         res = await getOutputs(
             {
@@ -34,19 +34,19 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
                 order_dir: "desc"
             },
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
-    } else {
-        const tags = ["tape", cartridge_id, rule];
-        res = await getOutputs(
-            {
-                tags,
-                type: 'input',
-                page,
-                page_size: DEFAULT_PAGE_SIZE,
-                order_by: "timestamp",
-                order_dir: "desc"
-            },
-            {cartesiNodeUrl: envClient.CARTESI_NODE_URL});    
-    }
+    // } else {
+        // const tags = ["tape", cartridge_id, rule];
+        // res = await getOutputs(
+        //     {
+        //         tags,
+        //         type: 'input',
+        //         page,
+        //         page_size: DEFAULT_PAGE_SIZE,
+        //         order_by: "timestamp",
+        //         order_dir: "desc"
+        //     },
+        //     {cartesiNodeUrl: envClient.CARTESI_NODE_URL});    
+    // }
 
     total_pages = Math.ceil(res.total / DEFAULT_PAGE_SIZE);
     return res;
@@ -110,9 +110,9 @@ function tapesBoardFallback() {
 
 
 
-function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:{
-    cartridge_id:string, rule: string | undefined, get_verification_outputs: boolean}) {
-    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadInput[]|VerificationOutput[]|null>(null);
+function RuleLeaderboard({cartridge_id, rule}:{
+    cartridge_id:string, rule: string | undefined}) {
+    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadProxyInput[]|VerificationOutput[]|null>(null);
     const [addressUserMap, setAddressUserMap] = useState<Record<string, User>>({});
 
     // pagenation state
@@ -128,7 +128,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
 
     const reloadScores = async (page: number) => {
         if (!rule) return null;
-        return (await getGeneralVerificationPayloads(cartridge_id, rule, page, get_verification_outputs))
+        return (await getGeneralVerificationPayloads(cartridge_id, rule, page))//, get_verification_outputs))
     }
 
     const previousPage = () => {
@@ -174,7 +174,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
             setCurrPage(page);
             setPageToLoad(page);
         });
-    }, [pageToLoad, rule, get_verification_outputs])
+    }, [pageToLoad, rule])
 
     useEffect(() => {
         setTapePayloads(null);
@@ -229,7 +229,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
                             const verification_outputs = tape instanceof VerificationOutput;
                             const tapets = verification_outputs ? tape.timestamp : tape._timestamp;
                             const sender = verification_outputs ? tape.user_address : tape._msgSender;
-                            const tapeId = verification_outputs ? tape.tape_hash.slice(2) : getTapeId(tape.tape);
+                            const tapeId = verification_outputs ? tapeIdFromBytes(tape.tape_id) : getTapeId(tape.tape);
                             const score = verification_outputs ? tape.score.toString() : "-";
                             const userTape = userAddress == sender?.toLocaleLowerCase();
 

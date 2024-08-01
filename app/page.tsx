@@ -3,7 +3,7 @@ import CartridgeCard from "./components/CartridgeCard";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import TapeCard from "./components/TapeCard";
 import { cartridgeInfo, rules } from "./backend-libs/core/lib";
-import { VerifyPayload } from "@/app/backend-libs/core/lib";
+import { VerifyPayloadProxy } from "@/app/backend-libs/core/lib";
 import { cartridges as cartridgesRequest } from "@/app/backend-libs/core/lib";
 import { envClient } from "./utils/clientEnv";
 import { getTapes } from "./utils/util";
@@ -63,7 +63,7 @@ async function getLatestsContests() {
 export default async function Home() {
   const promises = [getLatestsCartridges(), getLatestsTapes(), getLatestsContests(), getTotalCartridges(), getTotalTapes()]
   let cartridges:Array<CartridgeInfo>;
-  let tapes:Array<VerifyPayload>;
+  let tapes:Array<VerifyPayloadProxy>;
   let contests:Array<RuleInfo>;
   let userAddresses:Set<string> = new Set();
   

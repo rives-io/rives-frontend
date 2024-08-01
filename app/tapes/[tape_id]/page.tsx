@@ -1,11 +1,12 @@
 import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
-import { cartridgeInfo, getOutputs, rules, VerifyPayload } from '@/app/backend-libs/core/lib';
+import { cartridgeInfo, getOutputs, rules, VerifyPayloadProxy } from '@/app/backend-libs/core/lib';
 import ContestCard from '@/app/components/ContestCard';
 import RivemuPlayer from '@/app/components/RivemuPlayer';
 import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
+import TapeTitle from '@/app/components/TapeTitle';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
-import { getTapeName, timeToDateUTCString } from '@/app/utils/util';
+import { getTapeName, ruleIdFromBytes, timeToDateUTCString } from '@/app/utils/util';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -54,11 +55,11 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
         );
     }
     
-    const tape:VerifyPayload = res.data[0];
+    const tape:VerifyPayloadProxy = res.data[0];
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
-    res = await rules({id: tape.rule_id.substring(2)}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
+    res = await rules({id: ruleIdFromBytes(tape.rule_id)}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const contest:RuleInfo = res.data[0];
 
     const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
@@ -76,14 +77,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                 <div className='w-full flex flex-col gap-4'>
                     <div className='flex flex-wrap gap-4'>
                         <div className='flex flex-col w-fit'>
-                            <h1 className={`pixelated-font text-2xl md:text-5xl truncate`} title={params.tape_id}>
-                                {
-                                    tapeName?
-                                        tapeName
-                                    :
-                                        params.tape_id.substring(0, 20)
-                                }
-                            </h1>
+                            <TapeTitle tapeId={params.tape_id} tapeName={tapeName} />
                             <span className='text-sm md:text-base truncate'>
                             {
                                 !user?

@@ -4,8 +4,8 @@
 import {  ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
-import { VerifyPayload } from "../backend-libs/core/lib";
-import { TapesRequest, getTapes, getUsersFromTapes, timeToDateUTCString } from "../utils/util";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
+import { TapesRequest, calculateTapeId, getTapes, getUsersFromTapes, timeToDateUTCString } from "../utils/util";
 import { formatBytes } from '../utils/common';
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import TapeCard from "../components/TapeCard";
@@ -14,11 +14,6 @@ import { getUsersByAddress, User } from "../utils/privyApi";
 
 const DEFAULT_PAGE_SIZE = 12
 
-function getTapeId(tapeHex: string): string {
-  return sha256(ethers.utils.arrayify(tapeHex));
-}
-
-
 
 interface TapesPagination extends TapesRequest {
   atEnd: boolean,
@@ -26,7 +21,7 @@ interface TapesPagination extends TapesRequest {
 }
 
 export default function Tapes() {
-  const [verificationInputs, setVerificationInputs] = useState<Array<VerifyPayload>|null>(null);
+  const [verificationInputs, setVerificationInputs] = useState<Array<VerifyPayloadProxy>|null>(null);
   const [tapesRequestOptions, setTapesRequestOptions] = useState<TapesPagination>({currentPage: 1, pageSize: DEFAULT_PAGE_SIZE, atEnd: false, fetching: false, orderBy: "timestamp", orderDir: "desc"});
   const [userMap, setUserMap] = useState<Record<string, User>>({});
 
@@ -52,7 +47,7 @@ export default function Tapes() {
       setTapesRequestOptions({...tapesRequestOptions, fetching: false, atEnd: true});
       return;
     } 
-    const tapesInputs:Array<VerifyPayload> = res.data;
+    const tapesInputs:Array<VerifyPayloadProxy> = res.data;
 
     const newUserMap:Record<string, User> = await getUsersFromTapes(tapesInputs, userMap);
     if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
@@ -91,7 +86,7 @@ export default function Tapes() {
               const user = verificationInput._msgSender.toLowerCase();
               const player = `${user.slice(0, 6)}...${user.substring(user.length-4,user.length)}`;
               const timestamp = timeToDateUTCString(verificationInput._timestamp*1000);
-              const tapeId = getTapeId(verificationInput.tape);
+              const tapeId = calculateTapeId(verificationInput.rule_id, verificationInput.tape);
               const size = formatBytes((verificationInput.tape.length -2 )/2);
               
               return (

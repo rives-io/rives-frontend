@@ -1,10 +1,12 @@
 "use client"
 
-import { ContestStatus, getContestStatus } from "../utils/common";
+import { Contest, ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
-import { formatTime, getContestWinner } from "../utils/util";
 import { useEffect, useState } from "react";
+import { envClient } from "../utils/clientEnv";
+import { tapes } from "../backend-libs/core/lib";
+import { formatTime, getContestWinner } from "../utils/util";
 import { getUsersByAddress, User } from "../utils/privyApi";
 import Link from "next/link";
 
@@ -30,14 +32,16 @@ export interface CartridgeWithUser extends CartridgeInfo {
 export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeWithUser}) {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [winnerUser, setWinnerUser] = useState<User|null>(null);
-    const isContest = contest.start && contest.end;
+    const contests = envClient.CONTESTS as Record<string,Contest>;
+    const isContest = contest.start && contest.end && contests[contest.id] != undefined;
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
+    const [nTapes, setNTapes] = useState<number>();
 
     const status = getContestStatus(contest);
 
     useEffect(() => {
         const checkWinner = async () => {
-            if (status == ContestStatus.VALIDATED) {
+            if (status == ContestStatus.FINISHED) {
                 const contestWinnerAddress = await getContestWinner(contest.cartridge_id, contest.id);
                 if (!contestWinnerAddress) return;
                 setWinnerAddress(contestWinnerAddress);
@@ -56,6 +60,14 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
         checkWinner();
     }, []);
 
+    useEffect(() => {
+        tapes({rule_id:contest.id,page:1,page_size:0}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}).then(
+            (tapeOut) => {
+                setNTapes(tapeOut.total);
+            }
+        );
+    }, [contest]);
+
     return (
         <div className="relative">
             <div id={contest.id} 
@@ -68,7 +80,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                 <div className="flex flex-col md:w-52"
                 >
                     <span className="pixelated-font text-lg">{contest.name}</span>
-                    <span className="text-sm text-gray-400">{contest.n_tapes} Submissions</span>
+                    <span className="text-sm text-gray-400">{nTapes} Submissions</span>
 
                     {
                         contestStatusMessage(contest)

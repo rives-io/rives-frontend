@@ -2,7 +2,7 @@ import { envClient } from "./clientEnv";
 import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType } from 'viem'
 import { BigNumber } from "ethers";
 
-import { getChain } from "./util";
+import { formatCartridgeIdToBytes, formatTapeIdToBytes, getChain } from "./util";
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import tapeAbiFile from "@/app/contracts/Tape.json"
 import currencyAbiFile from "@/app/contracts/CurrencyToken.json"
@@ -30,100 +30,110 @@ const publicClient = createPublicClient({
 export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
-    const bond: any[] = await publicClient.readContract({
-        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-        abi: cartridgeAbi.abi,
-        functionName: "cartridgeBonds",
-        args: [`0x${cartridgeId}`]
-    }) as any[];
-    if (!bond || !(bond[0].steps?.length)) return null;
-    if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
-        const decimalsOut: any[] = await publicClient.readContract({
-            address: `0x${bond[0].currencyToken.slice(2)}`,
-            abi: currencyAbiFile.abi,
-            functionName: "decimals",
-            args: []
-        }) as any[];
-        decimals = decimalsOut[0];
-        const symbolOut: any[] = await publicClient.readContract({
-            address: `0x${bond[0].currencyToken.slice(2)}`,
-            abi: currencyAbiFile.abi,
-            functionName: "symbol",
-            args: []
-        }) as any[];
-        symbol = symbolOut[0];
-    }
-    let buyPrice: BigNumber|undefined = undefined;
-    if (getBuyPrice){
-        const buyPriceOut: any[] = await publicClient.readContract({
+    try {
+        const bond: any[] = await publicClient.readContract({
             address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
             abi: cartridgeAbi.abi,
-            functionName: "getCurrentBuyPrice",
-            args: [`0x${cartridgeId}`,1]
+            functionName: "cartridgeBonds",
+            args: [formatCartridgeIdToBytes(cartridgeId)]
         }) as any[];
-        buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+        if (!bond || !(bond[0].steps?.length)) return null;
+        if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
+            const decimalsOut: any[] = await publicClient.readContract({
+                address: `0x${bond[0].currencyToken.slice(2)}`,
+                abi: currencyAbiFile.abi,
+                functionName: "decimals",
+                args: []
+            }) as any[];
+            decimals = decimalsOut[0];
+            const symbolOut: any[] = await publicClient.readContract({
+                address: `0x${bond[0].currencyToken.slice(2)}`,
+                abi: currencyAbiFile.abi,
+                functionName: "symbol",
+                args: []
+            }) as any[];
+            symbol = symbolOut[0];
+        }
+        let buyPrice: BigNumber|undefined = undefined;
+        if (getBuyPrice){
+            const buyPriceOut: any[] = await publicClient.readContract({
+                address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+                abi: cartridgeAbi.abi,
+                functionName: "getCurrentBuyPrice",
+                args: [`0x${cartridgeId}`,1]
+            }) as any[];
+            buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+        }
+        const supply = BigNumber.from(bond[0].currentSupply);
+        const price = BigNumber.from(bond[0].currentPrice);
+        const marketcap = supply.mul(price);
+        return {
+            buyPrice:buyPrice,
+            currentPrice:price,
+            currentSupply:supply,
+            marketcap:marketcap,
+            currencyDecimals:decimals,
+            currencySymbol:symbol
+        };
+    } catch (e) {
+        console.log("Error reading contract");
+        return null;
     }
-    const supply = BigNumber.from(bond[0].currentSupply);
-    const price = BigNumber.from(bond[0].currentPrice);
-    const marketcap = supply.mul(price);
-    return {
-        buyPrice:buyPrice,
-        currentPrice:price,
-        currentSupply:supply,
-        marketcap:marketcap,
-        currencyDecimals:decimals,
-        currencySymbol:symbol
-    };
 }
 
 
 export async function getTapeBondInfo(tapeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
-    const bond: any[] = await publicClient.readContract({
-        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-        abi: tapeAbi.abi,
-        functionName: "tapeBonds",
-        args: [`0x${tapeId}`]
-    }) as any[];
-    if (!bond || !(bond[0].steps?.length)) return null;
-    if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
-        const decimalsOut: any[] = await publicClient.readContract({
-            address: `0x${bond[0].currencyToken.slice(2)}`,
-            abi: currencyAbiFile.abi,
-            functionName: "decimals",
-            args: []
-        }) as any[];
-        decimals = decimalsOut[0];
-        const symbolOut: any[] = await publicClient.readContract({
-            address: `0x${bond[0].currencyToken.slice(2)}`,
-            abi: currencyAbiFile.abi,
-            functionName: "symbol",
-            args: []
-        }) as any[];
-        symbol = symbolOut[0];
-    }
-    let buyPrice: BigNumber|undefined = undefined;
-    if (getBuyPrice){
-        const buyPriceOut: any[] = await publicClient.readContract({
+    try {
+        const bond: any[] = await publicClient.readContract({
             address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
             abi: tapeAbi.abi,
-            functionName: "getCurrentBuyPrice",
-            args: [`0x${tapeId}`,1]
+            functionName: "tapeBonds",
+            args: [formatTapeIdToBytes(tapeId)]
         }) as any[];
-        buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+        if (!bond || !(bond[0].steps?.length)) return null;
+        if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
+            const decimalsOut: any[] = await publicClient.readContract({
+                address: `0x${bond[0].currencyToken.slice(2)}`,
+                abi: currencyAbi.abi,
+                functionName: "decimals",
+                args: []
+            }) as any[];
+            decimals = decimalsOut[0];
+            const symbolOut: any[] = await publicClient.readContract({
+                address: `0x${bond[0].currencyToken.slice(2)}`,
+                abi: currencyAbi.abi,
+                functionName: "symbol",
+                args: []
+            }) as any[];
+            symbol = symbolOut[0];
+        }
+        let buyPrice: BigNumber|undefined = undefined;
+        if (getBuyPrice){
+            const buyPriceOut: any[] = await publicClient.readContract({
+                address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+                abi: tapeAbi.abi,
+                functionName: "getCurrentBuyPrice",
+                args: [`0x${tapeId}`,1]
+            }) as any[];
+            buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+        }
+        const supply = BigNumber.from(bond[0].currentSupply);
+        const price = BigNumber.from(bond[0].currentPrice);
+        const marketcap = supply.mul(price);
+        return {
+            buyPrice:buyPrice,
+            currentPrice:price,
+            currentSupply:supply,
+            marketcap:marketcap,
+            currencyDecimals:decimals,
+            currencySymbol:symbol
+        };
+    } catch (e) {
+        console.log("Error reading contract");
+        return null;
     }
-    const supply = BigNumber.from(bond[0].currentSupply);
-    const price = BigNumber.from(bond[0].currentPrice);
-    const marketcap = supply.mul(price);
-    return {
-        buyPrice:buyPrice,
-        currentPrice:price,
-        currentSupply:supply,
-        marketcap:marketcap,
-        currencyDecimals:decimals,
-        currencySymbol:symbol
-    };
 }
 
 export async function getUserCartridges(user: string): Promise<string[]> {
@@ -165,20 +175,24 @@ export async function getUserCartridges(user: string): Promise<string[]> {
 
 export async function getUserCartridgesBondInfo(user: string): Promise<BondInfo[]> {
     const bondCartridges = new Array<BondInfo>();
-    for (const cartridgeId of await getUserCartridges(user)) {
-        const bond = await getCartridgeBondInfo(cartridgeId.slice(2));
-        if (bond) {
-            const balance: any[] = await publicClient.readContract({
-                address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-                abi: cartridgeAbi.abi,
-                functionName: "balanceOf",
-                args: [user,`0x${cartridgeId.slice(2)}`]
-            }) as any[];
-            if (balance) {
-                bond.amountOwned = BigNumber.from(balance);
+    try {
+        for (const cartridgeId of await getUserCartridges(user)) {
+            const bond = await getCartridgeBondInfo(cartridgeId.slice(2));
+            if (bond) {
+                const balance: any[] = await publicClient.readContract({
+                    address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+                    abi: cartridgeAbi.abi,
+                    functionName: "balanceOf",
+                    args: [user,`0x${cartridgeId.slice(2)}`]
+                }) as any[];
+                if (balance) {
+                    bond.amountOwned = BigNumber.from(balance);
+                }
+                bondCartridges.push(bond);
             }
-            bondCartridges.push(bond);
         }
+    } catch (e) {
+        console.log("Error reading contract");
     }
     return bondCartridges;
 }
@@ -222,48 +236,60 @@ export async function getUserTapes(user: string): Promise<string[]> {
 
 export async function getUserTapesBondInfo(user: string): Promise<BondInfo[]> {
     const bondTapes = new Array<BondInfo>();
-    for (const tapeId of await getUserTapes(user)) {
-        const bond = await getTapeBondInfo(tapeId.slice(2));
-        if (bond) {
-            const balance: any[] = await publicClient.readContract({
-                address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-                abi: tapeAbi.abi,
-                functionName: "balanceOf",
-                args: [user,`0x${tapeId.slice(2)}`]
-            }) as any[];
-            if (balance) {
-                bond.amountOwned = BigNumber.from(balance);
+    try {
+        for (const tapeId of await getUserTapes(user)) {
+            const bond = await getTapeBondInfo(tapeId.slice(2));
+            if (bond) {
+                const balance: any[] = await publicClient.readContract({
+                    address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+                    abi: tapeAbi.abi,
+                    functionName: "balanceOf",
+                    args: [user,`0x${tapeId.slice(2)}`]
+                }) as any[];
+                if (balance) {
+                    bond.amountOwned = BigNumber.from(balance);
+                }
+                bondTapes.push(bond);
             }
-            bondTapes.push(bond);
         }
+    } catch (e) {
+        console.log("Error reading contract");
     }
     return bondTapes;
 }
 
 export async function getTotalTapes(): Promise<BigNumber> {
 
-    const nAssets: any[] = await publicClient.readContract({
-        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-        abi: tapeAbi.abi,
-        functionName: "totalTapes",
-        args: []
-    }) as any[];
-    if (nAssets) {
-        return BigNumber.from(nAssets);
+    try {
+        const nAssets: any[] = await publicClient.readContract({
+            address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+            abi: tapeAbi.abi,
+            functionName: "totalTapes",
+            args: []
+        }) as any[];
+        if (nAssets) {
+            return BigNumber.from(nAssets);
+        }
+    } catch (e) {
+        console.log("Error reading contract");
     }
     return BigNumber.from(0);
 }
 
 export async function getTotalCartridges(): Promise<BigNumber> {
 
-    const nAssets: any[] = await publicClient.readContract({
-        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-        abi: cartridgeAbi.abi,
-        functionName: "totalCartridges",
-        args: []
-    }) as any[];
-    if (nAssets) {
-        return BigNumber.from(nAssets);
+    try {
+        const nAssets: any[] = await publicClient.readContract({
+            address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+            abi: cartridgeAbi.abi,
+            functionName: "totalCartridges",
+            args: []
+        }) as any[];
+        if (nAssets) {
+            return BigNumber.from(nAssets);
+        }
+    } catch (e) {
+        console.log("Error reading contract");
     }
     return BigNumber.from(0);
 }

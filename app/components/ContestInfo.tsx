@@ -26,7 +26,7 @@ function ContestInfo({contest, status}:{contest:RuleInfo, status:ContestStatus})
                         className={({selected}) => {return selected?"game-tabs-option-selected":"game-tabs-option-unselected"}}
                         >
                             <span className='game-tabs-option-text'>
-                                <span>{status == ContestStatus.VALIDATED? "Leaderboard":"Submissions"}</span>
+                                <span>{status == ContestStatus.FINISHED? "Leaderboard":"Submissions"}</span>
                             </span>
                     </Tab>
                 </Tab.List>
@@ -37,9 +37,7 @@ function ContestInfo({contest, status}:{contest:RuleInfo, status:ContestStatus})
                     </Tab.Panel>
 
                     <Tab.Panel className="game-tab-content">
-                        <RuleLeaderboard cartridge_id={contest.cartridge_id} rule={contest.id} 
-                            get_verification_outputs={contest != undefined && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(status) > -1 } 
-                        />
+                        <RuleLeaderboard cartridge_id={contest.cartridge_id} rule={contest.id} />
                     </Tab.Panel>
 
                 </Tab.Panels>

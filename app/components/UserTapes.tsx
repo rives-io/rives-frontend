@@ -3,8 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getTapes, getUsersFromTapes } from "../utils/util";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { getTapes, tapeIdFromBytes, getUsersFromTapes} from "../utils/util";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
@@ -14,10 +14,10 @@ import { User } from "../utils/privyApi";
 
 
 export default function UserTapes({address, twitterInfo}:{address:string, twitterInfo:User}) {
-    const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCreatedPage, setTapesCreatedPage] = useState(0);
     
-    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCollectedPage, setTapesCollectedPage] = useState(0);
     
     const [tapesCreatedPageToLoad, setTapesCreatedPageToLoad] = useState(1);
@@ -88,7 +88,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
 
         const page_size = 6;
 
-        let tapes:VerifyPayload[] = [];
+        let tapes:VerifyPayloadProxy[] = [];
         const begin = page_size*(tapesCollectedPageToLoad-1)
         for (let i = begin; i < tapesCollectedList.length; i++) {
             const tapeId = tapesCollectedList[i];
@@ -140,7 +140,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
 
     useEffect(() => {
         TapesCreatedByProfile();
-        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => t.slice(2))));
+        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => tapeIdFromBytes(t))));
     }, [])
 
     useEffect(() => {

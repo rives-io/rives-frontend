@@ -168,7 +168,6 @@ export class BasicIO<T extends object> extends IOData<T> {
     _blockNumber?: number
     _msgSender?: string
 
-
     constructor(model: ModelInterface<T>, payload: string, timestamp?: number, blockNumber?: number, msgSender?: string, inputIndex?: number, proxyMsgSender: boolean = false) {
         if (proxyMsgSender) {
             msgSender = `0x${payload.slice(10,50)}`;

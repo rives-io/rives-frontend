@@ -5,12 +5,11 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { insertTapeGif, insertTapeImage, insertTapeName } from "../utils/util";
-import { sha256 } from "js-sha256";
+import { calculateTapeId, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
 import { ContractReceipt, ethers } from "ethers";
-import { VerifyPayload } from "../backend-libs/core/ifaces";
+import { VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
-import { registerExternalVerification } from "../backend-libs/core/lib";
+import { registerExternalVerification, verify } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";
@@ -76,10 +75,6 @@ function generateGif(frames: string[], width:number, height:number): Promise<str
     
 }
 
-function calculateTapeId(log: Uint8Array): string {
-    return sha256(log);
-}
-
 
 
 function GameplaySubmitter() {
@@ -87,7 +82,7 @@ function GameplaySubmitter() {
     const {user, ready, connectWallet} = usePrivy();
     const {wallets} = useWallets();
     
-    const tapeId = gameplay? calculateTapeId(gameplay.log):"";
+    const tapeId = gameplay? calculateTapeId(gameplay.rule_id,gameplay.log):"";
     const [tapeTitle, setTapeTitle] = useState("");
     const [tapeURL, setTapeURL] = useState("");
     const [gifImg, setGifImg] = useState("");
@@ -182,15 +177,21 @@ function GameplaySubmitter() {
         // submit the gameplay
         const provider = await wallet.getEthereumProvider();
         const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
-        const inputData: VerifyPayload = {
-            rule_id: '0x' + gameplay.rule_id,
+        const inputData: VerifyPayloadProxy = {
+            rule_id: formatRuleIdToBytes(gameplay.rule_id),
             outcard_hash: '0x' + gameplay.outcard.hash,
             tape: ethers.utils.hexlify(gameplay.log),
-            claimed_score: gameplay.score || 0
+            claimed_score: gameplay.score || 0,
+            tapes:gameplay.tapes||[],
+            in_card:gameplay.in_card ? ethers.utils.hexlify(gameplay.in_card):'0x'
         }
         try {
             setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
-            const receipt:ContractReceipt = await registerExternalVerification(signer, envClient.DAPP_ADDR, inputData, {sync:false, cartesiNodeUrl: envClient.CARTESI_NODE_URL}) as ContractReceipt;
+            const receipt:ContractReceipt = await registerExternalVerification(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            }) as ContractReceipt;
         } catch (error) {
             console.log(error)
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});

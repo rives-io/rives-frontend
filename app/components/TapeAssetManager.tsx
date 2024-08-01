@@ -7,7 +7,7 @@ import { useEffect, useState, Fragment } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { Contract, ContractReceipt, ethers, BigNumber, PayableOverrides } from "ethers";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayload, getOutputs } from "../backend-libs/core/lib";
+import { VerificationOutput, VerifyPayloadProxy, getOutputs } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { Input } from '@mui/base/Input';
 import tapeAbiFile from "@/app/contracts/Tape.json"
@@ -70,7 +70,7 @@ const getTapeVerificationOutput = async (tapeId:string):Promise<VerificationOutp
 }
 
 const getTapeCreator = async (tapeId:string):Promise<string> => {
-    const replayLogs:Array<VerifyPayload> = (await getOutputs(
+    const replayLogs:Array<VerifyPayloadProxy> = (await getOutputs(
         {
             tags: ["tape",tapeId],
             type: 'input'

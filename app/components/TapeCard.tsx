@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
-import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
+import { calculateTapeId, getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
 import rivesCheck from "@/public/default_tape.png";
 import { Twitter } from "@privy-io/react-auth";
@@ -22,8 +22,8 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayload|TapePreview, creator?:User|null}) {
-    let tape:VerifyPayload|TapePreview;
+export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayloadProxy|TapePreview, creator?:User|null}) {
+    let tape:VerifyPayloadProxy|TapePreview;
 
     if (typeof tapeInput == "string") {
         tape = JSON.parse(tapeInput);
@@ -51,13 +51,13 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
             userName = tape.twitterInfo.name;
         }
     } else {
-        userAddress = (tape as VerifyPayload)._msgSender.toLowerCase();
-        tapeId = sha256(ethers.utils.arrayify(((tape as VerifyPayload).tape)));
+        userAddress = (tape as VerifyPayloadProxy)._msgSender.toLowerCase();
+        tapeId = calculateTapeId((tape as VerifyPayloadProxy).rule_id,(tape as VerifyPayloadProxy).tape);
     }
 
     const player = `${userAddress.slice(0, 6)}...${userAddress.substring(userAddress.length-4,userAddress.length)}`;
     const [playerName, setPlayerName] = useState<string|null>(userName);
-    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? tapeId:tapeTitle);
+    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? `...${tapeId.substring(56, 64)}`:tapeTitle);
     const [gifImage, setGifImage] = useState<string|null>(initialGifImageValue);
     const [gif, setGif] = useState<string|null>(initialGifValue);
     const [currentPrice,setCurrentPrice] = useState<string>();

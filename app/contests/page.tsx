@@ -1,7 +1,7 @@
 import { envClient } from "@/app/utils/clientEnv";
 import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/ifaces";
-import { cartridgeInfo, rules } from "../backend-libs/core/lib";
-import { Contest, getContestStatus } from "../utils/common";
+import { cartridgeInfo, rules, tapes, TapesOutput } from "../backend-libs/core/lib";
+import { Contest, getContestStatus, RuleWithMetadata } from "../utils/common";
 import ContestCard from "../components/ContestCard";
 import { Metadata } from "next";
 import { getUsersByAddress, User } from "../utils/privyApi";
@@ -12,8 +12,6 @@ export const metadata: Metadata = {
   title: 'Contests',
   description: 'Contests',
 }
-
-interface RuleWithMetadata extends RuleInfo, Contest {}
 
 const getRules = async (contests:Record<string,Contest>, onlyActive = false) => {
   const contestsRules:Array<RuleWithMetadata> = [];

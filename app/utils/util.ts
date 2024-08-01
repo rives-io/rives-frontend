@@ -1,8 +1,9 @@
 import { envClient } from "./clientEnv";
+import { ethers } from "ethers";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
 import { isHex, fromHex } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { cartridges, getOutputs, VerifyPayload } from "../backend-libs/core/lib";
+import { cartridges, getOutputs, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
@@ -379,6 +380,42 @@ export function extractTxError(msg:string):string {
     return "Error in transaction";
 }
 
+const CARTRIDGE_ID_BYTES = 6;
+const RULE_ID_BYTES = 20;
+const TAPE_ID_BYTES = 32;
+const TRUNCATED_TAPE_ID_BYTES = 12;
+
+export function cartridgeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*CARTRIDGE_ID_BYTES) : id.slice(0,2*CARTRIDGE_ID_BYTES);
+}
+
+export function ruleIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*RULE_ID_BYTES) : id.slice(0,2*RULE_ID_BYTES);
+}
+
+export function tapeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TAPE_ID_BYTES) : id.slice(0,2*TAPE_ID_BYTES);
+}
+
+export function truncateTapeHash(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TRUNCATED_TAPE_ID_BYTES) : id.slice(0,2*TRUNCATED_TAPE_ID_BYTES);
+}
+
+export function formatCartridgeIdToBytes(id: string): string {
+    return `0x${cartridgeIdFromBytes(id)}${'0'.repeat(2*(32-CARTRIDGE_ID_BYTES))}`;
+}
+
+export function formatRuleIdToBytes(id: string): string {
+    return `0x${ruleIdFromBytes(id)}${'0'.repeat(2*(32-RULE_ID_BYTES))}`;
+}
+
+export function formatTapeIdToBytes(id: string): string {
+    return `0x${tapeIdFromBytes(id)}${'0'.repeat(2*(32-TAPE_ID_BYTES))}`;
+}
+
+export function calculateTapeId(ruleId:string, log: Uint8Array): string {
+    return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
+}
 
 export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
@@ -397,7 +434,7 @@ export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, cu
     return newUserMap;
 }
 
-export async function getUsersFromTapes(tapes:Array<VerifyPayload>, currUserMap:Record<string, User>) {
+export async function getUsersFromTapes(tapes:Array<VerifyPayloadProxy>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
     for (let tape of tapes) {
         const userAddress = tape._msgSender.toLowerCase();
