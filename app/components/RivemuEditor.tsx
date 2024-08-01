@@ -36,6 +36,8 @@ import { CartridgeInfo, RuleInfo, InfoCartridge, RuleDataProxy, InsertCartridgeP
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
 
+let canvasPlaying = false;
+
 const darkTheme = createTheme({
     palette: {
        mode: 'dark',
@@ -176,9 +178,9 @@ function RivemuEditor() {
     const [ruleSaveTapes, setRuleSaveTapes] = useState(false);
     const [manageCartridge, setManageCartridge] = useState(false);
     const [newUserAddress, setNewUserAddress] = useState<string>();
-    const [cartridgeVersions, setCartridgeVersions] = useState<readonly CartridgeInfo[]>([])
-    const [versionsComboOpen, setVersionsComboOpen] = useState(false);
-    const [versionSelected, setVersionSelected] = useState<CartridgeInfo|null>();
+    // const [cartridgeVersions, setCartridgeVersions] = useState<readonly CartridgeInfo[]>([])
+    // const [versionsComboOpen, setVersionsComboOpen] = useState(false);
+    // const [versionSelected, setVersionSelected] = useState<CartridgeInfo|null>();
 
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
 
@@ -193,8 +195,10 @@ function RivemuEditor() {
     useEffect(() => {
         document.addEventListener("visibilitychange", (event) => {
             if (document.visibilityState == "hidden") {
-                rivemuRef.current?.setSpeed(0);
-                setPaused(true);
+                if (canvasPlaying) {
+                    rivemuRef.current?.setSpeed(0);
+                    setPaused(true);
+                }
             }
           });
     }, []);
@@ -303,9 +307,9 @@ function RivemuEditor() {
                     setCartridgeData(data);
                     setStoredCartridge(true);
                 });
-                if (newCartridge.versions) {
-                    getCartridges(newCartridge.versions).then(data => setCartridgeVersions(data));
-                }
+                // if (newCartridge.versions) {
+                //     getCartridges(newCartridge.versions).then(data => setCartridgeVersions(data));
+                // }
             } else {
                 setCartridgeData(undefined);
             }
@@ -408,6 +412,7 @@ function RivemuEditor() {
 
     const rivemuOnBegin = function (width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array) {
         console.log("rivemu_on_begin");
+        canvasPlaying = true;
         
         let info: InfoCartridge|undefined;
         if (info_data.length > 0) {
@@ -434,6 +439,7 @@ function RivemuEditor() {
     ) {
         rivemuRef.current?.stop();
         console.log("rivemu_on_finish")
+        canvasPlaying = false;
         // if (document.fullscreenElement) document.exitFullscreen();
         if (restarting)
             setPlaying({...playing, playCounter: playing.playCounter+1});
@@ -638,56 +644,56 @@ function RivemuEditor() {
         }
     }
 
-    async function sendRemoveCartridge() {
+    // async function sendRemoveCartridge() {
 
-        if (!storedCartridge) {
-            setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
+    //     if (!storedCartridge) {
+    //         setErrorFeedback({message:"Cartridge not stored", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
         
-        if (!selectedCartridge) {
-            setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
+    //     if (!selectedCartridge) {
+    //         setErrorFeedback({message:"No selected cartridge data", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
 
-        if (!versionSelected) {
-            setErrorFeedback({message:"No version selected", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
+    //     if (!versionSelected) {
+    //         setErrorFeedback({message:"No version selected", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
 
-        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
-        if (!wallet) {
-            setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
+    //     const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+    //     if (!wallet) {
+    //         setErrorFeedback({message:"Please connect your wallet", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
 
-        if (wallet.address.toLowerCase() != selectedCartridge.user_address.toLowerCase()) {
-            setErrorFeedback({message:"Not owner of the cartridge", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
+    //     if (wallet.address.toLowerCase() != envClient.OPERATOR_ADDR.toLowerCase()) {
+    //         setErrorFeedback({message:"Only operator can remove cartridges", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
 
-        const provider = await wallet.getEthereumProvider();
-        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
+    //     const provider = await wallet.getEthereumProvider();
+    //     const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
 
-        const inputData: RemoveCartridgePayloadProxy = {
-            id: formatCartridgeIdToBytes(versionSelected.id)
-        }
-        try {
-            await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {
-                sync:false, 
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
-                inputBoxAddress: envClient.WORLD_ADDRESS
-            });
-            selectCartridge(null);
-            setVersionSelected(null);
-        } catch (error) {
-            console.log(error)
-            let errorMsg = (error as Error).message;
-            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
-        }
-    }
+    //     const inputData: RemoveCartridgePayloadProxy = {
+    //         id: formatCartridgeIdToBytes(versionSelected.id)
+    //     }
+    //     try {
+    //         await removeCartridge(signer, envClient.DAPP_ADDR, inputData, {
+    //             sync:false, 
+    //             cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+    //             inputBoxAddress: envClient.WORLD_ADDRESS
+    //         });
+    //         selectCartridge(null);
+    //         setVersionSelected(null);
+    //     } catch (error) {
+    //         console.log(error)
+    //         let errorMsg = (error as Error).message;
+    //         if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+    //         setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+    //         return;
+    //     }
+    // }
 
     async function sendTransferCartridge() {
 
@@ -1015,8 +1021,9 @@ function RivemuEditor() {
                             } label="Manage Cartridge" />
                     <TextField className="w-full" label="Transfer to" value={newUserAddress || ""} variant="standard" hidden={!manageCartridge}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUserAddress(e.target.value)} />
-
-                    <Autocomplete
+                    
+                    {/* Remove Cartridge only for  */}
+                    {/* <Autocomplete
                         hidden={!manageCartridge}
                         value={versionSelected || null}
                         className="w-full"
@@ -1033,7 +1040,7 @@ function RivemuEditor() {
                         renderInput={(params) => (
                             <TextField {...params} label="Version" variant="standard"/>
                         )}
-                    />
+                    /> */}
 
 
                     <div className='grid grid-cols-3 gap-1 justify-items-center'>
@@ -1041,9 +1048,9 @@ function RivemuEditor() {
                         Insert Cartridge
                     </button>
 
-                    <button hidden={!manageCartridge} disabled={!cartridgeData || !versionSelected || !storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRemoveCartridge}>
+                    {/* <button hidden={!manageCartridge} disabled={!cartridgeData || !versionSelected || !storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRemoveCartridge}>
                         Remove Cartridge
-                    </button>
+                    </button> */}
 
                     <button hidden={!manageCartridge} disabled={!cartridgeData || !newUserAddress || !storedCartridge || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendTransferCartridge}>
                         Transfer Cartridge

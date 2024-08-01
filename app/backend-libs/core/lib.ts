@@ -147,7 +147,7 @@ export async function externalVerification(
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
     const data: ExternalVerificationPayloadProxy = new ExternalVerificationPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.ExternalVerificationPayloadProxy>(client,dappAddress,'0x1f25d69c',data, options)
+    const result = await genericAdvanceInput<ifaces.ExternalVerificationPayloadProxy>(client,dappAddress,'0x4252da70',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -187,12 +187,27 @@ export async function cleanTapes(
 export async function setOperatorAddress(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.SetOperatorPayload,
+    inputData: ifaces.SetOperatorPayloadProxy,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: SetOperatorPayload = new SetOperatorPayload(inputData);
+    const data: SetOperatorPayloadProxy = new SetOperatorPayloadProxy(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.SetOperatorPayload>(client,dappAddress,'0xe1e9bc95',data, options)
+    const result = await genericAdvanceInput<ifaces.SetOperatorPayloadProxy>(client,dappAddress,'0xe1e9bc95',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
+export async function setInternalVerifyLock(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.SetInternalVerifyLockProxy,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: SetInternalVerifyLockProxy = new SetInternalVerifyLockProxy(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.SetInternalVerifyLockProxy>(client,dappAddress,'0xef53291f',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -454,14 +469,24 @@ export function exportToCleanTapesPayloadProxy(data: ifaces.CleanTapesPayloadPro
     const dataToExport: CleanTapesPayloadProxy = new CleanTapesPayloadProxy(data);
     return dataToExport.export();
 }
-export class SetOperatorPayloadInput extends Input<ifaces.SetOperatorPayload> { constructor(data: CartesiInput) { super(models['SetOperatorPayload'],data); } }
-export function decodeToSetOperatorPayloadInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetOperatorPayloadInput {
-    return new SetOperatorPayloadInput(output as CartesiInput);
+export class SetOperatorPayloadProxyInput extends Input<ifaces.SetOperatorPayloadProxy> { constructor(data: CartesiInput) { super(models['SetOperatorPayloadProxy'],data,true); } }
+export function decodeToSetOperatorPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetOperatorPayloadProxyInput {
+    return new SetOperatorPayloadProxyInput(output as CartesiInput);
 }
 
-export class SetOperatorPayload extends IOData<ifaces.SetOperatorPayload> { constructor(data: ifaces.SetOperatorPayload, validate: boolean = true) { super(models['SetOperatorPayload'],data,validate); } }
-export function exportToSetOperatorPayload(data: ifaces.SetOperatorPayload): string {
-    const dataToExport: SetOperatorPayload = new SetOperatorPayload(data);
+export class SetOperatorPayloadProxy extends IOData<ifaces.SetOperatorPayloadProxy> { constructor(data: ifaces.SetOperatorPayloadProxy, validate: boolean = true) { super(models['SetOperatorPayloadProxy'],data,validate); } }
+export function exportToSetOperatorPayloadProxy(data: ifaces.SetOperatorPayloadProxy): string {
+    const dataToExport: SetOperatorPayloadProxy = new SetOperatorPayloadProxy(data);
+    return dataToExport.export();
+}
+export class SetInternalVerifyLockProxyInput extends Input<ifaces.SetInternalVerifyLockProxy> { constructor(data: CartesiInput) { super(models['SetInternalVerifyLockProxy'],data,true); } }
+export function decodeToSetInternalVerifyLockProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetInternalVerifyLockProxyInput {
+    return new SetInternalVerifyLockProxyInput(output as CartesiInput);
+}
+
+export class SetInternalVerifyLockProxy extends IOData<ifaces.SetInternalVerifyLockProxy> { constructor(data: ifaces.SetInternalVerifyLockProxy, validate: boolean = true) { super(models['SetInternalVerifyLockProxy'],data,validate); } }
+export function exportToSetInternalVerifyLockProxy(data: ifaces.SetInternalVerifyLockProxy): string {
+    const dataToExport: SetInternalVerifyLockProxy = new SetInternalVerifyLockProxy(data);
     return dataToExport.export();
 }
 export class CartridgePayloadSplittableInput extends Input<ifaces.CartridgePayloadSplittable> { constructor(data: CartesiInput) { super(models['CartridgePayloadSplittable'],data); } }
@@ -672,11 +697,11 @@ export const models: Models = {
     },
     'ExternalVerificationPayloadProxy': {
         ioType:IOType.mutationPayload,
-        abiTypes:['bytes32[]', 'int256[]', 'uint256[]', 'bytes[]', 'bytes32[][]'],
-        params:['tape_ids', 'scores', 'error_codes', 'outcards', 'tapes'],
+        abiTypes:['bytes32[]', 'int256[]', 'uint256[]', 'bytes[]'],
+        params:['tape_ids', 'scores', 'error_codes', 'outcards'],
         decoder: decodeToExternalVerificationPayloadProxyInput,
         exporter: exportToExternalVerificationPayloadProxy,
-        validator: ajv.compile<ifaces.ExternalVerificationPayloadProxy>(JSON.parse('{"title": "ExternalVerificationPayloadProxy", "type": "object", "properties": {"tape_ids": {"type": "array", "items": {"type": "string", "format": "binary"}}, "scores": {"type": "array", "items": {"type": "integer"}}, "error_codes": {"type": "array", "items": {"type": "integer"}}, "outcards": {"type": "array", "items": {"type": "string", "format": "binary"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}}, "required": ["tape_ids", "scores", "error_codes", "outcards", "tapes"]}'.replaceAll('integer','string","format":"biginteger')))
+        validator: ajv.compile<ifaces.ExternalVerificationPayloadProxy>(JSON.parse('{"title": "ExternalVerificationPayloadProxy", "type": "object", "properties": {"tape_ids": {"type": "array", "items": {"type": "string", "format": "binary"}}, "scores": {"type": "array", "items": {"type": "integer"}}, "error_codes": {"type": "array", "items": {"type": "integer"}}, "outcards": {"type": "array", "items": {"type": "string", "format": "binary"}}}, "required": ["tape_ids", "scores", "error_codes", "outcards"]}'.replaceAll('integer','string","format":"biginteger')))
     },
     'AwardWinnerTapesPayloadProxy': {
         ioType:IOType.mutationPayload,
@@ -694,13 +719,21 @@ export const models: Models = {
         exporter: exportToCleanTapesPayloadProxy,
         validator: ajv.compile<ifaces.CleanTapesPayloadProxy>(JSON.parse('{"title": "CleanTapesPayloadProxy", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}}, "required": ["rule_id"]}'.replaceAll('integer','string","format":"biginteger')))
     },
-    'SetOperatorPayload': {
+    'SetOperatorPayloadProxy': {
         ioType:IOType.mutationPayload,
         abiTypes:['address'],
         params:['new_operator_address'],
-        decoder: decodeToSetOperatorPayloadInput,
-        exporter: exportToSetOperatorPayload,
-        validator: ajv.compile<ifaces.SetOperatorPayload>(JSON.parse('{"title": "SetOperatorPayload", "type": "object", "properties": {"new_operator_address": {"type": "string"}}, "required": ["new_operator_address"]}'.replaceAll('integer','string","format":"biginteger')))
+        decoder: decodeToSetOperatorPayloadProxyInput,
+        exporter: exportToSetOperatorPayloadProxy,
+        validator: ajv.compile<ifaces.SetOperatorPayloadProxy>(JSON.parse('{"title": "SetOperatorPayloadProxy", "type": "object", "properties": {"new_operator_address": {"type": "string"}}, "required": ["new_operator_address"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'SetInternalVerifyLockProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bool'],
+        params:['lock'],
+        decoder: decodeToSetInternalVerifyLockProxyInput,
+        exporter: exportToSetInternalVerifyLockProxy,
+        validator: ajv.compile<ifaces.SetInternalVerifyLockProxy>(JSON.parse('{"title": "SetInternalVerifyLockProxy", "type": "object", "properties": {"lock": {"type": "boolean"}}, "required": ["lock"]}'.replaceAll('integer','string","format":"biginteger')))
     },
     'CartridgePayloadSplittable': {
         ioType:IOType.queryPayload,

@@ -187,7 +187,7 @@ function GameplaySubmitter() {
         }
         try {
             setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
-            const receipt:ContractReceipt = await verify(signer, envClient.DAPP_ADDR, inputData, {
+            const receipt:ContractReceipt = await registerExternalVerification(signer, envClient.DAPP_ADDR, inputData, {
                 sync:false, 
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
                 inputBoxAddress: envClient.WORLD_ADDRESS
