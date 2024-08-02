@@ -1,5 +1,5 @@
 import { envClient } from "./clientEnv";
-import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType } from 'viem'
+import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain } from 'viem'
 import { BigNumber } from "ethers";
 
 import { formatCartridgeIdToBytes, formatTapeIdToBytes, getChain } from "./util";
@@ -22,8 +22,24 @@ export interface BondInfo {
     amountOwned?: BigNumber;
 }
 
+export const customChain = defineChain({
+    id: 42069,
+    name: 'Rives Devnet',
+    nativeCurrency: {
+      decimals: 18,
+      name: 'Rives Ether',
+      symbol: 'RETH',
+    },
+    rpcUrls: {
+      default: {
+        http: ['https://anvil.dev.rives.io'],
+        webSocket: ['wss://anvil.dev.rives.io'],
+      },
+    },
+});
+
 const publicClient = createPublicClient({ 
-    chain: getChain(envClient.NETWORK_CHAIN_ID),
+    chain: envClient.NETWORK_CHAIN_ID == "0xA455" ? customChain : getChain(envClient.NETWORK_CHAIN_ID),
     transport: http(envClient.NETWORK_CHAIN_ID == "0xAA36A7" ? "https://ethereum-sepolia-rpc.publicnode.com" : undefined)
 })
 
