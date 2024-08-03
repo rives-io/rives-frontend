@@ -17,6 +17,7 @@ interface RivemuProps {
     in_card?:Uint8Array, 
     entropy?:string,
     tape?:Uint8Array,
+    smallSize?: boolean,
     rivemu_on_frame(outcard: ArrayBuffer,frame: number,cycles: number,fps: number,
         cpu_cost: number,cpu_speed: number,cpu_usage: number,cpu_quota: number): void,
     rivemu_on_begin(width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array): void,
@@ -168,7 +169,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
                     <div className="text-white">No Cartridge...</div>
                 </div>
             :<canvas
-                className='gameplay-screen border border-[#131415] bg-black'
+                className={'border border-[#131415] bg-black ' + props.smallSize ? "gameplay-screen-sm" : "gameplay-screen"}
                 id="canvas"
                 onContextMenu={(e) => e.preventDefault()}
                 tabIndex={-1}

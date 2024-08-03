@@ -4,6 +4,7 @@ import ProfileOptions from "@/app/components/ProfileOptions";
 import ProfileSummary from "@/app/components/ProfileSummary";
 import TapeFeesManager from "@/app/components/TapeFeeManager";
 import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
+import Link from "next/link";
 
 
 export async function generateMetadata({ params }: { params: { address: string } }) {
@@ -39,6 +40,9 @@ export default async function ProfilePage({ params }: { params: { address: strin
     
     return (
         <main>
+            <section className="flex justify-end">
+                <Link className='pixelated-font btn mt-2 text-xs shadow' href={"/upload-cartridge"}>Upload Cartridge</Link>
+            </section>
             <section className="flex flex-col items-center gap-8">
                 <div className="flex flex-wrap gap-8 items-center justify-center">
                     <div className="flex flex-col gap-2">

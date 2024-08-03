@@ -341,6 +341,7 @@ function RivemuEditor() {
             setOutcard(undefined);
             setCartridgeData(undefined);
             setSelectedCartridge(undefined);
+            setInfoCartridge(undefined);
             const data = readerEvent.target?.result;
             if (data) {
                 setStoredCartridge(false);

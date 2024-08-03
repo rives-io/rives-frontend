@@ -285,6 +285,11 @@ body {
   height: 768px;
 }
 
+.gameplay-screen-sm {
+  width: 512px;
+  height: 512px;
+}
+
 .screen-controls {
   width: 768px;
 }
@@ -305,6 +310,10 @@ body {
     max-width: 512px;
     max-height: 512px;
   }
+  .gameplay-screen-sm {
+    width: 512px;
+    height: 512px;
+  }
   .screen-controls {
     width: 512px;
   }
@@ -316,6 +325,10 @@ body {
 
 @media screen and (max-width: 768px)  {
   .gameplay-screen {
+    max-width: 512px;
+    max-height: 512px;
+  }
+  .gameplay-screen-sm {
     max-width: 512px;
     max-height: 512px;
   }
@@ -334,6 +347,10 @@ body {
     max-width: 256px;
     max-height: 256px;
   }
+  .gameplay-screen-sm {
+    max-width: 256px;
+    max-height: 256px;
+  }
   .screen-controls {
     width: 256px;
   }
@@ -344,7 +361,7 @@ body {
 }
 
 @media screen and (max-width: 512px)  {
-  .gameplay-screen {
+  .gameplay-screen-sm {
     max-width: 256px;
     max-height: 256px;
   }
