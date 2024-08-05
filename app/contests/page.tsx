@@ -51,7 +51,7 @@ export default async function Contests() {
   if (contests.length == 0) {
     return (
       <main className="flex items-center justify-center h-lvh">
-        <span className={`text-4xl text-white` }>No Active Contests!</span>
+        <span className={`text-4xl text-white pixelated-font` }>No Active Contests!</span>
       </main>
     )
   }

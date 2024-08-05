@@ -13,6 +13,7 @@ import Image from 'next/image';
 import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
 import { tapeIdFromBytes,timeToDateUTCString} from '../utils/util';
+import Link from 'next/link';
 
 const DEFAULT_PAGE_SIZE = 10;
 let total_pages = 1;
@@ -236,30 +237,43 @@ function RuleLeaderboard({cartridge_id, rule}:{
                             const user = addressUserMap[sender.toLowerCase()];
 
                             return (
-                                <tr key={index} onClick={() => window.open(`/tapes/${tapeId}`, "_self")}
+                                <tr key={index}
                                 className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-rives-gray":""}`}
-                                style={{cursor: "pointer"}}
                                 >
                                     <td className=''>
-                                        {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
+                                        </Link>
                                     </td>
                                     {
                                         !user?
-                                            <td className='flex items-center gap-2'>
-                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
-                                                <span className='break-all' title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
+                                            <td>
+                                                <Link href={`/tapes/${tapeId}`} className='flex items-center gap-2'>
+                                                    <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
+                                                    <span className='break-all' title={sender}>
+                                                        {sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}
+                                                    </span>
+                                                </Link>
                                             </td>
                                         :
-                                            <td className='flex items-center gap-2'>
-                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
-                                                <span title={sender}>{user.name}</span>
+                                            <td>
+                                                <Link href={`/tapes/${tapeId}`} className='flex items-center gap-2'>
+                                                    <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
+                                                    <span title={sender}>{user.name}</span>
+                                                </Link>
                                             </td>
                                     }
 
                                     <td>
-                                        {timeToDateUTCString(Number(tapets))}
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {timeToDateUTCString(Number(tapets))}
+                                        </Link>
                                     </td>
-                                    <td className=''>{score}</td>
+                                    <td className=''>
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {score}
+                                        </Link>
+                                    </td>
                                 </tr>
                             );
                         })

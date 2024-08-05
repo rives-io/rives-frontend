@@ -77,16 +77,16 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
     }
 
     const TapesCollectedByProfile = async () => {
+        const page_size = 6;
         if (tapesCollectedList.length == 0 || tapesCollect[tapesCollectedPageToLoad-1]) {
             setTapesCollectedPage(tapesCollectedPageToLoad);
-            setTotalTapesCollectedPages(0);
+            setTotalTapesCollectedPages(Math.ceil(tapesCollectedList.length / page_size));
             setTapesCollectedLoading(false);
             return;
         }
 
         setTapesCollectedLoading(true);
 
-        const page_size = 6;
 
         let tapes:VerifyPayloadProxy[] = [];
         const begin = page_size*(tapesCollectedPageToLoad-1)

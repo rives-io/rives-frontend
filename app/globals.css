@@ -361,6 +361,11 @@ body {
 }
 
 @media screen and (max-width: 512px)  {
+  .gameplay-screen {
+    max-width: 256px;
+    max-height: 256px;
+  }
+  
   .gameplay-screen-sm {
     max-width: 256px;
     max-height: 256px;

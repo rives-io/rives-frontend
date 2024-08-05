@@ -501,15 +501,15 @@ function RivemuPlayer(
     return (
         <section className="flex flex-col items-center justify-center">
             <div>
-                <div className='grid grid-cols-3 bg-gray-500 p-2 text-center screen-controls'>
-                    <div className="flex justify-start gap-2">
-                        <button className="justify-self-start bg-gray-700 text-white border border-gray-700 hover:border-black"
+                <div style={{justifyContent: "space-between"}} className='screen-controls flex items-center md:grid md:grid-cols-3 bg-gray-500 p-2'>
+                    <div className="flex gap-2">
+                        <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
                         title={isTape ? "Restart" :"Record"}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={play}>
                             {isTape ? <RestartIcon/> : <FiberManualRecordIcon/>}
                         </button>
-                        <button className="justify-self-end bg-gray-700 text-white border border-gray-700 hover:border-black"
+                        <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
                         title="Pause/Resume"
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
@@ -518,7 +518,7 @@ function RivemuPlayer(
                             <PauseIcon/>
                         </button>
 
-                        <button className="justify-self-end bg-red-500 text-white border border-gray-700 hover:border-black"
+                        <button className="bg-red-500 text-white border border-gray-700 hover:border-black"
                         title="Stop"
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
@@ -529,12 +529,12 @@ function RivemuPlayer(
 
                     </div>
 
-                    <div className={`pixelated-font ${currScore && currScore > 1000000000? "text-xs":"text-sm"}`}>
+                    <div className={`pixelated-font text-center font-bold text-yellow-500 text-xs md:text-xl`}>
                         {currScore}
                     </div>
 
-                    <div className="flex justify-end gap-2">
-                        <button className="justify-self-end bg-gray-700 text-white border border-gray-700 hover:border-black font-thin"
+                    <div className="flex md:justify-end gap-2">
+                        <button hidden={!isTape} className="justify-self-end bg-gray-700 text-white border border-gray-700 hover:border-black font-thin"
                         title="Change Speed"
                         disabled={!playing.isPlaying || !isTape}
                         onKeyDown={() => null} onKeyUp={() => null}
@@ -553,36 +553,37 @@ function RivemuPlayer(
                         </button>
                     </div>
 
-            </div>
-                    <div className="relative">
-                    { !playing.isPlaying?
-                        <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
-                        title={isTape ? "Replay": "Record"}>
-                            {
-                                playing.playCounter === 0?
-                                    <PlayArrowIcon className='text-7xl'/>
-                                :
-                                (isTape ? <RestartIcon className='text-7xl' /> : <PlayArrowIcon className='text-7xl'/>)
-                            }
-                            
-                        </button>
-                    : (paused ?     
-                        <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
-                            <PlayArrowIcon className='text-7xl' />
-                        </button>
-                    : (skipToFrame ?     
-                        <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-md backdrop-opacity-40 border border-gray-500'} onClick={resumeSpeed}>
-                            <FastForwardIcon className='text-7xl animate-pulse' />
-                        </button>
-                    : <></>))
-                    }
-                        <Rivemu ref={rivemuRef} cartridge_data={cartridgeData} args={rule.args} entropy={entropy}
-                            tape={tape?.tape && tape.tape.length > 0 && ethers.utils.arrayify(tape.tape)}
-                            in_card={inCard && inCard.length > 0 ? inCard : new Uint8Array([])} 
-                            rivemu_on_frame={rivemuOnFrame} rivemu_on_begin={rivemuOnBegin} rivemu_on_finish={rivemuOnFinish}
-                        />
-                    </div>
                 </div>
+                    
+                <div className="relative">
+                { !playing.isPlaying?
+                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
+                    title={isTape ? "Replay": "Record"}>
+                        {
+                            playing.playCounter === 0?
+                                <PlayArrowIcon className='text-7xl'/>
+                            :
+                            (isTape ? <RestartIcon className='text-7xl' /> : <PlayArrowIcon className='text-7xl'/>)
+                        }
+                        
+                    </button>
+                : (paused ?     
+                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
+                        <PlayArrowIcon className='text-7xl' />
+                    </button>
+                : (skipToFrame ?     
+                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-md backdrop-opacity-40 border border-gray-500'} onClick={resumeSpeed}>
+                        <FastForwardIcon className='text-7xl animate-pulse' />
+                    </button>
+                : <></>))
+                }
+                    <Rivemu ref={rivemuRef} cartridge_data={cartridgeData} args={rule.args} entropy={entropy}
+                        tape={tape?.tape && tape.tape.length > 0 && ethers.utils.arrayify(tape.tape)}
+                        in_card={inCard && inCard.length > 0 ? inCard : new Uint8Array([])} 
+                        rivemu_on_frame={rivemuOnFrame} rivemu_on_begin={rivemuOnBegin} rivemu_on_finish={rivemuOnFinish}
+                    />
+                </div>
+            </div>
                 {isTape ? 
                     <div className="screen-controls">
                     <Box sx={{ width: "100%'" }}>

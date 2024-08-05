@@ -104,7 +104,7 @@ export default async function Home() {
         <div className='flex flex-col mb-8 space-y-8'>
           <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>          
 
-          <div className="flex flex-wrap justify-between md:justify-start gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {
               cartridges.map((cartridge, index) => {
                 return <CartridgeCard key={index} cartridge={cartridge} creator={userMap[cartridge.user_address.toLowerCase()] || null}/>
@@ -118,7 +118,7 @@ export default async function Home() {
         <div className='flex flex-col mb-8 space-y-8'>
           <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
 
-          <div className="flex flex-wrap justify-between md:justify-start gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {
               tapes.map((tape, index) => {
                 return <TapeCard key={index} tapeInput={JSON.stringify(tape)} creator={userMap[tape._msgSender.toLowerCase()] || null} />
@@ -130,11 +130,11 @@ export default async function Home() {
 
 
         <div className='flex flex-col mb-8 space-y-8'>
-          <h1 className={`text-4xl pixelated-font`}>Contests Live</h1>
+          <h1 className={`text-4xl pixelated-font`}>Open Contests</h1>
 
           {
               contests.length == 0?
-                <div className="text-center pixelated-font">No Contests Running</div>
+                <div className="text-center pixelated-font">No Contests Open</div>
               :
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
                 {

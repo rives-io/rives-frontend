@@ -79,14 +79,17 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     }
 
     const CartridgesCollectedByProfile = async () => {
+        const page_size = 6;
+
         if (cartridgesCollectedList.length == 0 || cartridgesCollect[cartridgesCollectedPageToLoad-1]) {
             setCartridgesCollectedLoading(false);
+            setCartridgesCollectedPage(cartridgesCollectedPageToLoad);
+            setTotalCartridgesCollectedPages(Math.ceil(cartridgesCollectedList.length/page_size));
             return;
         }
 
         setCartridgesCollectedLoading(true);
 
-        const page_size = 6;
 
         const res:CartridgesOutput = await getCartridges(
             {
@@ -164,7 +167,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
 
                             {
                                 cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0?
-                                    totalCartridgesCollectedPages != -1?
+                                    totalCartridgesCreatedPages != -1?
                                         <div className="text-center pixelated-font">No Cartridges Created</div>
                                     :
                                         <></>
