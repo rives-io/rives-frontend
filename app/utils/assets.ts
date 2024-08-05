@@ -2,7 +2,7 @@ import { envClient } from "./clientEnv";
 import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain } from 'viem'
 import { BigNumber } from "ethers";
 
-import { formatCartridgeIdToBytes, formatTapeIdToBytes, getChain } from "./util";
+import { cartridgeIdFromBytes, formatCartridgeIdToBytes, formatTapeIdToBytes, getChain, tapeIdFromBytes } from "./util";
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import tapeAbiFile from "@/app/contracts/Tape.json"
 import currencyAbiFile from "@/app/contracts/CurrencyToken.json"
@@ -76,7 +76,7 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
                 address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
                 abi: cartridgeAbi.abi,
                 functionName: "getCurrentBuyPrice",
-                args: [`0x${cartridgeId}`,1]
+                args: [formatCartridgeIdToBytes(cartridgeId),1]
             }) as any[];
             buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
         }
@@ -131,7 +131,7 @@ export async function getTapeBondInfo(tapeId: string, getBuyPrice = false): Prom
                 address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
                 abi: tapeAbi.abi,
                 functionName: "getCurrentBuyPrice",
-                args: [`0x${tapeId}`,1]
+                args: [formatTapeIdToBytes(tapeId),1]
             }) as any[];
             buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
         }
@@ -183,7 +183,7 @@ export async function getUserCartridges(user: string): Promise<string[]> {
         for (const log of logArr) {
             const args = log.args as any;
             const cartridgeId = BigNumber.from(args.id).toHexString()
-            if (cartridgeIds.indexOf(cartridgeId) == -1) cartridgeIds.push(cartridgeId);
+            if (cartridgeIds.indexOf(cartridgeId) == -1) cartridgeIds.push(cartridgeIdFromBytes(cartridgeId));
         }
     }
     return cartridgeIds;
@@ -193,13 +193,13 @@ export async function getUserCartridgesBondInfo(user: string): Promise<BondInfo[
     const bondCartridges = new Array<BondInfo>();
     try {
         for (const cartridgeId of await getUserCartridges(user)) {
-            const bond = await getCartridgeBondInfo(cartridgeId.slice(2));
+            const bond = await getCartridgeBondInfo(cartridgeId);
             if (bond) {
                 const balance: any[] = await publicClient.readContract({
                     address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
                     abi: cartridgeAbi.abi,
                     functionName: "balanceOf",
-                    args: [user,`0x${cartridgeId.slice(2)}`]
+                    args: [user,formatCartridgeIdToBytes(cartridgeId)]
                 }) as any[];
                 if (balance) {
                     bond.amountOwned = BigNumber.from(balance);
@@ -244,7 +244,7 @@ export async function getUserTapes(user: string): Promise<string[]> {
         for (const log of logArr) {
             const args = log.args as any;
             const tapeId = BigNumber.from(args.id).toHexString()
-            if (tapeIds.indexOf(tapeId) == -1) tapeIds.push(tapeId);
+            if (tapeIds.indexOf(tapeId) == -1) tapeIds.push(tapeIdFromBytes(tapeId));
         }
     }
     return tapeIds;
@@ -254,13 +254,13 @@ export async function getUserTapesBondInfo(user: string): Promise<BondInfo[]> {
     const bondTapes = new Array<BondInfo>();
     try {
         for (const tapeId of await getUserTapes(user)) {
-            const bond = await getTapeBondInfo(tapeId.slice(2));
+            const bond = await getTapeBondInfo(tapeId);
             if (bond) {
                 const balance: any[] = await publicClient.readContract({
                     address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
                     abi: tapeAbi.abi,
                     functionName: "balanceOf",
-                    args: [user,`0x${tapeId.slice(2)}`]
+                    args: [user,formatTapeIdToBytes(tapeId)]
                 }) as any[];
                 if (balance) {
                     bond.amountOwned = BigNumber.from(balance);
