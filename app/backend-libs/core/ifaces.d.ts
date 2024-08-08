@@ -6,73 +6,56 @@
  */
 
 export interface _Master_ {
-  TapeAward: TapeAward;
-  SetInternalVerifyLock: SetInternalVerifyLock;
-  InsertCartridgePayloadProxy: InsertCartridgePayloadProxy;
-  CartridgeAuthorsOutput: CartridgeAuthorsOutput;
-  TransferCartridgePayloadProxy: TransferCartridgePayloadProxy;
-  SetOperatorPayload: SetOperatorPayload;
-  RemoveCartridgePayloadProxy: RemoveCartridgePayloadProxy;
+  RuleDataProxy: RuleDataProxy;
   UpdateRivosPayload: UpdateRivosPayload;
   GetRulesPayload: GetRulesPayload;
-  GetRuleTagsPayload: GetRuleTagsPayload;
-  GetCartridgeAuthorsPayload: GetCartridgeAuthorsPayload;
-  GetTapesPayload: GetTapesPayload;
-  VerifyPayloadProxy: VerifyPayloadProxy;
-  GetCartridgeTagsPayload: GetCartridgeTagsPayload;
-  TapesOutput: TapesOutput;
-  CartridgeTagsOutput: CartridgeTagsOutput;
-  CartridgeInfo: CartridgeInfo;
-  CartridgesOutput: CartridgesOutput;
-  CartridgePayload: CartridgePayload;
-  EmptyClass: EmptyClass;
-  CartridgeEvent: CartridgeEvent;
   ExternalVerificationPayloadProxy: ExternalVerificationPayloadProxy;
-  CleanTapesPayloadProxy: CleanTapesPayloadProxy;
-  AwardWinnerTapesPayloadProxy: AwardWinnerTapesPayloadProxy;
+  GetRuleTagsPayload: GetRuleTagsPayload;
+  VerifyPayloadProxy: VerifyPayloadProxy;
+  CartridgePayloadSplittable: CartridgePayloadSplittable;
   CartridgeRemoved: CartridgeRemoved;
-  RuleDataProxy: RuleDataProxy;
+  GetTapesPayload: GetTapesPayload;
+  SetOperatorPayload: SetOperatorPayload;
+  SetUnlockedCartridgePayloadProxy: SetUnlockedCartridgePayloadProxy;
+  CartridgesPayload: CartridgesPayload;
+  InsertCartridgePayloadProxy: InsertCartridgePayloadProxy;
+  TransferCartridgePayloadProxy: TransferCartridgePayloadProxy;
+  AwardWinnerTapesPayloadProxy: AwardWinnerTapesPayloadProxy;
+  CartridgeAuthorsOutput: CartridgeAuthorsOutput;
+  TapesOutput: TapesOutput;
+  RemoveCartridgePayloadProxy: RemoveCartridgePayloadProxy;
   RuleCreated: RuleCreated;
   FormatInCardPayload: FormatInCardPayload;
   RuleTagsOutput: RuleTagsOutput;
-  CartridgesPayload: CartridgesPayload;
-  CartridgePayloadSplittable: CartridgePayloadSplittable;
+  GetCartridgeAuthorsPayload: GetCartridgeAuthorsPayload;
   VerificationOutput: VerificationOutput;
   RulesOutput: RulesOutput;
-  SetUnlockedCartridgePayloadProxy: SetUnlockedCartridgePayloadProxy;
+  GetCartridgeTagsPayload: GetCartridgeTagsPayload;
+  CartridgeTagsOutput: CartridgeTagsOutput;
+  TapeAward: TapeAward;
+  CartridgeInfo: CartridgeInfo;
+  SetInternalVerifyLock: SetInternalVerifyLock;
+  EmptyClass: EmptyClass;
+  CartridgesOutput: CartridgesOutput;
+  CartridgePayload: CartridgePayload;
+  CartridgeEvent: CartridgeEvent;
+  CleanTapesPayloadProxy: CleanTapesPayloadProxy;
 }
-export interface TapeAward {
-  version: string;
+export interface RuleDataProxy {
   cartridge_id: string;
-  cartridge_input_index: number;
-  cartridge_user_address: string;
-  user_address: string;
-  timestamp: number;
-  score: number;
-  rule_id: string;
-  rule_input_index: number;
-  tape_id: string;
-  tape_input_index: number;
-  rank: number;
-}
-export interface SetInternalVerifyLock {
-  lock: boolean;
-}
-export interface InsertCartridgePayloadProxy {
-  data: string;
-}
-export interface CartridgeAuthorsOutput {
-  authors: string[];
-}
-export interface TransferCartridgePayloadProxy {
-  id: string;
-  new_user_address: string;
-}
-export interface SetOperatorPayload {
-  new_operator_address: string;
-}
-export interface RemoveCartridgePayloadProxy {
-  id: string;
+  name: string;
+  description: string;
+  args: string;
+  in_card: string;
+  score_function: string;
+  start: number;
+  end: number;
+  tags: string[];
+  tapes: string[];
+  allow_tapes: boolean;
+  allow_in_card: boolean;
+  save_tapes: boolean;
+  save_out_cards: boolean;
 }
 export interface UpdateRivosPayload {
   data: string;
@@ -94,12 +77,31 @@ export interface GetRulesPayload {
   tags_or?: boolean;
   full?: boolean;
 }
+export interface ExternalVerificationPayloadProxy {
+  tape_ids: string[];
+  scores: number[];
+  error_codes: number[];
+  outcards: string[];
+}
 export interface GetRuleTagsPayload {
   name?: string;
   cartridge_id?: string;
 }
-export interface GetCartridgeAuthorsPayload {
-  name?: string;
+export interface VerifyPayloadProxy {
+  rule_id: string;
+  outcard_hash: string;
+  tape: string;
+  claimed_score: number;
+  tapes: string[];
+  in_card: string;
+}
+export interface CartridgePayloadSplittable {
+  id: string;
+  part?: number;
+}
+export interface CartridgeRemoved {
+  cartridge_id: string;
+  timestamp: number;
 }
 export interface GetTapesPayload {
   cartridge_id?: string;
@@ -119,16 +121,43 @@ export interface GetTapesPayload {
   tags_or?: boolean;
   full?: boolean;
 }
-export interface VerifyPayloadProxy {
-  rule_id: string;
-  outcard_hash: string;
-  tape: string;
-  claimed_score: number;
-  tapes: string[];
-  in_card: string;
+export interface SetOperatorPayload {
+  new_operator_address: string;
 }
-export interface GetCartridgeTagsPayload {
+export interface SetUnlockedCartridgePayloadProxy {
+  ids: string[];
+  unlocks: boolean[];
+}
+export interface CartridgesPayload {
   name?: string;
+  author?: string;
+  tags?: string[];
+  ids?: string[];
+  user_address?: string;
+  page?: number;
+  page_size?: number;
+  order_by?: string;
+  order_dir?: string;
+  get_cover?: boolean;
+  tags_or?: boolean;
+  full?: boolean;
+  enable_inactive?: boolean;
+  enable_non_primary?: boolean;
+  locked?: boolean;
+}
+export interface InsertCartridgePayloadProxy {
+  data: string;
+}
+export interface TransferCartridgePayloadProxy {
+  id: string;
+  new_user_address: string;
+}
+export interface AwardWinnerTapesPayloadProxy {
+  rule_id: string;
+  tapes_to_award: number;
+}
+export interface CartridgeAuthorsOutput {
+  authors: string[];
 }
 export interface TapesOutput {
   data: TapeInfo[];
@@ -150,92 +179,8 @@ export interface TapeInfo {
   out_card?: string;
   tapes?: string[];
 }
-export interface CartridgeTagsOutput {
-  tags: string[];
-}
-export interface CartridgeInfo {
+export interface RemoveCartridgePayloadProxy {
   id: string;
-  name: string;
-  user_address: string;
-  input_index?: number;
-  authors?: string[];
-  info?: InfoCartridge;
-  original_info?: InfoCartridge;
-  created_at: number;
-  updated_at: number;
-  cover?: string;
-  active?: boolean;
-  unlocked?: boolean;
-  primary?: boolean;
-  primary_id?: string;
-  last_version?: string;
-  versions?: string[];
-  tapes?: string[];
-  tags?: string[];
-}
-export interface InfoCartridge {
-  name?: string;
-  summary?: string;
-  description?: string;
-  version?: string;
-  status?: string;
-  tags?: string[];
-  authors?: Author[];
-  links?: string[];
-  tapes?: string[];
-}
-export interface Author {
-  name: string;
-  link: string;
-}
-export interface CartridgesOutput {
-  data: CartridgeInfo[];
-  total: number;
-  page: number;
-}
-export interface CartridgePayload {
-  id: string;
-}
-export interface EmptyClass {}
-export interface CartridgeEvent {
-  version: string;
-  cartridge_id: string;
-  cartridge_input_index: number;
-  cartridge_user_address: string;
-  timestamp: number;
-}
-export interface ExternalVerificationPayloadProxy {
-  tape_ids: string[];
-  scores: number[];
-  error_codes: number[];
-  outcards: string[];
-}
-export interface CleanTapesPayloadProxy {
-  rule_id: string;
-}
-export interface AwardWinnerTapesPayloadProxy {
-  rule_id: string;
-  tapes_to_award: number;
-}
-export interface CartridgeRemoved {
-  cartridge_id: string;
-  timestamp: number;
-}
-export interface RuleDataProxy {
-  cartridge_id: string;
-  name: string;
-  description: string;
-  args: string;
-  in_card: string;
-  score_function: string;
-  start: number;
-  end: number;
-  tags: string[];
-  tapes: string[];
-  allow_tapes: boolean;
-  allow_in_card: boolean;
-  save_tapes: boolean;
-  save_out_cards: boolean;
 }
 export interface RuleCreated {
   rule_id: string;
@@ -251,26 +196,8 @@ export interface FormatInCardPayload {
 export interface RuleTagsOutput {
   tags: string[];
 }
-export interface CartridgesPayload {
+export interface GetCartridgeAuthorsPayload {
   name?: string;
-  author?: string;
-  tags?: string[];
-  ids?: string[];
-  user_address?: string;
-  page?: number;
-  page_size?: number;
-  order_by?: string;
-  order_dir?: string;
-  get_cover?: boolean;
-  tags_or?: boolean;
-  full?: boolean;
-  enable_inactive?: boolean;
-  enable_non_primary?: boolean;
-  locked?: boolean;
-}
-export interface CartridgePayloadSplittable {
-  id: string;
-  part?: number;
 }
 export interface VerificationOutput {
   version: string;
@@ -312,7 +239,80 @@ export interface RuleInfo {
   save_out_cards?: boolean;
   tapes?: string[];
 }
-export interface SetUnlockedCartridgePayloadProxy {
-  ids: string[];
-  unlocks: boolean[];
+export interface GetCartridgeTagsPayload {
+  name?: string;
+}
+export interface CartridgeTagsOutput {
+  tags: string[];
+}
+export interface TapeAward {
+  version: string;
+  cartridge_id: string;
+  cartridge_input_index: number;
+  cartridge_user_address: string;
+  user_address: string;
+  timestamp: number;
+  score: number;
+  rule_id: string;
+  rule_input_index: number;
+  tape_id: string;
+  tape_input_index: number;
+  rank: number;
+}
+export interface CartridgeInfo {
+  id: string;
+  name: string;
+  user_address: string;
+  input_index?: number;
+  authors?: string[];
+  info?: InfoCartridge;
+  original_info?: InfoCartridge;
+  created_at: number;
+  updated_at: number;
+  cover?: string;
+  active?: boolean;
+  unlocked?: boolean;
+  primary?: boolean;
+  primary_id?: string;
+  last_version?: string;
+  versions?: string[];
+  tapes?: string[];
+  tags?: string[];
+}
+export interface InfoCartridge {
+  name?: string;
+  summary?: string;
+  description?: string;
+  version?: string;
+  status?: string;
+  tags?: string[];
+  authors?: Author[];
+  links?: string[];
+  tapes?: string[];
+}
+export interface Author {
+  name: string;
+  link: string;
+}
+export interface SetInternalVerifyLock {
+  lock: boolean;
+}
+export interface EmptyClass {}
+export interface CartridgesOutput {
+  data: CartridgeInfo[];
+  total: number;
+  page: number;
+}
+export interface CartridgePayload {
+  id: string;
+}
+export interface CartridgeEvent {
+  version: string;
+  cartridge_id: string;
+  cartridge_input_index: number;
+  cartridge_user_address: string;
+  timestamp: number;
+}
+export interface CleanTapesPayloadProxy {
+  rule_id: string;
 }
