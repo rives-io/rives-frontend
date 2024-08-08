@@ -13,7 +13,7 @@ export async function getCartridgeTapesTotal(cartridgeId:string): Promise<number
 
     const indexerOutput: IndexerOutput = await indexerQuery(
         {
-            tags:["tape",cartridgeId],
+            tags:["tape", cartridgeId.slice(0, 12)],
             type:"input",
             page_size:0
         },
@@ -55,7 +55,7 @@ function CartridgeStats({cartridge_id,reload}:{cartridge_id:string,reload:number
                 <span className='mt-auto'>{totalCartridges}</span>
             </div> : <></>}
 
-            {totalTapes ? <div className='p-4 flex flex-col bg-rives-gray'>
+            {totalTapes != undefined ? <div className='p-4 flex flex-col bg-rives-gray'>
                 <span>Tapes Created</span>
                 <span className='mt-auto'>{totalTapes}</span>
             </div> : <></>}

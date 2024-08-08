@@ -1,6 +1,6 @@
 "use client"
 
-import { Contest, ContestStatus, getContestStatus } from "../utils/common";
+import { ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
 import { useEffect, useState } from "react";
@@ -32,8 +32,7 @@ export interface CartridgeWithUser extends CartridgeInfo {
 export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeWithUser}) {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [winnerUser, setWinnerUser] = useState<User|null>(null);
-    const contests = envClient.CONTESTS as Record<string,Contest>;
-    const isContest = contest.start && contest.end && contests[contest.id] != undefined;
+    const isContest = contest.start && contest.end;
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
     const [nTapes, setNTapes] = useState<number>();
 

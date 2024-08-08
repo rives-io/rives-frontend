@@ -6,12 +6,8 @@ import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridgeInfo, getOutputs, rules } from "../backend-libs/core/lib";
 import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
-import { Contest } from "../utils/common";
 import ContestCard from "./ContestCard";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
-
-const knowContests = envClient.CONTESTS as Record<string,Contest>;
-const contestsIds = Object.keys(knowContests);
 
 
 export default function UserContests({address}:{address:string}) {    
@@ -24,7 +20,7 @@ export default function UserContests({address}:{address:string}) {
         setContestsLoading(true);
 
         const contests = (await rules(
-            {ids: contestsIds},
+            {has_start: true, has_end: true},
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
         ).data;
 
@@ -52,7 +48,7 @@ export default function UserContests({address}:{address:string}) {
             
             // user played this contest
             if (res.data.length > 0) {
-                participatedContests.push({...contest, ...knowContests[contest.id]});
+                participatedContests.push(contest);
 
                 if (!participatedContestsCartridges[contest.cartridge_id]) {
                     const cartridge:CartridgeInfo = await cartridgeInfo(

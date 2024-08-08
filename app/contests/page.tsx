@@ -1,7 +1,7 @@
 import { envClient } from "@/app/utils/clientEnv";
 import { CartridgeInfo, GetRulesPayload, RuleInfo } from "../backend-libs/core/ifaces";
-import { cartridgeInfo, rules, tapes, TapesOutput } from "../backend-libs/core/lib";
-import { Contest, getContestStatus, RuleWithMetadata } from "../utils/common";
+import { cartridgeInfo, rules } from "../backend-libs/core/lib";
+import { getContestStatus } from "../utils/common";
 import ContestCard from "../components/ContestCard";
 import { Metadata } from "next";
 import { getUsersByAddress, User } from "../utils/privyApi";
@@ -13,31 +13,19 @@ export const metadata: Metadata = {
   description: 'Contests',
 }
 
-const getRules = async (contests:Record<string,Contest>, onlyActive = false) => {
-  const contestsRules:Array<RuleWithMetadata> = [];
+const getRules = async (onlyActive = false) => {
 
-  const inputPayload: GetRulesPayload = {
-    ids: Object.keys(contests)
-  };
+  const inputPayload: GetRulesPayload = {};
   if (onlyActive) {
     inputPayload.active_ts = Math.floor((new Date()).valueOf()/1000);
   }
   
-  const activeRules = (await rules(inputPayload, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data
-  for (let i = 0; i < activeRules.length; i++) {
-    const rule: RuleInfo = activeRules[i];
-    if (rule.id in contests) {
-      const ruleWithMetadata = {...contests[rule.id], ...rule};
-      contestsRules.push(ruleWithMetadata);
-    }
-  }
-
-  return contestsRules;
+  const contests:Array<RuleInfo> = (await rules(inputPayload, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data
+  return contests;
 }
 
 export default async function Contests() {
-  const contestsMetadata = envClient.CONTESTS as Record<string,Contest>;
-  const contests = (await getRules(contestsMetadata)).sort((a, b) => {
+  const contests = (await getRules()).sort((a, b) => {
     const aStatus = getContestStatus(a);
     const bStatus = getContestStatus(b);
     if (!b.start || !a.start) return b.created_at - a.created_at;

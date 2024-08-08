@@ -3,7 +3,7 @@ import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import { envClient } from "@/app/utils/clientEnv";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Contest as ContestClass, ContestStatus, getContestStatus, RuleWithMetadata } from "../../utils/common";
+import { ContestStatus, getContestStatus, RuleWithMetadata } from "../../utils/common";
 import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
 import { formatTime, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
@@ -48,16 +48,6 @@ function contestStatusMessage(contest:RuleInfo) {
   }
 }
 
-const getContest = (rule_id:string) => {
-  const contests = envClient.CONTESTS as Record<string,ContestClass>;
-
-  if (rule_id in contests) {
-    return contests[rule_id];
-  }
-
-  return null;
-}
-
 const getRule = async(rule_id:string):Promise<RuleWithMetadata|null> => {
   const rulesFound = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
@@ -78,19 +68,14 @@ export default async function Contest({ params }: { params: { contest_id: string
   const contest_id = params.contest_id;
   let userAddresses:Set<string> = new Set();
 
-  const contestMetadata = getContest(contest_id);
-
-  if (!contestMetadata) {
-    notFound();
-  }
-
   const contest = await getRule(contest_id);
   if (!contest) {
     notFound();
   }
 
-  let user = null as User|null;
-  let winnerUser:User|null = null;
+  let contestCreatorUser = null as User|null;
+  let contestWinnerUser:User|null = null;
+  let contestWinner:string|undefined;
   userAddresses.add(contest.created_by);
   const contestCreatorAddr = contest.created_by.toLowerCase();
 
@@ -99,19 +84,19 @@ export default async function Contest({ params }: { params: { contest_id: string
   const contestIsOpen = status == ContestStatus.IN_PROGRESS;
   const game = await getGameInfo(contest.cartridge_id);
   if (status == ContestStatus.FINISHED) {
-    contestMetadata.winner = await getContestWinner(contest.cartridge_id,contest_id);
-    if (contestMetadata.winner) {
-      contestMetadata.winner = contestMetadata.winner.toLowerCase();
-      userAddresses.add(contestMetadata.winner);
+    contestWinner = await getContestWinner(contest.cartridge_id,contest_id);
+    if (contestWinner) {
+      contestWinner = contestWinner.toLowerCase();
+      userAddresses.add(contestWinner);
     }
   }
 
   const userMap:Record<string, User> = JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
-  if (contestMetadata.winner && userMap[contestMetadata.winner]) {
-    winnerUser = userMap[contestMetadata.winner];
+  if (contestWinner && userMap[contestWinner]) {
+    contestWinnerUser = userMap[contestWinner];
   }
 
-  if (userMap[contestCreatorAddr]) user = userMap[contestCreatorAddr];
+  if (userMap[contestCreatorAddr]) contestCreatorUser = userMap[contestCreatorAddr];
 
   return (
     <main>
@@ -123,23 +108,23 @@ export default async function Contest({ params }: { params: { contest_id: string
             <div className="flex flex-col">
               <span className="pixelated-font text-xl">{contest.name}</span>
               {
-                !contestMetadata.winner?
+                !contestWinner?
                   <></>
                 :
-                  winnerUser?
-                    <span title={contestMetadata.winner} className="text-gray-400">
+                  contestWinnerUser?
+                    <span title={contestWinner} className="text-gray-400">
                       Winner: <Link 
                       className="pixelated-font text-rives-purple hover:underline"
-                      href={`/profile/${contestMetadata.winner}`}>
-                        {winnerUser.name}
+                      href={`/profile/${contestWinner}`}>
+                        {contestWinnerUser.name}
                       </Link>
                     </span>
                   :
-                    <span title={contestMetadata.winner} className="text-gray-400">
+                    <span title={contestWinner} className="text-gray-400">
                       Winner: <Link 
                       className="pixelated-font text-rives-purple hover:underline" 
-                      href={`/profile/${contestMetadata.winner}`}>
-                        {`${contestMetadata.winner.slice(0, 6)}...${contestMetadata.winner.substring(contestMetadata.winner.length-4,contestMetadata.winner.length)}`}
+                      href={`/profile/${contestWinner}`}>
+                        {`${contestWinner.slice(0, 6)}...${contestWinner.substring(contestWinner.length-4,contestWinner.length)}`}
                       </Link>
                     </span>
               }
@@ -179,11 +164,11 @@ export default async function Contest({ params }: { params: { contest_id: string
 
                   <span className="text-gray-400">Contest Creator</span>
                   {
-                    user?
+                    contestCreatorUser?
                       <Link className="text-rives-purple hover:underline"
                       title={contest.created_by}
                       href={`/profile/${contest.created_by}`}>
-                        {user.name}
+                        {contestCreatorUser.name}
                       </Link>
                     :
                       <Link className="text-rives-purple hover:underline"
