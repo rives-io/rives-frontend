@@ -478,7 +478,7 @@ function RivemuUploader() {
                                 multiline InputLabelProps={{ shrink: true }} />
                         <TextField className="" label="Links" disabled value={infoCartridge?.links?.join("\n") || ""} variant="standard"
                                 multiline InputLabelProps={{ shrink: true }} />
-                        <TextField className="" label="Tags" disabled value={infoCartridge?.tags.map((t,i) => `#${t}`).join(", ") || ""} variant="standard"
+                        <TextField className="" label="Tags" disabled value={infoCartridge?.tags?.map((t,i) => `#${t}`).join(", ") || ""} variant="standard"
                                 InputLabelProps={{ shrink: true }} />
                     </div>
 
