@@ -43,7 +43,7 @@ export const envClient = envsafe({
     desc: "Mud world ETH address."
   }),
   AGGREGATOR: url({
-    input: process.env.NEXT_PUBLIC_AGGREGATOR,
+    input: process.env.NEXT_PUBLIC_AGGREGATOR_URL,
     desc: "Aggregator URL."
   })
 })
