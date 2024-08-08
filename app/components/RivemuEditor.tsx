@@ -751,7 +751,8 @@ function RivemuEditor() {
     return (
         <ThemeProvider theme={darkTheme}>
         <CssBaseline />
-            <div className="flex items-center flex-wrap justify-center h-[calc(100vh-13rem)] gap-2 overflow-auto absolute top-16 w-full">
+            <div className="h-[calc(100vh-13rem)] overflow-auto absolute top-16 w-full">
+                <div className='flex items-start flex-wrap justify-center gap-2 pt-4'>
                 <div className="grid grid-cols-1 place-items-center">
                     <div className='grid grid-cols-3 bg-gray-500 p-2 w-full'>
                         <div className="flex justify-start gap-2">
@@ -817,24 +818,24 @@ function RivemuEditor() {
                         </div>
 
                     </div>
-                    <div className='relative gameplay-screen' 
+                    <div className='relative gameplay-screen-sm' 
                         onDrop={handleCartridgeDrop}
                         onDragOver={(event) => event.preventDefault()}
                     >
                         { !cartridgeData?
-                            <div className={'absolute gameplay-screen text-white t-0 border border-gray-500 flex items-center justify-center'}>
+                            <div className={'absolute gameplay-screen-sm text-white t-0 border border-gray-500 flex items-center justify-center'}>
                                 <span>Select/Drop cartridge</span>
                             </div>
                         : <></> }
                         <div hidden={!cartridgeData}  className={'absolute t-0 relative'}>
 
                             { !playing.isPlaying?
-                                <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={record}
+                                <button className={'absolute gameplay-screen-sm text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={record}
                                 title="Record">
                                     <PlayArrowIcon className='text-7xl'/>
                                 </button>
                             : (paused ?     
-                                <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
+                                <button className={'absolute gameplay-screen-sm text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={pause}>
                                     <PlayArrowIcon className='text-7xl' />
                                 </button>
                             : <></>)
@@ -843,6 +844,7 @@ function RivemuEditor() {
                                 tape={tape}
                                 in_card={finalInCard ? finalInCard : new Uint8Array([])} 
                                 rivemu_on_frame={rivemuOnFrame} rivemu_on_begin={rivemuOnBegin} rivemu_on_finish={rivemuOnFinish}
+                                smallSize={true}
                             />
                         </div>
                     </div>
@@ -1061,6 +1063,7 @@ function RivemuEditor() {
                         Create Rule
                     </button>
                     </div>
+                </div>
                 </div>
 
             {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
