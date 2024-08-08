@@ -8,6 +8,7 @@ import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
+import { Achievement, ProfileAchievementAggregated } from "./common";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -449,4 +450,94 @@ export async function getUsersFromTapes(tapes:Array<VerifyPayloadProxy>, currUse
     }
 
     return newUserMap;
+}
+
+
+export async function getAchievement(slug:string) {
+    let res:Response;
+
+    try {
+        res = await fetch(
+            `${envClient.AGGREGATOR}/console_achievement/${slug}`,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement: ${slug}\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    if (!res_json.slug) return null;
+
+    return res_json as Achievement;
+}
+
+export async function getAchievements() {
+    let res:Response;
+
+    try {
+        res = await fetch(
+            `${envClient.AGGREGATOR}/console_achievement`,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json.items as Array<Achievement>;
+}
+
+export async function getContestDefaultAchievements() {
+    const firstPlaceAchievementPromise = getAchievement("1st_place");
+    const participantAchievementPromise = getAchievement("contest_participation");
+
+    const res:Array<Achievement|null> = await Promise.all([firstPlaceAchievementPromise, participantAchievementPromise]);
+
+    return res;
+}
+
+export async function getProfileAchievementsSummary(address:string) {
+    let res:Response;
+
+    try {
+        res = await fetch(
+            `${envClient.AGGREGATOR}/profile/${address}/console_achievements_summary`,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json.items as Array<ProfileAchievementAggregated>;
 }

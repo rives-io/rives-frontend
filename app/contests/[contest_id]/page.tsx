@@ -3,11 +3,12 @@ import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import { envClient } from "@/app/utils/clientEnv";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ContestStatus, getContestStatus, RuleWithMetadata } from "../../utils/common";
+import { ContestStatus, getContestStatus } from "../../utils/common";
 import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
-import { formatTime, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
+import { formatTime, getContestDefaultAchievements, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
 import { getUsersByAddress, User } from "@/app/utils/privyApi";
+import Image from "next/image";
 
 
 export const revalidate = 0 // revalidate always
@@ -48,8 +49,8 @@ function contestStatusMessage(contest:RuleInfo) {
   }
 }
 
-const getRule = async(rule_id:string):Promise<RuleWithMetadata|null> => {
-  const rulesFound = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
+const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
+  const rulesFound:Array<RuleInfo> = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
   if (rulesFound.length == 0) return null;
 
@@ -98,6 +99,8 @@ export default async function Contest({ params }: { params: { contest_id: string
 
   if (userMap[contestCreatorAddr]) contestCreatorUser = userMap[contestCreatorAddr];
 
+  const contestAchievements = await getContestDefaultAchievements();
+
   return (
     <main>
       <section>
@@ -128,6 +131,17 @@ export default async function Contest({ params }: { params: { contest_id: string
                       </Link>
                     </span>
               }
+
+              <div className="flex flex-wrap gap-2">
+                {
+                  contestAchievements.map((achievement, index) => {
+                    if (!achievement) return <></>;
+
+                    return <Image title={achievement.name} key={`${achievement.slug}-${index}`} src={`data:image/png;base64,${achievement.image_data}`} width={64} height={64} alt=""/>
+
+                  })
+                }
+              </div>
             </div>
 
             {

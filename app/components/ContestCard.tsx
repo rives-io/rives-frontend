@@ -1,14 +1,15 @@
 "use client"
 
-import { ContestStatus, getContestStatus } from "../utils/common";
+import { Achievement, ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
 import { useEffect, useState } from "react";
 import { envClient } from "../utils/clientEnv";
 import { tapes } from "../backend-libs/core/lib";
-import { formatTime, getContestWinner } from "../utils/util";
+import { formatTime, getContestDefaultAchievements, getContestWinner } from "../utils/util";
 import { getUsersByAddress, User } from "../utils/privyApi";
 import Link from "next/link";
+import Image from "next/image";
 
 
 function contestStatusMessage(contest:RuleInfo) {
@@ -35,6 +36,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
     const isContest = contest.start && contest.end;
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
     const [nTapes, setNTapes] = useState<number>();
+    const [contestAchievements, setContestAchievements] = useState<Array<Achievement|null>>([]);
 
     const status = getContestStatus(contest);
 
@@ -56,6 +58,8 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
             }
         }
 
+        getContestDefaultAchievements().then(setContestAchievements)
+
         checkWinner();
     }, []);
 
@@ -76,8 +80,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                     {cartridgeCard}
                 </div>
 
-                <div className="flex flex-col md:w-52"
-                >
+                <div className="flex flex-col md:w-52">
                     <span className="pixelated-font text-lg">{contest.name}</span>
                     <span className="text-sm text-gray-400">{nTapes} Submissions</span>
 
@@ -105,6 +108,22 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                                     </Link>
                                 </span>
                     }
+
+                    {
+                        contestAchievements.length == 0?
+                            <></>
+                        :
+                            <div className="flex flex-wrap gap-2">
+                                {
+                                    contestAchievements.map((achievement, index) => {
+                                        if (!achievement) return <></>;
+
+                                        return <Image title={achievement.name} key={`${achievement.slug}-${index}`} src={`data:image/png;base64,${achievement.image_data}`} width={48} height={48} alt=""/>
+                                    })
+                                }
+                            </div>
+                    }
+                    
                 </div>
             </div>
             <div className="absolute start-4 top-4">

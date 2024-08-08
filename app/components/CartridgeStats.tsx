@@ -7,13 +7,13 @@ import { indexerQuery } from "../backend-libs/indexer/lib";
 import { IndexerOutput } from "../backend-libs/indexer/ifaces";
 import { BondInfo, getCartridgeBondInfo, prettyNumberFormatter } from "../utils/assets";
 import { ethers } from "ethers";
-import { formatCartridgeIdToBytes } from "../utils/util";
+import { cartridgeIdFromBytes, formatCartridgeIdToBytes } from "../utils/util";
 
 export async function getCartridgeTapesTotal(cartridgeId:string): Promise<number> {
 
     const indexerOutput: IndexerOutput = await indexerQuery(
         {
-            tags:["tape", cartridgeId.slice(0, 12)],
+            tags:["tape", cartridgeIdFromBytes(cartridgeId)],
             type:"input",
             page_size:0
         },

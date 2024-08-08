@@ -272,11 +272,11 @@ body {
   }
 
   .tab-navigation-item {
-    @apply p-4 bg-black text-white hover:tab-navigation-item-selected;
+    @apply p-4 bg-black text-white hover:bg-[rgb(var(--background-start-rgb))];
   }
 
   .tab-navigation-item-selected {
-    @apply bg-[rgb(var(--background-start-rgb))];
+    @apply p-4 bg-[rgb(var(--background-start-rgb))];
   }
 }
 

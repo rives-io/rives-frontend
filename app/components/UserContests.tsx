@@ -87,7 +87,7 @@ export default function UserContests({address}:{address:string}) {
                         <div className="text-center pixelated-font">No Contests</div>
                     :
                         <div className="flex justify-center">
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
                                 {
                                     userContests.map((contest, index) => {
                                         return (

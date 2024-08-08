@@ -2,14 +2,24 @@ import { RuleInfo } from "../backend-libs/core/ifaces";
 
 export const SOCIAL_MEDIA_HASHTAGS = [];
 
+export interface Achievement {
+  slug:string,
+  name:string,
+  description:string,
+  points:number,
+  image_data:string,
+  image_type:string
+}
 
-export interface Contest {
-  // rule_id:string,
-  // start:number,
-  // n_tapes?:number,
-  // n_verified?:number,
-  prize:string,
-  winner?:string
+export interface ProfileAchievementAggregated {
+  ca_slug:string,
+  latest:string, //"2024-08-08T16:20:11.787Z"
+  total_points:number,
+  count:number,
+  name:string,
+  description:string,
+  image_data:string,
+  image_type:string
 }
 
 export enum ContestStatus {
@@ -19,8 +29,6 @@ export enum ContestStatus {
   FINISHED,
   INVALID,
 }
-
-export interface RuleWithMetadata extends RuleInfo, Contest {}
 
 export const getContestStatus = (rule: RuleInfo): ContestStatus => {
   if (rule.start == undefined || rule.end == undefined) return ContestStatus.INVALID;

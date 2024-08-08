@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 
 const getRules = async (onlyActive = false) => {
 
-  const inputPayload: GetRulesPayload = {};
+  const inputPayload: GetRulesPayload = {
+    has_start:true,
+    has_end: true
+  };
   if (onlyActive) {
     inputPayload.active_ts = Math.floor((new Date()).valueOf()/1000);
   }
@@ -39,7 +42,7 @@ export default async function Contests() {
   if (contests.length == 0) {
     return (
       <main className="flex items-center justify-center h-lvh">
-        <span className={`text-4xl text-white pixelated-font` }>No Active Contests!</span>
+        <span className={`text-4xl text-white pixelated-font` }>No Contests!</span>
       </main>
     )
   }
