@@ -14,6 +14,20 @@ export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+function buildUrl(baseUrl:string, path:string) {
+    let formatedBaseUrl = baseUrl;
+    let formatedPath = path;
+    
+    if (baseUrl[baseUrl.length-1] == "/") {
+        formatedBaseUrl = baseUrl.slice(0, baseUrl.length-1);
+    }
+
+    if (path.length > 0 && path[0] == "/") {
+        formatedPath = path.slice(1);
+    }
+
+    return `${formatedBaseUrl}/${formatedPath}`;
+}
 
 export async function getContestWinner(cartridge_id:string, rule:string):Promise<string|undefined> {
     const tags = ["score",cartridge_id,rule];
@@ -90,7 +104,7 @@ export function formatDate(date:Date) {
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/gifs`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "gifs"),
             {
                 method: "POST",
                 headers: {
@@ -115,7 +129,7 @@ export async function getTapesGifs(tapes:Array<string>):Promise<Array<string>> {
     if (tapes.length == 0) return [];
     
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/gifs`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "gifs"),
             {
                 method: "POST",
                 headers: {
@@ -138,8 +152,7 @@ export async function getTapesGifs(tapes:Array<string>):Promise<Array<string>> {
 export async function insertTapeGif(gameplay_id:string, gifImage:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "gif": gifImage});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-gif`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-gif"),
             {
                 method: "POST",
                 headers: {
@@ -155,7 +168,7 @@ export async function insertTapeGif(gameplay_id:string, gifImage:string) {
 
 export async function getTapeImage(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/images`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "images"),
             {
                 method: "POST",
                 headers: {
@@ -180,7 +193,7 @@ export async function getTapesImages(tapes:Array<string>):Promise<Array<string>>
     if (tapes.length == 0) return [];
     
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/images`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "images"),
             {
                 method: "POST",
                 headers: {
@@ -203,8 +216,7 @@ export async function getTapesImages(tapes:Array<string>):Promise<Array<string>>
 export async function insertTapeImage(gameplay_id:string, gifImage:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "image": gifImage});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-image`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-image"),
             {
                 method: "POST",
                 headers: {
@@ -221,7 +233,7 @@ export async function insertTapeImage(gameplay_id:string, gifImage:string) {
 
 export async function getTapeName(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/names`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "names"),
             {
                 method: "POST",
                 headers: {
@@ -246,8 +258,7 @@ export async function getTapeName(tape_id:string):Promise<string|null> {
 export async function insertTapeName(gameplay_id:string, name:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "name": name});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-name`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-name"),
             {
                 method: "POST",
                 headers: {
@@ -457,8 +468,7 @@ export async function getAchievement(slug:string) {
     let res:Response;
 
     try {
-        res = await fetch(
-            `${envClient.AGGREGATOR}/console_achievement/${slug}`,
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `console_achievement/${slug}`),
             {
                 method: "GET",
                 headers: {
@@ -485,8 +495,7 @@ export async function getAchievements() {
     let res:Response;
 
     try {
-        res = await fetch(
-            `${envClient.AGGREGATOR}/console_achievement`,
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `console_achievement`),
             {
                 method: "GET",
                 headers: {
@@ -520,8 +529,7 @@ export async function getProfileAchievementsSummary(address:string) {
     let res:Response;
 
     try {
-        res = await fetch(
-            `${envClient.AGGREGATOR}/profile/${address}/console_achievements_summary`,
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `profile/${address}/console_achievements_summary`),
             {
                 method: "GET",
                 headers: {
