@@ -15,6 +15,7 @@ import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
 import { timeToDateUTCString } from '../utils/util';
 import { getUsersByAddress, User } from '../utils/privyApi';
+import CartridgeUnlocker from './CartridgeUnlocker';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
@@ -72,13 +73,16 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                 </div>
 
                 <div className='w-full flex flex-col'>
+                    <div>
+                        <CartridgeUnlocker cartridge={cartridge} />
+                    </div>
                     <h2 className={`pixelated-font text-3xl`}>Summary</h2>
                     <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web',marginBottom: "4px"}}>
                         {cartridge.info?.summary}
                     </pre>
                     <div className='flex flex-warp gap-2 items-center'>
                         {
-                            cartridge.info?.tags.map((tag, index) => {
+                            cartridge.info?.tags?.map((tag, index) => {
                                 return <span key={`${tag}-${index}`} className='pixelated-font py-1 px-2 rounded-full bg-rives-gray text-center text-sm'>{tag}</span>
                             }) 
                         }
