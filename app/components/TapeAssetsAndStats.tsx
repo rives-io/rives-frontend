@@ -25,16 +25,12 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
         }
     }, [reload,tape_id])
 
-    if (! (currentPrice || totalTapes || marketCap)) {
-        return <></>;
-    }
-
     return (
         <>
         <div className="flex justify-end">
             <TapeAssetManager tape_id={tape_id} onChange={()=>setReload(reload+1)}/>
         </div>
-        <div className='grid grid-cols-2 md:grid-cols-3 text-center gap-2'>
+        {! (currentPrice || totalTapes || marketCap) ? <></> : <div className='grid grid-cols-2 md:grid-cols-3 text-center gap-2'>
             {currentPrice ? <div className='p-4 flex flex-col bg-rives-gray'>
                 <span>Current Value</span>
                 <span className='mt-auto'>{currentPrice}</span>
@@ -54,7 +50,7 @@ function TapeAssetsAndStats({tape_id}:{tape_id:string}) {
                 <span>Total Owners</span>
                 <span className='mt-auto'>100</span>
             </div> */}
-        </div>
+        </div>}
         </>
     )
 }

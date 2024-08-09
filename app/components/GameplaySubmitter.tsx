@@ -21,6 +21,7 @@ import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
+import CartridgeAssetManager from "./CartridgeAssetManager";
 
 
 enum MODAL_STATE {
@@ -197,6 +198,7 @@ function GameplaySubmitter() {
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else if (errorMsg.toLowerCase().indexOf("67d145bf") > -1) errorMsg = "You must own cartridge to send tapes";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
@@ -367,10 +369,16 @@ function GameplaySubmitter() {
                 </Dialog>
             </Transition>
             {
-                modalState.state != MODAL_STATE.NOT_PREPARED? 
-                    <button className="zoom-btn dialog-btn mt-2 fixed text-[10px] bg-rives-purple shadow right-5 bottom-20 z-20" onClick={() => {openModal()}}>
+                modalState.state != MODAL_STATE.NOT_PREPARED?  <>
+                    { gameplay ? 
+                        <div className="fixed right-5 bottom-56 z-20">
+                            <CartridgeAssetManager cartridge_id={gameplay?.cartridge_id} onChange={()=>{}} minimal={true} /> 
+                        </div>
+                        : <></> }
+                    <button className="zoom-btn dialog-btn fixed text-[10px] bg-rives-purple shadow right-5 bottom-40 z-20" onClick={() => {openModal()}}>
                         Open Submit
                     </button>
+                    </>
                 : 
                     <></> 
             }

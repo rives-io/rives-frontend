@@ -455,8 +455,8 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
                         <span className="place-self-start">Number of Tapes {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
                         <Input className="text-black" aria-label="Tapes" placeholder="Tapes to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} />
-                        <span className="place-self-start">Slippage (%)</span>
-                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
+                        {/* <span className="place-self-start">Slippage (%)</span>
+                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
                     </div>
     
                     <div className="flex pb-2 mt-4">
@@ -487,8 +487,8 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
                         <span className="place-self-start">Number of Tapes</span>
                         <Input className="text-black" aria-label="Tapes" placeholder="Tapes to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.SELL)} />
-                        <span className="place-self-start">Slippage (%)</span>
-                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
+                        {/* <span className="place-self-start">Slippage (%)</span>
+                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
                     </div>
     
                     <div className="flex pb-2 mt-4">
@@ -600,7 +600,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     } 
                     className='bg-[#4e99e0] assets-btn zoom-btn' 
                     onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
-                {validated ? "Claimed" : "Claim"}
+                {validated ? "Proved" : "Prove Tape Submission"}
                 </button> : <></>}
                 <button title={amountOwned?.gt(0) ? "" : "No balance"} 
                         className='bg-[#e04ec3] assets-btn zoom-btn' 
@@ -614,11 +614,12 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                 </button>
                 </> :
                 <> <div></div><div></div>
+                {/* {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || tapeOutput?.user_address?.toLowerCase() == signerAddress?.toLowerCase() ?  */}
                 {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
-                    <button title={"Activate"} 
+                    <button title={"Activate asset sales for this tape with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={tapeExists}>
-                        Activate
+                        Set up Sales
                     </button>
                 : 
                     <></>
