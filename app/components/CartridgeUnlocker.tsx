@@ -12,6 +12,7 @@ import { setUnlockCartridge } from "../backend-libs/core/lib";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { extractTxError, formatCartridgeIdToBytes } from "../utils/util";
 import { CartridgeInfo, SetUnlockedCartridgePayloadProxy } from "../backend-libs/core/ifaces";
+import Link from "next/link";
 
 function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
     // state
@@ -23,8 +24,6 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
 
     // modal state variables
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
-
-    console.log("cartridge",cartridge)
 
     // use effects
     useEffect(() => {
@@ -87,6 +86,11 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
                 
                 { signer && cartridge.unlocked == undefined && envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
                     <>
+                    <Link title={"Test"} 
+                            className='bg-rives-purple assets-btn zoom-btn' 
+                            href={`https://emulator.rives.io/#cartridge=${envClient.DEPLOYMENT_URL}/cartridges-data/${cartridge.id}`}>
+                        Test on Emuator
+                    </Link>
                     <button title={"Reject"} 
                             className='bg-[#e04ec3] assets-btn zoom-btn' 
                             onClick={() => unlockCartridge(false)}>

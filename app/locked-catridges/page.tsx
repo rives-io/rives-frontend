@@ -8,8 +8,8 @@ import { timeToDateUTCString } from "../utils/util";
 export const revalidate = 0 // revalidate always
 
 export const metadata: Metadata = {
-  title: 'Contests',
-  description: 'Contests',
+  title: 'Locked Cartridges',
+  description: 'Locked Cartridges',
 }
 
 const getLockedCartridges = async () => {
