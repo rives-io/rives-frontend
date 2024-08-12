@@ -14,7 +14,7 @@ export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-function buildUrl(baseUrl:string, path:string) {
+export function buildUrl(baseUrl:string, path:string) {
     let formatedBaseUrl = baseUrl;
     let formatedPath = path;
     

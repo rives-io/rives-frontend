@@ -10,7 +10,7 @@ import { envClient } from "../utils/clientEnv";
 import { setUnlockCartridge } from "../backend-libs/core/lib";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { extractTxError, formatCartridgeIdToBytes } from "../utils/util";
+import { buildUrl, extractTxError, formatCartridgeIdToBytes } from "../utils/util";
 import { CartridgeInfo, SetUnlockedCartridgePayloadProxy } from "../backend-libs/core/ifaces";
 import Link from "next/link";
 
@@ -88,7 +88,7 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
                     <>
                     <Link title={"Test"} 
                             className='bg-rives-purple assets-btn zoom-btn' 
-                            href={`https://emulator.rives.io/#cartridge=${envClient.DEPLOYMENT_URL}/cartridges-data/${cartridge.id}`}>
+                            href={buildUrl(`https://emulator.rives.io/#cartridge=${envClient.DEPLOYMENT_URL}`,`/cartridges-data/${cartridge.id}`)}>
                         Test on Emuator
                     </Link>
                     <button title={"Reject"} 
