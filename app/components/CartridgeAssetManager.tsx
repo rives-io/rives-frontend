@@ -438,6 +438,32 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else errorMsg = extractTxError(errorMsg);
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
+        }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
+    }
+
+    async function activateFree() {
+        if (!signer) {
+            setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
+            return;
+        }
+        if (!cartridgeContract) {
+            setErrorFeedback({message:"No contract", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
+            return;
+        }
+        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
+        try{
+            const tx = await cartridgeContract.setCartridgeParamsCustom(`0x${cartridgeIdB32}`,0,[10000],[0],false);
+            const txReceipt = await tx.wait(1);
+            setReload(reload+1);
+            onChange();
+            closeModal();
+        } catch (error) {
+            console.log(error)
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
             // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
@@ -642,13 +668,20 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
                     Buy {buyPrice ? `(${parseFloat(ethers.utils.formatUnits(buyPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol})` : ""} 
                 </button>
                 </> :
-                <> <div></div><div></div>
+                <> 
                 {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || cartridgeOutput?.cartridge_user_address?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                    <>
+                    <button title={"Activate free minting for this cartidge"} 
+                            className='bg-[#4e99e0] assets-btn zoom-btn' 
+                            onClick={activateFree} disabled={cartridgeExists}>
+                        Set up Free Mint
+                    </button>
                     <button title={"Activate asset sales for this cartidge with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={cartridgeExists}>
-                        Set up Sales
+                        Set up Std. Sales
                     </button>
+                    </>
                 : 
                     <></>
                 }
