@@ -6,7 +6,7 @@
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
 import { calculateTapeId, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
-import { ContractReceipt, ethers } from "ethers";
+import { BigNumber, ContractReceipt, ethers } from "ethers";
 import { VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification, verify } from "../backend-libs/core/lib";
@@ -22,6 +22,7 @@ import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
 import CartridgeAssetManager from "./CartridgeAssetManager";
+import { getUserCartridgeBondInfo } from "../utils/assets";
 
 
 enum MODAL_STATE {
@@ -89,6 +90,7 @@ function GameplaySubmitter() {
     const [gifImg, setGifImg] = useState("");
     const [img, setImg] = useState("");
     const [gameInfo, setGameInfo] = useState<Cartridge>();
+    const [amountOwned,setAmountOwned] = useState<BigNumber>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -125,6 +127,7 @@ function GameplaySubmitter() {
             setErrorFeedback(error);
         } else {
             setErrorFeedback(undefined);
+
         }
     }, [user])
 
@@ -133,10 +136,29 @@ function GameplaySubmitter() {
             setModalState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
             return;
         }
-
+        getCartridgesAmountOwned();
         prepareSubmission();
     }, [gameplay])
 
+    async function getCartridgesAmountOwned() {
+        if (ready && !user) {
+            setAmountOwned(undefined);
+            return;
+        }
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) {
+            setAmountOwned(undefined);
+            return;
+        }
+        if (!gameplay) {
+            setAmountOwned(undefined);
+            return;
+        }
+        const bond = await getUserCartridgeBondInfo(user!.wallet!.address.toLowerCase(),gameplay.cartridge_id);
+        if (bond) {
+            setAmountOwned(bond.amountOwned);
+        }
+    }
     async function prepareSubmission() {
         try {
             const gifParameters = getGifParameters();
@@ -257,13 +279,21 @@ function GameplaySubmitter() {
                         >
                             Cancel
                         </button>
-                        <button
-                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
-                        type="button"
-                        onClick={submitLog}
-                        >
-                            Submit
-                        </button>
+                        { gameplay ? 
+                        <>
+                        { amountOwned?.gt(0) ? 
+                            <button
+                            className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
+                            type="button"
+                            onClick={submitLog}
+                            >
+                                Submit
+                            </button> :
+                            <div>
+                                <CartridgeAssetManager cartridge_id={gameplay?.cartridge_id} onChange={getCartridgesAmountOwned} minimal={true} /> 
+                            </div>}
+                        </>
+                        : <></> }
                     </div>
                 </>
             )
@@ -371,11 +401,6 @@ function GameplaySubmitter() {
             </Transition>
             {
                 modalState.state != MODAL_STATE.NOT_PREPARED?  <>
-                    { gameplay ? 
-                        <div className="fixed right-5 bottom-56 z-20">
-                            <CartridgeAssetManager cartridge_id={gameplay?.cartridge_id} onChange={()=>{}} minimal={true} /> 
-                        </div>
-                        : <></> }
                     <button className="zoom-btn dialog-btn fixed text-[10px] bg-rives-purple shadow right-5 bottom-40 z-20" onClick={() => {openModal()}}>
                         Open Submit
                     </button>
