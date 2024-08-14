@@ -2,6 +2,21 @@ import { RuleInfo } from "../backend-libs/core/ifaces";
 
 export const SOCIAL_MEDIA_HASHTAGS = [];
 
+export interface ContestDetails {
+  id:string,
+  name:string,
+  description:string,
+  created_at:string,
+  start:string,
+  end:string,
+  cartridge_id:string,
+  sponsor_name:string,
+  sponsor_image_data:string,
+  sponsor_image_type:string,
+  prize:string,
+  achievements: Array<Achievement>
+}
+
 export interface Achievement {
   slug:string,
   name:string,

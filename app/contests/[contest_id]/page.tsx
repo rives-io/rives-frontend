@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { ContestStatus, getContestStatus } from "../../utils/common";
 import CartridgeCard from "@/app/components/CartridgeCard";
 import RuleLeaderboard from "@/app/components/RuleLeaderboard";
-import { formatTime, getContestDefaultAchievements, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
+import { formatTime, getContestDetails, getContestWinner, timeToDateUTCString } from "@/app/utils/util";
 import { getUsersByAddress, User } from "@/app/utils/privyApi";
 import Image from "next/image";
 
@@ -99,7 +99,8 @@ export default async function Contest({ params }: { params: { contest_id: string
 
   if (userMap[contestCreatorAddr]) contestCreatorUser = userMap[contestCreatorAddr];
 
-  const contestAchievements = await getContestDefaultAchievements();
+  const contestDetails = await getContestDetails(params.contest_id);
+  const contestHasPrizes = contestDetails && (contestDetails.prize || (contestDetails.achievements && contestDetails.achievements.length > 0));
 
   return (
     <main>
@@ -132,16 +133,27 @@ export default async function Contest({ params }: { params: { contest_id: string
                     </span>
               }
 
-              <div className="flex flex-wrap gap-2">
-                {
-                  contestAchievements.map((achievement, index) => {
-                    if (!achievement) return <></>;
+              {
+                !contestDetails || !contestDetails.sponsor_name?
+                    <></>
+                :
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-gray-400 me-2">Sponsor</span>
+                        {
+                            !(contestDetails.sponsor_image_data || contestDetails.sponsor_image_type)?
+                                <></>
+                            :
+                                <Image
+                                src={`data:${contestDetails.sponsor_image_type};base64,${contestDetails.sponsor_image_data}`}
+                                width={32}
+                                height={32}
+                                alt=""
+                                />    
+                        }
+                        <span>{contestDetails.sponsor_name}</span>
+                    </div>
+                }              
 
-                    return <Image title={achievement.name} key={`${achievement.slug}-${index}`} src={`data:image/png;base64,${achievement.image_data}`} width={64} height={64} alt=""/>
-
-                  })
-                }
-              </div>
             </div>
 
             {
@@ -192,6 +204,37 @@ export default async function Contest({ params }: { params: { contest_id: string
                       </Link>  
                   }
 
+                  {
+                    !contestHasPrizes?
+                      <></>
+                    :
+                      <>
+                        <span className="text-gray-400">Prizes</span>
+                        <div className="flex flex-col">
+                          {
+                            !contestDetails.prize?
+                              <></>
+                            :
+                              contestDetails.prize
+                          }
+
+                          <div className="flex gap-2">
+                            {
+                              contestDetails.achievements.map((achievement, index) => {
+                                return <Image 
+                                        title={achievement.name} 
+                                        key={`${achievement.slug}-${index}`} 
+                                        src={`data:image/png;base64,${achievement.image_data}`} 
+                                        width={48} 
+                                        height={48} 
+                                        alt=""
+                                        />
+                              })
+                            }
+                          </div>
+                        </div>
+                      </>
+                  }
                 </div>
               </div>
 

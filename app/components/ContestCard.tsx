@@ -1,12 +1,12 @@
 "use client"
 
-import { Achievement, ContestStatus, getContestStatus } from "../utils/common";
+import { ContestDetails, ContestStatus, getContestStatus } from "../utils/common";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
 import CartridgeCard from "./CartridgeCard";
 import { useEffect, useState } from "react";
 import { envClient } from "../utils/clientEnv";
 import { tapes } from "../backend-libs/core/lib";
-import { formatTime, getContestDefaultAchievements, getContestWinner } from "../utils/util";
+import { formatTime, getContestDetails, getContestWinner } from "../utils/util";
 import { getUsersByAddress, User } from "../utils/privyApi";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,9 +36,10 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
     const isContest = contest.start && contest.end;
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
     const [nTapes, setNTapes] = useState<number>();
-    const [contestAchievements, setContestAchievements] = useState<Array<Achievement|null>>([]);
+    const [contestDetails, setContestDetails] = useState<ContestDetails|null>(null);
 
     const status = getContestStatus(contest);
+    const contestHasPrizes = contestDetails && (contestDetails.prize || (contestDetails.achievements && contestDetails.achievements.length > 0));
 
     useEffect(() => {
         const checkWinner = async () => {
@@ -58,7 +59,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
             }
         }
 
-        getContestDefaultAchievements().then(setContestAchievements)
+        getContestDetails(contest.id).then(setContestDetails);
 
         checkWinner();
     }, []);
@@ -75,12 +76,12 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
         <div className="relative">
             <div id={contest.id} 
             onClick={() => isContest? window.open(`/contests/${contest.id}`, "_self"):null}
-            className={`bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
+            className={`h-full bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
                 <div>
                     {cartridgeCard}
                 </div>
 
-                <div className="flex flex-col md:w-52">
+                <div className="flex flex-col w-full">
                     <span className="pixelated-font text-lg">{contest.name}</span>
                     <span className="text-sm text-gray-400">{nTapes} Submissions</span>
 
@@ -109,20 +110,78 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                                 </span>
                     }
 
+
                     {
-                        contestAchievements.length == 0?
+                        !contestHasPrizes?
                             <></>
                         :
-                            <div className="flex flex-wrap gap-2">
-                                {
-                                    contestAchievements.map((achievement, index) => {
-                                        if (!achievement) return <></>;
+                            <div className="border-t border-b border-white mt-2">
+                                <div className="text-center -mt-3">
+                                    <span className="bg-black px-1 pixelated-font">
+                                        Prizes
+                                    </span>
+                                </div>
 
-                                        return <Image title={achievement.name} key={`${achievement.slug}-${index}`} src={`data:image/png;base64,${achievement.image_data}`} width={48} height={48} alt=""/>
-                                    })
-                                }
+
+                                <div className="pb-3">
+                                    {
+                                        !contestDetails || !contestDetails.prize?
+                                        <></>
+                                    :
+                                        <div className="text-center">
+                                            {contestDetails.prize}
+                                        </div>
+
+                                    }
+
+                                    {
+                                        !contestDetails || contestDetails.achievements.length == 0?
+                                            <></>
+                                        :
+                                            <div className="flex flex-wrap gap-2">
+                                                {
+                                                    contestDetails.achievements.map((achievement, index) => {
+                                                        if (!achievement) return <></>;
+
+                                                        return <Image 
+                                                        title={achievement.name} 
+                                                        key={`${achievement.slug}-${index}`} 
+                                                        src={`data:image/png;base64,${achievement.image_data}`} 
+                                                        width={48} 
+                                                        height={48} 
+                                                        alt=""
+                                                        />
+                                                    })
+                                                }
+                                            </div>
+                                    }
+                                </div>
+
                             </div>
                     }
+
+
+                    <div>
+                        {
+                            !contestDetails || !contestDetails.sponsor_name?
+                                <></>
+                            :
+                                <div className="mt-2 flex justify-center items-center gap-2">
+                                    {
+                                        !(contestDetails.sponsor_image_data || contestDetails.sponsor_image_type)?
+                                            <></>
+                                        :
+                                            <Image
+                                            src={`data:${contestDetails.sponsor_image_type};base64,${contestDetails.sponsor_image_data}`}
+                                            width={32}
+                                            height={32}
+                                            alt=""
+                                            />    
+                                    }
+                                    <span>{contestDetails.sponsor_name}</span>
+                                </div>
+                        }
+                    </div>
                     
                 </div>
             </div>

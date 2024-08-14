@@ -8,7 +8,7 @@ import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
-import { Achievement, ProfileAchievementAggregated } from "./common";
+import { Achievement, ContestDetails, ProfileAchievementAggregated } from "./common";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -516,13 +516,30 @@ export async function getAchievements() {
     return res_json.items as Array<Achievement>;
 }
 
-export async function getContestDefaultAchievements() {
-    const firstPlaceAchievementPromise = getAchievement("1st_place");
-    const participantAchievementPromise = getAchievement("contest_participation");
 
-    const res:Array<Achievement|null> = await Promise.all([firstPlaceAchievementPromise, participantAchievementPromise]);
+export async function getContestDetails(rule_id:string) {
+    let res:Response;
 
-    return res;
+    try {
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `rule/${rule_id}`),
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json as ContestDetails;
 }
 
 export async function getProfileAchievementsSummary(address:string) {
