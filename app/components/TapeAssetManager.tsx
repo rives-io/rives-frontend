@@ -410,7 +410,6 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             else errorMsg = extractTxError(errorMsg);
-            // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
         }
         setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
@@ -614,8 +613,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                 </button>
                 </> :
                 <> <div></div><div></div>
-                {/* {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || tapeOutput?.user_address?.toLowerCase() == signerAddress?.toLowerCase() ?  */}
-                {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? 
                     <button title={"Activate asset sales for this tape with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={tapeExists}>

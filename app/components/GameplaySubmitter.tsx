@@ -198,7 +198,8 @@ function GameplaySubmitter() {
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            else if (errorMsg.toLowerCase().indexOf("67d145bf") > -1) errorMsg = "You must own cartridge to send tapes";
+            else if (errorMsg.toLowerCase().indexOf("10201e38") > -1) errorMsg = "You must own cartridge to send tapes";
+            else if (errorMsg.toLowerCase().indexOf("ae37392") > -1) errorMsg = "You must own all used tapes";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
             return;
         }
