@@ -11,8 +11,7 @@ import { ethers } from 'ethers';
 import Link from 'next/link';
 import WarningIcon from '@mui/icons-material/Warning';
 
-// Make Next.JS revalidate the page every 30 seconds
-export const revalidate = 30;
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: { tape_id: string } }) {
     const imageUrl = `${envClient.GIF_SERVER_URL}/images/${params.tape_id}`;

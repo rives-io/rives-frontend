@@ -3,7 +3,7 @@ import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
 import { envClient } from "@/app/utils/clientEnv";
 import CartridgePage from "@/app/components/CartridgePage";
 
-export const revalidate = 30;
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: { cartridge_id: string } }) {
     const cartridge:CartridgeInfo = await cartridgeInfo(
