@@ -290,7 +290,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
         changeModalInput("1",state);
     }
 
-    async function buyCartridge() {
+    async function buyCartridge(val?: number) {
         if (!signer) {
             setErrorFeedback({message:"No wallet connected", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
             return;
@@ -309,10 +309,19 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
             return;
         }
 
-        setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
         try{
-            const amount = BigNumber.from(modalValue);
-            const slippage = modalPreviewPrice?.mul(100+modalSlippage).div(100);
+            let amount: BigNumber;
+            let slippage: BigNumber | undefined;
+            if (val) {
+                setModalState({isOpen:true, state: MODAL_STATE.SUBMITTING});
+                amount = BigNumber.from(val);
+                const res = await cartridgeContract.getCurrentBuyPrice(`0x${cartridgeIdB32}`,amount);
+                slippage = res[0];
+            } else {
+                setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
+                amount = BigNumber.from(modalValue);
+                slippage = modalPreviewPrice?.mul(100+modalSlippage).div(100);
+            }
             if (!slippage) {
                 setErrorFeedback({message:"Couldn't get slippage", severity: "warning", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
                 return;
@@ -454,7 +463,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
         }
         setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
         try{
-            const tx = await cartridgeContract.setCartridgeParamsCustom(`0x${cartridgeIdB32}`,0,[10000],[0],false);
+            const tx = await cartridgeContract.setCartridgeParamsCustom(`0x${cartridgeIdB32}`,0,[10000,'0xffffffffffffffffffffffffffffffff'],[0,0],true);
             const txReceipt = await tx.wait(1);
             setReload(reload+1);
             onChange();
@@ -504,11 +513,11 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                        Buy Cartridge
+                        Buy Cartridge {amountOwned ? `(amount owned: ${amountOwned?.toString()})` : ""}
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
-                        <span className="place-self-start">Number of Cartridges {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
-                        <Input className="text-black" aria-label="Cartridges" placeholder="Cartridges to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} />
+                        {/* <span className="place-self-start">Number of Cartridges {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
+                        <Input className="text-black" aria-label="Cartridges" placeholder="Cartridges to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} /> */}
                         {/* <span className="place-self-start">Slippage (%)</span>
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
                     </div>
@@ -524,7 +533,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
                         <button
                         className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
                         type="button"
-                        onClick={buyCartridge}
+                        onClick={() => buyCartridge()}
                         disabled={modalValue == undefined || modalValue < 1}
                         >
                             Buy {modalPreviewPrice ? `(${parseFloat(ethers.utils.formatUnits(modalPreviewPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol})` : ""}
@@ -613,7 +622,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
     return (
         <>    
             <Transition appear show={modalState.isOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-10" onClose={closeModal}>
+                <Dialog as="div" className="relative z-20" onClose={closeModal}>
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -647,7 +656,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
             { !minimal ? 
             <div className='justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2'>
                 { cartridgeExists ?  <>
-                {cartridgeOwner?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {cartridgeOwner?.toLowerCase() == signerAddress || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress ? 
                 <button title={validated ? "Claimed" : 
                         (cartridgeOutput?._proof ? 
                             (unclaimedFees ? `unclaimed fees = ${parseFloat(ethers.utils.formatUnits(unclaimedFees,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : "")
@@ -669,13 +678,14 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
                 </button>
                 </> :
                 <> 
-                {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || cartridgeOutput?.cartridge_user_address?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || cartridgeOutput?.cartridge_user_address?.toLowerCase() == signerAddress) ? 
                     <>
+                    {signerAddress && envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress ? 
                     <button title={"Activate free minting for this cartidge"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activateFree} disabled={cartridgeExists}>
                         Set up Free Mint
-                    </button>
+                    </button> : <></> }
                     <button title={"Activate asset sales for this cartidge with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={cartridgeExists}>
@@ -691,7 +701,7 @@ function CartridgeAssetManager({cartridge_id,onChange,minimal}:{cartridge_id:str
             : <>
                 <button 
                     className='bg-[#53fcd8] assets-btn zoom-btn text-black' 
-                    onClick={() => {openModal(MODAL_STATE.BUY)}} disabled={!buyPrice}
+                    onClick={() => {buyCartridge(1)}} disabled={!buyPrice || modalState.state == MODAL_STATE.SUBMITTING}
                     title={buyPrice ? "" : "Not Activated"}>
                         Buy {buyPrice ? `(${parseFloat(ethers.utils.formatUnits(buyPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol})` : ""} 
                 </button>

@@ -449,7 +449,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                        Buy Tape
+                        Buy Tape {amountOwned ? `(amount owned: ${amountOwned?.toString()})` : ""}
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
                         <span className="place-self-start">Number of Tapes {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
@@ -481,7 +481,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                        Sell Tape
+                        Sell Tape {amountOwned ? `(amount owned: ${amountOwned?.toString()})` : ""}
                     </Dialog.Title>
                     <div className="mt-4 text-center grid grid-cols-1 gap-2">
                         <span className="place-self-start">Number of Tapes</span>
@@ -591,7 +591,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
             {/* <div className="grid grid-cols-3 justify-items-center"> */}
             <div className='justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2'>
                 { tapeExists ? <>
-                {tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {tapeCreator?.toLowerCase() == signerAddress || envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress ? 
                 <button title={validated ? "Claimed" : 
                     (tapeOutput?._proof ? 
                         (unclaimedFees ? `unclaimed fees = ${parseFloat(ethers.utils.formatUnits(unclaimedFees,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : "")
@@ -613,7 +613,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                 </button>
                 </> :
                 <> <div></div><div></div>
-                {envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() || tapeCreator?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || tapeCreator?.toLowerCase() == signerAddress) ? 
                     <button title={"Activate asset sales for this tape with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={tapeExists}>

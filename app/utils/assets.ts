@@ -189,21 +189,30 @@ export async function getUserCartridges(user: string): Promise<string[]> {
     return cartridgeIds;
 }
 
+export async function getUserCartridgeBondInfo(user: string, cartridgeId:string): Promise<BondInfo|null> {
+    const bond = await getCartridgeBondInfo(cartridgeId);
+    if (bond) {
+        const balance: any[] = await publicClient.readContract({
+            address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+            abi: cartridgeAbi.abi,
+            functionName: "balanceOf",
+            args: [user,formatCartridgeIdToBytes(cartridgeId)]
+        }) as any[];
+        if (balance) {
+            bond.amountOwned = BigNumber.from(balance);
+        }
+        return bond
+    }
+    return null;
+
+}
+
 export async function getUserCartridgesBondInfo(user: string): Promise<BondInfo[]> {
     const bondCartridges = new Array<BondInfo>();
     try {
         for (const cartridgeId of await getUserCartridges(user)) {
-            const bond = await getCartridgeBondInfo(cartridgeId);
+            const bond = await getUserCartridgeBondInfo(user,cartridgeId);
             if (bond) {
-                const balance: any[] = await publicClient.readContract({
-                    address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
-                    abi: cartridgeAbi.abi,
-                    functionName: "balanceOf",
-                    args: [user,formatCartridgeIdToBytes(cartridgeId)]
-                }) as any[];
-                if (balance) {
-                    bond.amountOwned = BigNumber.from(balance);
-                }
                 bondCartridges.push(bond);
             }
         }
