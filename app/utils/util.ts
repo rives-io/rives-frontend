@@ -1,7 +1,7 @@
 import { envClient } from "./clientEnv";
 import { ethers } from "ethers";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
-import { isHex, fromHex } from 'viem'
+import { isHex, fromHex, defineChain } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridges, getOutputs, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
@@ -272,6 +272,22 @@ export async function insertTapeName(gameplay_id:string, name:string) {
     }
 }
 
+const customChain = defineChain({
+    id: 42069,
+    name: 'Rives Devnet',
+    nativeCurrency: {
+      decimals: 18,
+      name: 'Rives Ether',
+      symbol: 'RETH',
+    },
+    rpcUrls: {
+      default: {
+        http: ['https://anvil.dev.rives.io'],
+        webSocket: ['wss://anvil.dev.rives.io'],
+      },
+    },
+});
+
 let chains:Record<number, Chain> = {};
 chains[base.id] = base;
 chains[mainnet.id] = mainnet;
@@ -279,6 +295,7 @@ chains[sepolia.id] = sepolia;
 chains[polygon.id] = polygon;
 chains[polygonMumbai.id] = polygon;
 chains[anvil.id] = anvil;
+chains[customChain.id] = customChain;
 
 export function getChain(chainId:number):Chain;
 export function getChain(chainId:string):Chain;

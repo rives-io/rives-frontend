@@ -5,9 +5,9 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { calculateTapeId, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
+import { calculateTapeId, extractTxError, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
-import { VerifyPayloadProxy } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
 import { registerExternalVerification, verify } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
@@ -15,18 +15,19 @@ import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";
 import { cartridgeInfo } from '../backend-libs/core/lib';
 import { CartridgeInfo as Cartridge } from "../backend-libs/core/ifaces";
-
 // @ts-ignore
 import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
-import CartridgeAssetManager from "./CartridgeAssetManager";
-import { getUserCartridgeBondInfo } from "../utils/assets";
+import { buyCartridge, getUserCartridgeBondInfo } from "../utils/assets";
+import CartridgeCard from "./CartridgeCard";
 
 
 enum MODAL_STATE {
     NOT_PREPARED,
+    BUY,
+    BUYING,
     SUBMIT,
     SUBMITTING,
     SUBMITTED
@@ -92,6 +93,12 @@ function GameplaySubmitter() {
     const [gameInfo, setGameInfo] = useState<Cartridge>();
     const [amountOwned,setAmountOwned] = useState<BigNumber>();
 
+    const [cartridge, setCartridge] = useState<CartridgeInfo>();
+    const [cartridgePrice, setCartridgePrice] = useState<BigNumber>();
+    const [currency, setCurrency] = useState<{
+        symbol:string, decimals:number, token:string|undefined
+    }>({symbol: "ETH", decimals: 18, token: undefined});
+
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
@@ -137,7 +144,7 @@ function GameplaySubmitter() {
             return;
         }
         getCartridgesAmountOwned();
-        prepareSubmission();
+        //prepareSubmission();
     }, [gameplay])
 
     async function getCartridgesAmountOwned() {
@@ -145,18 +152,36 @@ function GameplaySubmitter() {
             setAmountOwned(undefined);
             return;
         }
-        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
-        if (!wallet) {
-            setAmountOwned(undefined);
-            return;
-        }
+
         if (!gameplay) {
             setAmountOwned(undefined);
             return;
         }
-        const bond = await getUserCartridgeBondInfo(user!.wallet!.address.toLowerCase(),gameplay.cartridge_id);
+        const bond = await getUserCartridgeBondInfo(user!.wallet!.address.toLowerCase(), gameplay.cartridge_id);
         if (bond) {
             setAmountOwned(bond.amountOwned);
+            
+            if (bond.amountOwned?.gt(0)) {
+                await prepareSubmission();
+                setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
+            } else {
+                setCartridgePrice(bond.buyPrice);
+                setCurrency({
+                    symbol: bond.currencySymbol, 
+                    decimals: bond.currencyDecimals, 
+                    token: bond.currencyToken
+                });
+                
+                const res:CartridgeInfo = await cartridgeInfo(
+                    {id: gameplay.cartridge_id},
+                    {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+                );
+
+                setCartridge(res);
+                setModalState({isOpen: true, state: MODAL_STATE.BUY});
+                
+                await prepareSubmission();
+            }
         }
     }
     async function prepareSubmission() {
@@ -171,7 +196,7 @@ function GameplaySubmitter() {
             console.log("Error getting gif parameters", error)
         }
         
-        setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
+        //setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
     }
 
     async function submitLog() {
@@ -251,10 +276,88 @@ function GameplaySubmitter() {
         clearGifFrames();
     }
 
+    async function buy() {
+        if (!gameplay) return;
+
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) {
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
+            return;
+        }
+
+        try {
+            const amount = 1;
+            setModalState({isOpen:true, state: MODAL_STATE.BUYING});
+
+            await buyCartridge(gameplay.cartridge_id, wallet, amount, currency.token);
+            
+            setModalState({...modalState, state: MODAL_STATE.SUBMIT});
+        } catch (error) {
+            console.log(error)
+            setModalState({...modalState, state: MODAL_STATE.BUY});
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            else errorMsg = extractTxError(errorMsg);
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
+        }
+    }
+
     function submitModalBody() {
         let modalBodyContent:JSX.Element;
 
-        if (modalState.state == MODAL_STATE.SUBMIT) {
+        if (modalState.state == MODAL_STATE.BUY) {
+            let buyPriceText = cartridgePrice == undefined? "":`Collect (${parseFloat(
+                ethers.utils.formatUnits(cartridgePrice, currency.decimals))
+                .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
+            
+            if (cartridgePrice?.eq(0)) {
+                buyPriceText = "Collect (FREE)";
+            }
+            modalBodyContent = (
+                <>
+                    <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font mb-6">
+                        You need to own the Cartridge to submit
+                    </Dialog.Title>
+
+                    {
+                        !cartridge?
+                            <></>
+                        :
+                            <div className="text-left">
+                                <CartridgeCard cartridge={cartridge} showPriceTag={false} deactivateLink={true} />
+                            </div>
+                            
+                    }
+
+                    <div className="flex pb-2 mt-4">
+                        <button
+                        className={`dialog-btn zoom-btn bg-red-400 text-black`}
+                        type="button"
+                        onClick={closeModal}
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
+                        type="button"
+                        onClick={buy}
+                        >
+                            {buyPriceText}
+                        </button>
+                    </div>
+                </>
+            )
+
+        } else if (modalState.state == MODAL_STATE.SUBMIT) {
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
@@ -267,34 +370,41 @@ function GameplaySubmitter() {
                     </div>
 
                     <div className="mt-4 text-center">
-                        {/* <Image className="border border-black" width={256} height={256} src={"data:image/gif;base64,"+gifImg} alt={"Not found"}/> */}
-                        <TapeCard tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}} />
+                        <TapeCard deactivateLink={true} 
+                        tapeInput={{title: tapeTitle, tapeId: tapeId, gif: gifImg, gifImage: img, address: player, twitterInfo: user?.twitter}}
+                         />
                     </div>
     
                     <div className="flex pb-2 mt-4">
                         <button
-                        className={`dialog-btn bg-red-400 text-black`}
+                        className={`dialog-btn zoom-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
                             Cancel
                         </button>
-                        { gameplay ? 
-                        <>
-                        { amountOwned?.gt(0) ? 
-                            <button
-                            className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
-                            type="button"
-                            onClick={submitLog}
-                            >
-                                Submit
-                            </button> :
-                            <div>
-                                <CartridgeAssetManager cartridge_id={gameplay?.cartridge_id} onChange={getCartridgesAmountOwned} minimal={true} /> 
-                            </div>}
-                        </>
-                        : <></> }
+
+                        <button
+                        className={`dialog-btn zoom-btn bg-emerald-400 text-black`}
+                        type="button"
+                        onClick={submitLog}
+                        >
+                            Submit
+                        </button>
                     </div>
+                </>
+            )
+        } else if (modalState.state == MODAL_STATE.BUYING) {
+            modalBodyContent = (
+                <>
+                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 pixelated-font">
+                        Collecting {cartridge?.name} cartridge
+                    </Dialog.Title>
+        
+                    <div className="p-6 flex justify-center mt-4">
+                        <div className='w-12 h-12 border-2 rounded-full border-current border-r-transparent animate-spin'></div>
+                    </div>
+
                 </>
             )
         } else if (modalState.state == MODAL_STATE.SUBMITTING) {
@@ -344,7 +454,7 @@ function GameplaySubmitter() {
                             
                         </TwitterShareButton>
 
-                        <button className="dialog-btn bg-emerald-400 text-black"
+                        <button className="dialog-btn zoom-btn bg-emerald-400 text-black"
                         onClick={closeModal}
                         >
                             Done

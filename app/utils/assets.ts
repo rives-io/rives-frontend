@@ -1,11 +1,13 @@
 import { envClient } from "./clientEnv";
-import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain } from 'viem'
+import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain, createWalletClient, custom } from 'viem'
 import { BigNumber } from "ethers";
 
 import { cartridgeIdFromBytes, formatCartridgeIdToBytes, formatTapeIdToBytes, getChain, tapeIdFromBytes } from "./util";
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import tapeAbiFile from "@/app/contracts/Tape.json"
 import currencyAbiFile from "@/app/contracts/CurrencyToken.json"
+import { ConnectedWallet } from "@privy-io/react-auth";
+import { Proof } from "cartesi-client";
  
 const cartridgeAbi: any = cartridgeAbiFile;
 const tapeAbi: any = tapeAbiFile;
@@ -20,27 +22,29 @@ export interface BondInfo {
     currencySymbol: string;
     buyPrice?: BigNumber;
     amountOwned?: BigNumber;
+    currencyToken?: string;
 }
 
-export const customChain = defineChain({
-    id: 42069,
-    name: 'Rives Devnet',
-    nativeCurrency: {
-      decimals: 18,
-      name: 'Rives Ether',
-      symbol: 'RETH',
-    },
-    rpcUrls: {
-      default: {
-        http: ['https://anvil.dev.rives.io'],
-        webSocket: ['wss://anvil.dev.rives.io'],
-      },
-    },
-});
+// export const customChain = defineChain({
+//     id: 42069,
+//     name: 'Rives Devnet',
+//     nativeCurrency: {
+//       decimals: 18,
+//       name: 'Rives Ether',
+//       symbol: 'RETH',
+//     },
+//     rpcUrls: {
+//       default: {
+//         http: ['https://anvil.dev.rives.io'],
+//         webSocket: ['wss://anvil.dev.rives.io'],
+//       },
+//     },
+// });
 
 const publicClient = createPublicClient({ 
-    chain: envClient.NETWORK_CHAIN_ID == "0xA455" ? customChain : getChain(envClient.NETWORK_CHAIN_ID),
-    transport: http(envClient.NETWORK_CHAIN_ID == "0xAA36A7" ? "https://ethereum-sepolia-rpc.publicnode.com" : undefined)
+    chain: getChain(envClient.NETWORK_CHAIN_ID),
+    transport: http()
+    //transport: http(envClient.NETWORK_CHAIN_ID == "0xAA36A7" ? "https://ethereum-sepolia-rpc.publicnode.com" : undefined)
 })
 
 export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
@@ -54,16 +58,19 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
             args: [formatCartridgeIdToBytes(cartridgeId)]
         }) as any[];
         if (!bond || !(bond[0].steps?.length)) return null;
+        let currencyToken:string|undefined;
         if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
+            currencyToken = bond[0].currencyToken as string;
+
             const decimalsOut: any[] = await publicClient.readContract({
-                address: `0x${bond[0].currencyToken.slice(2)}`,
+                address: currencyToken as `0x${string}`,
                 abi: currencyAbiFile.abi,
                 functionName: "decimals",
                 args: []
             }) as any[];
             decimals = decimalsOut[0];
             const symbolOut: any[] = await publicClient.readContract({
-                address: `0x${bond[0].currencyToken.slice(2)}`,
+                address: currencyToken as `0x${string}`,
                 abi: currencyAbiFile.abi,
                 functionName: "symbol",
                 args: []
@@ -88,8 +95,9 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
             currentPrice:price,
             currentSupply:supply,
             marketcap:marketcap,
+            currencyToken:currencyToken,
             currencyDecimals:decimals,
-            currencySymbol:symbol
+            currencySymbol:symbol,
         };
     } catch (e) {
         console.log("Error reading contract");
@@ -190,7 +198,7 @@ export async function getUserCartridges(user: string): Promise<string[]> {
 }
 
 export async function getUserCartridgeBondInfo(user: string, cartridgeId:string): Promise<BondInfo|null> {
-    const bond = await getCartridgeBondInfo(cartridgeId);
+    const bond = await getCartridgeBondInfo(cartridgeId, true);
     if (bond) {
         const balance: any[] = await publicClient.readContract({
             address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
@@ -334,3 +342,139 @@ export function prettyNumberFormatter(num: number, digits: number): string {
     return item ? (num / item.value).toFixed(digits).replace(regexp, "").concat(item.symbol) : "0";
 }
   
+export async function buyCartridge(cartridge_id:string, wallet:ConnectedWallet, amount:number|bigint, erc20TokenAddr?:string) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const res = (await publicClient.readContract({
+        address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
+        abi: cartridgeAbi.abi,
+        functionName: "getCurrentBuyPrice",
+        args: [cartridgeIdB32, amount]
+    })) as Array<bigint>;
+
+    const slippage = res[0];
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    let value:bigint = BigInt(0);
+    if (!erc20TokenAddr) {
+        value = slippage;
+    } else {
+        // const allowance: BigNumber = await erc20Contract.allowance(signerAddress,cartridgeContract.address);
+        // if (allowance.lt(slippage)) {
+        //     const approveTx = await erc20Contract.approve(cartridgeContract.address,slippage.sub(allowance));
+        //     const approveTxReceipt = await approveTx.wait(1);
+        // }
+    }
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'buyCartridges',
+        args: [cartridgeIdB32, amount, slippage],
+        value: value
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    )
+}
+
+
+export async function sellCartridge(cartridge_id:string, wallet:ConnectedWallet, amount:number|bigint, slippage:number|bigint) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'sellCartridges',
+        args: [cartridgeIdB32, amount, slippage]
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    );
+}
+
+export async function activateCartridgeSalesFree(cartridge_id:string, wallet:ConnectedWallet) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'setCartridgeParamsCustom',
+        args: [cartridgeIdB32, 0, [10000,'0xffffffffffffffffffffffffffffffff'], [0,0], true]
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    );
+}
+
+export async function activateCartridge(cartridge_id:string, wallet:ConnectedWallet) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'setCartridgeParams',
+        args: [cartridgeIdB32]
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    );
+}
+
+export async function validateCartridge(cartridge_id:string, wallet:ConnectedWallet, payload:string, proof:Proof) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'validateCartridge',
+        args: [envClient.DAPP_ADDR, cartridgeIdB32, payload, proof]
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    );
+}

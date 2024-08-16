@@ -1,6 +1,6 @@
 import { RuleInfo } from "../backend-libs/core/ifaces";
 
-export const SOCIAL_MEDIA_HASHTAGS = [];
+export const SOCIAL_MEDIA_HASHTAGS = ["rives"];
 
 export interface ContestDetails {
   id:string,
