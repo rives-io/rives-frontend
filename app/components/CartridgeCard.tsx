@@ -12,7 +12,9 @@ import { ethers } from "ethers";
 import { BondInfo, getCartridgeBondInfo } from "../utils/assets";
 
 
-export default function CartridgeCard({cartridge, small, creator}:{cartridge:CartridgeInfo, small?:boolean, creator?:User|null}) {
+export default function CartridgeCard(
+{cartridge, small, creator, deactivateLink=false, showPriceTag=true}:
+{cartridge:CartridgeInfo, small?:boolean, creator?:User|null, deactivateLink?:boolean, showPriceTag?:boolean}) {
     const cartridge_creator = cartridge.user_address;
     const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
 
@@ -38,10 +40,17 @@ export default function CartridgeCard({cartridge, small, creator}:{cartridge:Car
             });    
         }
 
-        if (cartridge.id) {
+        if (cartridge.id && showPriceTag) {
             getCartridgeBondInfo(cartridge.id,true).then((bond: BondInfo|null) => {
                 if (bond && bond.buyPrice)
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+                    if (bond.buyPrice.eq(0)) {
+                        setCurrentPrice("Free")
+                    } else {
+                        setCurrentPrice(`${parseFloat(
+                            ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals))
+                            .toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`
+                        );
+                    }
             });
         }
     }, [])
@@ -52,7 +61,13 @@ export default function CartridgeCard({cartridge, small, creator}:{cartridge:Car
     }
 
     return (
-        <Link title={cartridge.name} href={`/cartridges/${cartridge.id}`} className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col hover:scale-110`}>
+        <Link 
+        title={cartridge.name} 
+        href={`/cartridges/${cartridge.id}`} 
+        className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col ${deactivateLink ? 'pointer-events-none' : 'hover:scale-110'}`}
+        aria-disabled={deactivateLink} 
+        tabIndex={deactivateLink ? -1 : undefined}
+        >
 
             <div className="flex items-stretch">
                 <div className='w-fit h-8'>

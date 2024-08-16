@@ -22,7 +22,7 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayloadProxy|TapePreview, creator?:User|null}) {
+export default function TapeCard({tapeInput, creator, deactivateLink=false}:{tapeInput:string|VerifyPayloadProxy|TapePreview, creator?:User|null, deactivateLink?:boolean}) {
     let tape:VerifyPayloadProxy|TapePreview;
 
     if (typeof tapeInput == "string") {
@@ -120,7 +120,9 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
         onMouseLeave={onMouseLeave}
         >
             <Link href={`/tapes/${tapeId}`}
-            className="tapeBorder flex flex-col items-center w-44 h-60 hover:scale-110">
+            aria-disabled={deactivateLink} 
+            tabIndex={deactivateLink ? -1 : undefined}
+            className={`tapeBorder flex flex-col items-center w-44 h-60 ${deactivateLink ? 'pointer-events-none' : 'hover:scale-110'}`}>
                 <div className="w-44 flex items-stretch px-[10px] ms-2">
                     <div className='w-fit h-8'>
                         <div className="w-16 h-4 relative">

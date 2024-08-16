@@ -3,10 +3,9 @@
 import {PrivyProvider} from '@privy-io/react-auth';
 import { getChain } from './util';
 import { envClient } from './clientEnv';
-import { customChain } from './assets';
 
 export default function PrivyProviders({children}: {children: React.ReactNode}) {
-  const chain = envClient.NETWORK_CHAIN_ID == "0xA455" ? customChain : getChain(envClient.NETWORK_CHAIN_ID);
+  const chain = getChain(envClient.NETWORK_CHAIN_ID);
 
   return (
     <PrivyProvider

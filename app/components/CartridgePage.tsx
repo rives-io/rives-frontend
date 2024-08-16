@@ -11,11 +11,12 @@ import { ContestStatus, getContestStatus } from '../utils/common';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
-import CartridgeAssetManager from './CartridgeAssetManager';
+//import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
 import { timeToDateUTCString } from '../utils/util';
 import { getUsersByAddress, User } from '../utils/privyApi';
 import CartridgeUnlocker from './CartridgeUnlocker';
+import CartridgeAssetManager from './CartridgeAssetManager';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
@@ -67,7 +68,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </div>
                         </div>
 
-                        <CartridgeAssetManager cartridge_id={cartridge.id} onChange={() => setReload(reload+1)}/>
+                        <CartridgeAssetManager cartridge={cartridge} reloadStats={() => setReload(reload+1)} />
                     </div>
                     <CartridgeStats cartridge_id={cartridge.id} reload={reload}/>
                 </div>
@@ -103,7 +104,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             <Menu.Button className="flex justify-center hover:text-rives-purple pixelated-font">
                                 {selectedRule?.name} <ArrowDropDownIcon/>
                             </Menu.Button>
-                            <Menu.Items className="absolute z-10 h-48 mt-2 divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+                            <Menu.Items className="absolute z-10 h-48 overflow-auto mt-2 divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                                 
                                 {
                                     rulesInfo?.map((ruleInfo, index) => {
