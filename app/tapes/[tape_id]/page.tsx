@@ -68,6 +68,13 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     let tapeName:string|null;
     [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
 
+    if (!tapeCartridge.primary && tapeCartridge.primary_id) {
+        tapeCartridge = await cartridgeInfo(
+            {id: tapeCartridge.primary_id}, 
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}
+        );
+    }
+
     return (
         <main>
             <section className='flex flex-col items-center gap-4'>

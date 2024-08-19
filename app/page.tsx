@@ -81,6 +81,20 @@ export default async function Home() {
     }
 
     if (!cartridge) continue;
+    
+    if (!cartridge.primary && cartridge.primary_id) {
+      const primaryId = cartridge.primary_id;
+      
+      cartridge = cartridges.find((cartridge => cartridge.id == cartridge.primary_id));
+      if (!cartridge) {
+        cartridge = await cartridgeInfo(
+          {id: primaryId},
+          {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        );  
+      }
+    }
+
+    if (!cartridge) continue;
 
     userAddresses.add(cartridge.user_address); // contest cartridge creator
     contestCartridges[contests[i].id] = cartridge;
@@ -136,7 +150,7 @@ export default async function Home() {
               contests.length == 0?
                 <div className="text-center pixelated-font">No Contests Open</div>
               :
-              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
+              <div className='flex flex-wrap justify-center gap-4'>
                 {
                   contests.map((contest, index) => {
                     return <ContestCard 

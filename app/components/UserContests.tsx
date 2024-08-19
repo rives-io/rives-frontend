@@ -51,12 +51,23 @@ export default function UserContests({address}:{address:string}) {
                 participatedContests.push(contest);
 
                 if (!participatedContestsCartridges[contest.cartridge_id]) {
-                    const cartridge:CartridgeInfo = await cartridgeInfo(
-                        {id:contests[i].cartridge_id},
+                    let cartridge:CartridgeInfo = await cartridgeInfo(
+                        {id:contest.cartridge_id},
                         {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
                     );
+
+                    if (!cartridge.primary && cartridge.primary_id) {
+                        const primaryId = cartridge.primary_id;
+                        
+                        if (!cartridge) {
+                          cartridge = await cartridgeInfo(
+                            {id: primaryId},
+                            {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+                          );  
+                        }
+                    }
                 
-                    participatedContestsCartridges[cartridge.id] = cartridge;
+                    participatedContestsCartridges[contest.cartridge_id] = cartridge;
                 }
             }
         }
@@ -87,7 +98,7 @@ export default function UserContests({address}:{address:string}) {
                         <div className="text-center pixelated-font">No Contests</div>
                     :
                         <div className="flex justify-center">
-                            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
+                            <div className="flex flex-wrap justify-center gap-4">
                                 {
                                     userContests.map((contest, index) => {
                                         return (

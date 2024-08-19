@@ -19,9 +19,16 @@ export default function CartridgeCard(
     const formatedCreatorAddr = `${cartridge_creator.slice(0, 6)}...${cartridge_creator.substring(cartridge_creator.length-4,cartridge_creator.length)}`;
 
     
-    const cartridgeSize = small? "w-36 h-52":"w-44 h-60";
-    const cartridgeLogoSize = small? "w-12 ":"w-16"
-    const cartridgeCoverSize = small? "w-32 h-32":"w-40 h-40";
+    const cartridgeSize = small? "w-[88px] h-[120px]":"w-44 h-60";
+    const cartridgeLogoSize = small? "w-8 h-2":"w-16 h-4"
+    const cartridgeCoverSize = small? "w-20 h-20":"w-40 h-40";
+    const cartridgeTextAreaSize = small? "h-5": "h-10"
+    const cartridgeTitleSize = small? "text-[7px]":"text-sm"
+    const cartridgeCreatorSize = small? "text-[6px]": "text-xs";
+    const cartridgeMarginX = small? "-mx-3":"-mx-2";
+    const cartridgeHeaderMargins = small? "-mt-3 -ms-3":"-mt-2 -ms-2";
+    const cartridgeTextAreaMarginTop = small? "-mt-1":"";
+    showPriceTag = small? false:showPriceTag;
 
     const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
     const [currentPrice,setCurrentPrice] = useState<string>();
@@ -64,26 +71,26 @@ export default function CartridgeCard(
         <Link 
         title={cartridge.name} 
         href={`/cartridges/${cartridge.id}`} 
-        className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col ${deactivateLink ? 'pointer-events-none' : 'hover:scale-110'}`}
+        className={`cartridgeBorder rounded-full ${cartridgeSize} flex flex-col gap-1 ${deactivateLink ? 'pointer-events-none' : 'hover:scale-110'}`}
         aria-disabled={deactivateLink} 
         tabIndex={deactivateLink ? -1 : undefined}
         >
 
-            <div className="flex items-stretch">
-                <div className='w-fit h-8'>
-                    <div className={`${cartridgeLogoSize} h-4 relative`}>
+            <div className={`flex items-stretch ${cartridgeHeaderMargins}`}>
+                <div className='w-fit'>
+                    <div className={`${cartridgeLogoSize} relative`}>
                     <Image fill
                         src={rivesLogo}
                         quality={100}
                         alt='rives logo'
-                        className="-mt-2 -ms-2"
+                        className=""
                     />
 
                     </div>
                 </div>
 
                 {currentPrice ? <div className="flex flex-1 justify-end text-wrap -me-2">
-                    <div className="h-fit px-1 bg-rives-purple text-black text-xs -mt-2">
+                    <div className="h-fit px-1 bg-rives-purple text-black text-xs">
                         {currentPrice}
                     </div>
                     
@@ -91,19 +98,19 @@ export default function CartridgeCard(
 
             </div>
 
-            <div className="w-fill -mt-[16px] -mx-2  justify-center">
+            <div className={`w-fit ${cartridgeMarginX} justify-center`}>
                 <div className={`${cartridgeCoverSize} grid grid-cols-1 place-content-center bg-black relative`}>
                     <Image fill
                         style={{objectFit: "cover"}}
-                        src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"}
+                        src={"data:image/png;base64,"+cartridge.cover} alt={""}
                     />
                 </div>
             </div>
 
-            <div className="flex h-10 w-fill -mx-2 ">
-                <div className="flex flex-col p-[2px] h-10 w-full">
-                    <span className="pixelated-font text-sm truncate">{cartridge.name}</span>
-                    <span className="pixelated-font text-xs truncate">
+            <div className={`flex ${cartridgeTextAreaSize} w-fill ${cartridgeMarginX} ${cartridgeTextAreaMarginTop}`}>
+                <div className="flex flex-col px-[2px] pb-[2px] h-full w-full">
+                    <span className={`pixelated-font ${cartridgeTitleSize} truncate`}>{cartridge.name}</span>
+                    <span className={`pixelated-font ${cartridgeCreatorSize} truncate`}>
                         By <button onClick={handleClick}
                             className="pixelated-font text-rives-purple hover:underline">
                                 {
