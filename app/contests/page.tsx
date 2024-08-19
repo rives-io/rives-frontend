@@ -50,12 +50,19 @@ export default async function Contests() {
   // get cartridgeInfo
   for (let i = 0; i < contests.length; i++) {
     if (!cartridgeInfoMap[contests[i].cartridge_id]) {
-      const cartridge:CartridgeInfo = await cartridgeInfo(
+      let cartridge:CartridgeInfo = await cartridgeInfo(
         {id:contests[i].cartridge_id},
         {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
       );
 
-      cartridgeInfoMap[cartridge.id] = cartridge;
+      if (!cartridge.primary && cartridge.primary_id) {
+        cartridge = await cartridgeInfo(
+          {id: cartridge.primary_id},
+          {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        );
+      }
+
+      cartridgeInfoMap[contests[i].cartridge_id] = cartridge;
       userAddresses.add(cartridge.user_address);
     }
   }
@@ -64,8 +71,7 @@ export default async function Contests() {
 
   return (
     <main>
-      <section className="flex justify-center">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+      <section className="flex flex-wrap justify-center gap-4">
           {
             contests.map((contest, index) => {
               if (!contest.start || !contest.end) return <></>;
@@ -78,7 +84,6 @@ export default async function Contests() {
               )
             })
           }
-        </div>
       </section>
     </main>
   )

@@ -73,49 +73,79 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
     }, [contest]);
 
     return (
-        <div className="relative">
+        <div className="relative w-[352px] h-60">
             <div id={contest.id} 
             onClick={() => isContest? window.open(`/contests/${contest.id}`, "_self"):null}
-            className={`h-full bg-black p-4 flex gap-4 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
-                <div>
-                    {cartridgeCard}
+            className={`h-full bg-black p-4 flex flex-col gap-2 text-start border border-transparent ${isContest? "hover:border-white hover:cursor-pointer":""}`}>
+                <div className="flex gap-2 text-start">
+                    <div>
+                        {cartridgeCard}
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full">
+                        <div className="flex flex-col">
+                            <span className="pixelated-font text-lg leading-none">{contest.name}</span>
+                            <span className="text-sm text-gray-400">{nTapes} Submissions</span>
+                        </div>
+
+                        <div className="flex flex-col leading-none">
+                            {
+                                contestStatusMessage(contest)
+                            }
+
+                            {
+                                winnerAddress.length == 0?
+                                    status == ContestStatus.FINISHED?
+                                        <span>WINNER: TBA</span>
+                                    :
+                                        <></>
+                                :
+                                    !winnerUser?
+                                        <span title={winnerAddress}>
+                                            WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
+                                                {`${winnerAddress.slice(0, 6)}...${winnerAddress.substring(winnerAddress.length-4,winnerAddress.length)}`}
+                                            </Link>
+                                        </span>
+                                    :
+                                        <span title={winnerAddress}>
+                                            WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
+                                                {winnerUser.name}
+                                            </Link>
+                                        </span>
+                            }
+
+                            <div>
+                                {
+                                    !contestDetails || !contestDetails.sponsor_name?
+                                        <></>
+                                    :
+                                        <div className="flex gap-2 items-center">
+                                            SPONSOR:
+                                            {
+                                                !(contestDetails.sponsor_image_data || contestDetails.sponsor_image_type)?
+                                                    <></>
+                                                :
+                                                    <Image
+                                                    src={`data:${contestDetails.sponsor_image_type};base64,${contestDetails.sponsor_image_data}`}
+                                                    width={24}
+                                                    height={24}
+                                                    alt=""
+                                                    />    
+                                            }
+                                            <span>{contestDetails.sponsor_name}</span>
+                                        </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex flex-col w-full">
-                    <span className="pixelated-font text-lg">{contest.name}</span>
-                    <span className="text-sm text-gray-400">{nTapes} Submissions</span>
 
-                    {
-                        contestStatusMessage(contest)
-                    }
-
-                    {
-                        winnerAddress.length == 0?
-                            status == ContestStatus.FINISHED?
-                                <span>WINNER: TBA</span>
-                            :
-                                <></>
-                        :
-                            !winnerUser?
-                                <span title={winnerAddress}>
-                                    WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
-                                        {`${winnerAddress.slice(0, 6)}...${winnerAddress.substring(winnerAddress.length-4,winnerAddress.length)}`}
-                                    </Link>
-                                </span>
-                            :
-                                <span title={winnerAddress}>
-                                    WINNER: <Link onClick={(e:React.MouseEvent<HTMLElement>) => e.stopPropagation()} href={`/profile/${winnerAddress}`} className="text-rives-purple hover:underline">
-                                        {winnerUser.name}
-                                    </Link>
-                                </span>
-                    }
-
-
-                    {
+                {
                         !contestHasPrizes?
                             <></>
                         :
-                            <div className="border-t border-b border-white mt-2">
+                            <div className="border-t border-white">
                                 <div className="text-center -mt-3">
                                     <span className="bg-black px-1 pixelated-font">
                                         Prizes
@@ -123,7 +153,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                                 </div>
 
 
-                                <div className="pb-3">
+                                <div>
                                     {
                                         !contestDetails || !contestDetails.prize?
                                         <></>
@@ -138,7 +168,7 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
                                         !contestDetails || contestDetails.achievements.length == 0?
                                             <></>
                                         :
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex gap-2">
                                                 {
                                                     contestDetails.achievements.map((achievement, index) => {
                                                         if (!achievement) return <></>;
@@ -159,31 +189,6 @@ export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cart
 
                             </div>
                     }
-
-
-                    <div>
-                        {
-                            !contestDetails || !contestDetails.sponsor_name?
-                                <></>
-                            :
-                                <div className="mt-2 flex justify-center items-center gap-2">
-                                    {
-                                        !(contestDetails.sponsor_image_data || contestDetails.sponsor_image_type)?
-                                            <></>
-                                        :
-                                            <Image
-                                            src={`data:${contestDetails.sponsor_image_type};base64,${contestDetails.sponsor_image_data}`}
-                                            width={32}
-                                            height={32}
-                                            alt=""
-                                            />    
-                                    }
-                                    <span>{contestDetails.sponsor_name}</span>
-                                </div>
-                        }
-                    </div>
-                    
-                </div>
             </div>
             <div className="absolute start-4 top-4">
                 {cartridgeCard}

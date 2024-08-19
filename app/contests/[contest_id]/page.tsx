@@ -60,7 +60,14 @@ const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
 }
 
 async function getGameInfo(cartridge_id:string) {
-  const cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+  let cartridgeWithInfo:CartridgeInfo = await cartridgeInfo({id:cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL});
+
+  if (!cartridgeWithInfo.primary && cartridgeWithInfo.primary_id) {
+    cartridgeWithInfo = await cartridgeInfo(
+      {id: cartridgeWithInfo.primary_id},
+      {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    );
+  }
 
   return cartridgeWithInfo;
 }

@@ -18,7 +18,7 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
         setContestsLoading(true);
 
         const contests = (await rules(
-            {cartridge_id: cartridgeId, has_start: true, has_end: true},
+            {cartridge_id: cartridge.last_version || cartridgeId, has_start: true, has_end: true},
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
         ).data;
 
