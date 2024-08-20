@@ -667,6 +667,9 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         if (buyPrice == BigInt(0)) {
             buyPriceText = "Collect (FREE)";
         }
+        if (sellPrice == BigInt(0)) {
+            sellPriceText = "Sell (FREE)";
+        }
         return (
             <>
                 <button
@@ -739,28 +742,30 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                             {
                                 (isOwner || isOperator)?
                                     validateCartridgeOption()
-                                :
-                                    (isOperator ||
-                                    cartridgeOutput?.cartridge_user_address?.toLowerCase() == userAddress)?
-                                        <>
-                                            {
-                                                isOperator?
-                                                    activateFreeSalesOption()
-                                                
-                                                :
-                                                    <></>                            
-                                            }
-                                            
-                                            {activateStdSalesOption()}
-                                        </>
-                                    :
-                                        <></>
+                                : <></>
                             }
 
                             {marketplaceOptions()}
                         </>
                     :
-                        <></>
+                        <>
+                            {
+                                user && wallets?.length > 0 && (isOperator ||
+                                (cartridgeOutput?.cartridge_user_address?.toLowerCase() == userAddress))?
+                                    <>
+                                        {
+                                            isOperator?
+                                                activateFreeSalesOption()
+                                            
+                                            :
+                                                <></>                            
+                                        }
+                                        
+                                        {activateStdSalesOption()}
+                                    </>
+                                : <></>
+                            }
+                        </>
                 }
             </div>
         </>

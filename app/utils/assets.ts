@@ -424,7 +424,7 @@ export async function activateCartridgeSalesFree(cartridge_id:string, wallet:Con
         address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
         abi: cartridgeAbi.abi,
         functionName: 'setCartridgeParamsCustom',
-        args: [cartridgeIdB32, 0, [10000,'0xffffffffffffffffffffffffffffffff'], [0,0], true]
+        args: [cartridgeIdB32, 0, [10000,'0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0,0], true]
     });
     const txHash = await walletClient.writeContract(request);
 

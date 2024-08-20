@@ -79,6 +79,21 @@ export async function setUnlockCartridge(
     return result;
 }
 
+export async function insertAndUnlockCartridge(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.InsertCartridgePayloadProxy,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: InsertCartridgePayloadProxy = new InsertCartridgePayloadProxy(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.InsertCartridgePayloadProxy>(client,dappAddress,'0xe05d2b0b',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
 export async function removeCartridge(
     client:Signer,
     dappAddress:string,
@@ -217,12 +232,42 @@ export async function setOperatorAddress(
 export async function setInternalVerifyLock(
     client:Signer,
     dappAddress:string,
-    inputData: ifaces.SetInternalVerifyLock,
+    inputData: ifaces.SetLock,
     options?:MutationOptions
 ):Promise<AdvanceOutput|ContractReceipt|any[]> {
-    const data: SetInternalVerifyLock = new SetInternalVerifyLock(inputData);
+    const data: SetLock = new SetLock(inputData);
     if (options?.decode) { options.sync = true; }
-    const result = await genericAdvanceInput<ifaces.SetInternalVerifyLock>(client,dappAddress,'0xef53291f',data, options)
+    const result = await genericAdvanceInput<ifaces.SetLock>(client,dappAddress,'0xef53291f',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
+export async function setCartridgeModerationLock(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.SetLock,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: SetLock = new SetLock(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.SetLock>(client,dappAddress,'0x8328ca15',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
+export async function setMaxLockedCartridges(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.SetMaxLockedCartridges,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: SetMaxLockedCartridges = new SetMaxLockedCartridges(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.SetMaxLockedCartridges>(client,dappAddress,'0x6c265c4c',data, options)
     if (options?.decode) {
         return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
     }
@@ -395,6 +440,17 @@ export async function proxyAddress(
     return output;
 }
 
+export async function config(
+    inputData: ifaces.EmptyClass,
+    options?:QueryOptions
+):Promise<InspectReport|any> {
+    const route = 'core/config';
+    const data: EmptyClass = new EmptyClass(inputData);
+    const output: InspectReport = await genericInspect<ifaces.EmptyClass>(data,route,options);
+    if (options?.decode) { return decodeToModel(output,options.decodeModel || "json"); }
+    return output;
+}
+
 
 /*
  * Indexer Query
@@ -530,14 +586,24 @@ export function exportToSetOperatorPayload(data: ifaces.SetOperatorPayload): str
     const dataToExport: SetOperatorPayload = new SetOperatorPayload(data);
     return dataToExport.export();
 }
-export class SetInternalVerifyLockInput extends Input<ifaces.SetInternalVerifyLock> { constructor(data: CartesiInput) { super(models['SetInternalVerifyLock'],data); } }
-export function decodeToSetInternalVerifyLockInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetInternalVerifyLockInput {
-    return new SetInternalVerifyLockInput(output as CartesiInput);
+export class SetLockInput extends Input<ifaces.SetLock> { constructor(data: CartesiInput) { super(models['SetLock'],data); } }
+export function decodeToSetLockInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetLockInput {
+    return new SetLockInput(output as CartesiInput);
 }
 
-export class SetInternalVerifyLock extends IOData<ifaces.SetInternalVerifyLock> { constructor(data: ifaces.SetInternalVerifyLock, validate: boolean = true) { super(models['SetInternalVerifyLock'],data,validate); } }
-export function exportToSetInternalVerifyLock(data: ifaces.SetInternalVerifyLock): string {
-    const dataToExport: SetInternalVerifyLock = new SetInternalVerifyLock(data);
+export class SetLock extends IOData<ifaces.SetLock> { constructor(data: ifaces.SetLock, validate: boolean = true) { super(models['SetLock'],data,validate); } }
+export function exportToSetLock(data: ifaces.SetLock): string {
+    const dataToExport: SetLock = new SetLock(data);
+    return dataToExport.export();
+}
+export class SetMaxLockedCartridgesInput extends Input<ifaces.SetMaxLockedCartridges> { constructor(data: CartesiInput) { super(models['SetMaxLockedCartridges'],data); } }
+export function decodeToSetMaxLockedCartridgesInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): SetMaxLockedCartridgesInput {
+    return new SetMaxLockedCartridgesInput(output as CartesiInput);
+}
+
+export class SetMaxLockedCartridges extends IOData<ifaces.SetMaxLockedCartridges> { constructor(data: ifaces.SetMaxLockedCartridges, validate: boolean = true) { super(models['SetMaxLockedCartridges'],data,validate); } }
+export function exportToSetMaxLockedCartridges(data: ifaces.SetMaxLockedCartridges): string {
+    const dataToExport: SetMaxLockedCartridges = new SetMaxLockedCartridges(data);
     return dataToExport.export();
 }
 export class UpdateRivosPayloadInput extends Input<ifaces.UpdateRivosPayload> { constructor(data: CartesiInput) { super(models['UpdateRivosPayload'],data); } }
@@ -796,13 +862,21 @@ export const models: Models = {
         exporter: exportToSetOperatorPayload,
         validator: ajv.compile<ifaces.SetOperatorPayload>(JSON.parse('{"title": "SetOperatorPayload", "type": "object", "properties": {"new_operator_address": {"type": "string"}}, "required": ["new_operator_address"]}'.replaceAll('integer','string","format":"biginteger')))
     },
-    'SetInternalVerifyLock': {
+    'SetLock': {
         ioType:IOType.mutationPayload,
         abiTypes:['bool'],
         params:['lock'],
-        decoder: decodeToSetInternalVerifyLockInput,
-        exporter: exportToSetInternalVerifyLock,
-        validator: ajv.compile<ifaces.SetInternalVerifyLock>(JSON.parse('{"title": "SetInternalVerifyLock", "type": "object", "properties": {"lock": {"type": "boolean"}}, "required": ["lock"]}'.replaceAll('integer','string","format":"biginteger')))
+        decoder: decodeToSetLockInput,
+        exporter: exportToSetLock,
+        validator: ajv.compile<ifaces.SetLock>(JSON.parse('{"title": "SetLock", "type": "object", "properties": {"lock": {"type": "boolean"}}, "required": ["lock"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
+    'SetMaxLockedCartridges': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['uint'],
+        params:['max_locked_cartridges'],
+        decoder: decodeToSetMaxLockedCartridgesInput,
+        exporter: exportToSetMaxLockedCartridges,
+        validator: ajv.compile<ifaces.SetMaxLockedCartridges>(JSON.parse('{"title": "SetMaxLockedCartridges", "type": "object", "properties": {"max_locked_cartridges": {"type": "integer"}}, "required": ["max_locked_cartridges"]}'.replaceAll('integer','string","format":"biginteger')))
     },
     'UpdateRivosPayload': {
         ioType:IOType.mutationPayload,
