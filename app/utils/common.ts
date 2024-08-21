@@ -2,6 +2,18 @@ import { RuleInfo } from "../backend-libs/core/ifaces";
 
 export const SOCIAL_MEDIA_HASHTAGS = ["rives"];
 
+export interface OlympicData {
+  contests:Array<{contest_id:string, name:string}>,
+  leaderboard:Array<PlayerOlympicData>
+}
+
+export interface PlayerOlympicData {
+  profile_address:string,
+  total_points:number,
+  total_score:number,
+  contests:{[contest_id: string]: {score:number, rank:number, points:number, tape_id:string} | undefined}
+}
+
 export interface ContestDetails {
   id:string,
   name:string,
