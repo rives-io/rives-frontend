@@ -33,7 +33,7 @@ import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage }
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
-import { cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
+import { buildUrl, cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
 
 let canvasPlaying = false;
 
@@ -53,16 +53,28 @@ export interface TapeInfo {
 
 const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
-    const data = await cartridge(
+
+    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
         {
-            id:formatedCartridgeId
-        },
-        {
-            decode:true,
-            decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL
+            method: "GET",
+            headers: {
+                "Content-Type": "application/octet-stream",
+            }
         }
     );
+    const blob = await response.blob();
+    const data = new Uint8Array(await blob.arrayBuffer());
+
+    // const data = await cartridge(
+    //     {
+    //         id:formatedCartridgeId
+    //     },
+    //     {
+    //         decode:true,
+    //         decodeModel:"bytes",
+    //         cartesiNodeUrl: envClient.CARTESI_NODE_URL
+    //     }
+    // );
     if (data.length > 0) return data;
 
     const out:Array<Uint8Array> = (await getOutputs(
