@@ -288,15 +288,21 @@ const customChain = defineChain({
     },
 });
 
+let customSepolia = Object.assign({},sepolia); //.rpcUrls.default.http = ["https://base-sepolia-rpc.publicnode.com"];
+customSepolia = Object.assign(customSepolia, {rpcUrls: {default: {http: ["https://ethereum-sepolia-rpc.publicnode.com"]}}});
+
+let customBaseSepolia = Object.assign({},baseSepolia); //.rpcUrls.default.http = ["https://base-sepolia-rpc.publicnode.com"];
+customBaseSepolia = Object.assign(customBaseSepolia, {rpcUrls: {default: {http: ["https://base-sepolia-rpc.publicnode.com"]}}});
+
 let chains:Record<number, Chain> = {};
 chains[base.id] = base;
 chains[mainnet.id] = mainnet;
-chains[sepolia.id] = sepolia;
+chains[sepolia.id] = customSepolia;
 chains[polygon.id] = polygon;
 chains[polygonMumbai.id] = polygon;
 chains[anvil.id] = anvil;
 chains[customChain.id] = customChain;
-chains[baseSepolia.id] = baseSepolia;
+chains[baseSepolia.id] = customBaseSepolia;
 
 export function getChain(chainId:number):Chain;
 export function getChain(chainId:string):Chain;

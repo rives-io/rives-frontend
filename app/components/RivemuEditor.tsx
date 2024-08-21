@@ -34,7 +34,7 @@ import Rivemu, { RivemuRef } from "./Rivemu";
 import { CartridgeInfo, RuleInfo, InfoCartridge, RuleDataProxy, InsertCartridgePayloadProxy, RemoveCartridgePayloadProxy, TransferCartridgePayloadProxy, CartridgesPayload, FormatInCardPayload } from "../backend-libs/core/ifaces";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
+import { buildUrl, cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
 
 let canvasPlaying = false;
 
@@ -85,17 +85,28 @@ const getCartridges = async (ids?: string[]):Promise<CartridgeInfo[]> => {
 
 const getCartridgeData = async (cartridgeId:string):Promise<Uint8Array> => {
     const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
-    const data = await cartridge(
+    // const data = await cartridge(
+    //     {
+    //         id:formatedCartridgeId
+    //     },
+    //     {
+    //         decode:true,
+    //         decodeModel:"bytes",
+    //         cartesiNodeUrl: envClient.CARTESI_NODE_URL
+    //     }
+    // );
+    
+    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
         {
-            id:formatedCartridgeId
-        },
-        {
-            decode:true,
-            decodeModel:"bytes",
-            cartesiNodeUrl: envClient.CARTESI_NODE_URL
+            method: "GET",
+            headers: {
+                "Content-Type": "application/octet-stream",
+            }
         }
     );
-    
+    const blob = await response.blob();
+    const data = new Uint8Array(await blob.arrayBuffer());
+
     if (data.length === 0) throw new Error(`Cartridge ${formatedCartridgeId} not found!`);
     
     return data;
