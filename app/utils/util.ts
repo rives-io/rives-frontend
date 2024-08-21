@@ -1,6 +1,6 @@
 import { envClient } from "./clientEnv";
 import { ethers } from "ethers";
-import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
+import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain, baseSepolia } from 'viem/chains';
 import { isHex, fromHex, defineChain } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridges, getOutputs, VerifyPayloadProxy } from "../backend-libs/core/lib";
@@ -296,6 +296,7 @@ chains[polygon.id] = polygon;
 chains[polygonMumbai.id] = polygon;
 chains[anvil.id] = anvil;
 chains[customChain.id] = customChain;
+chains[baseSepolia.id] = baseSepolia;
 
 export function getChain(chainId:number):Chain;
 export function getChain(chainId:string):Chain;
