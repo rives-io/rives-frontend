@@ -8,7 +8,10 @@ import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
-import { Achievement, ContestDetails, ProfileAchievementAggregated } from "./common";
+import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated } from "./common";
+import { ConnectedWallet } from "@privy-io/react-auth";
+
+const FRONTEND_ERROR_PREFIX = "RIVES Frontend ERROR:";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -411,6 +414,10 @@ export async function getCartridges(options:CartridgesRequest): Promise<Cartridg
 }
 
 export function extractTxError(msg:string):string {
+    if (msg.substring(0, FRONTEND_ERROR_PREFIX.length) == FRONTEND_ERROR_PREFIX) {
+        return msg.substring(FRONTEND_ERROR_PREFIX.length);
+    }
+
     const m = msg.match(/(.*)\s\[/);
     if (m?.length && m.length >= 2) return m[1] as string;
     return "Error in transaction";
@@ -589,4 +596,43 @@ export async function getProfileAchievementsSummary(address:string) {
     const res_json = await res.json();
 
     return res_json.items as Array<ProfileAchievementAggregated>;
+}
+
+
+export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
+    let res:Response;
+    const url = "https://storage.googleapis.com/rives-dev-public/tournament/doom-olympics/leaderboard.json";
+    
+    try {
+        res = await fetch(url,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch Olympics data\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const data:OlympicData = await res.json();
+
+    return data;
+}
+
+
+export async function verifyChain(wallet:ConnectedWallet) {
+    if (wallet.chainId.toLowerCase() != envClient.NETWORK_CHAIN_ID.toLowerCase()) {
+        try {
+            await wallet.switchChain(envClient.NETWORK_CHAIN_ID as `0x${string}`);
+        } catch (error) {
+            console.log((error as Error).message);
+            throw new Error(`${FRONTEND_ERROR_PREFIX} Failed to change to the correct network (${envClient.NETWORK_CHAIN_ID})`);
+        }
+    }
 }

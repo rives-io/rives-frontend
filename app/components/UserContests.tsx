@@ -85,7 +85,7 @@ export default function UserContests({address}:{address:string}) {
     return (
         <div className="flex flex-col gap-4">
             <div className='w-full lg:w-[80%]'>
-                    <h1 className={`text-2xl pixelated-font`}>Contests</h1>
+                    <h1 className={`text-2xl pixelated-font`}>Contests Participated</h1>
             </div>
 
             {

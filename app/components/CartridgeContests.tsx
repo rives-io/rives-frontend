@@ -42,7 +42,7 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
                     cartridgeContests?.length == 0?
                         <div className="text-center pixelated-font">No Contests</div>
                     :
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="flex flex-wrap justify-center gap-4">
                             {
                                 cartridgeContests?.map((contest, index) => {
                                     return (

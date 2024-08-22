@@ -2,7 +2,7 @@ import { envClient } from "./clientEnv";
 import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain, createWalletClient, custom } from 'viem'
 import { BigNumber } from "ethers";
 
-import { cartridgeIdFromBytes, formatCartridgeIdToBytes, formatTapeIdToBytes, getChain, tapeIdFromBytes } from "./util";
+import { cartridgeIdFromBytes, formatCartridgeIdToBytes, formatTapeIdToBytes, getChain, tapeIdFromBytes, verifyChain } from "./util";
 import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import tapeAbiFile from "@/app/contracts/Tape.json"
 import currencyAbiFile from "@/app/contracts/CurrencyToken.json"
@@ -345,6 +345,8 @@ export function prettyNumberFormatter(num: number, digits: number): string {
 export async function buyCartridge(cartridge_id:string, wallet:ConnectedWallet, amount:number|bigint, erc20TokenAddr?:string) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
 
+    await verifyChain(wallet);
+
     const res = (await publicClient.readContract({
         address: `0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`,
         abi: cartridgeAbi.abi,
@@ -390,6 +392,8 @@ export async function buyCartridge(cartridge_id:string, wallet:ConnectedWallet, 
 export async function sellCartridge(cartridge_id:string, wallet:ConnectedWallet, amount:number|bigint, slippage:number|bigint) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
 
+    await verifyChain(wallet);
+
     const provider = await wallet.getEthereumProvider();
     const walletClient = createWalletClient({
         chain: getChain(envClient.NETWORK_CHAIN_ID),
@@ -412,6 +416,8 @@ export async function sellCartridge(cartridge_id:string, wallet:ConnectedWallet,
 
 export async function activateCartridgeSalesFree(cartridge_id:string, wallet:ConnectedWallet) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    await verifyChain(wallet);
 
     const provider = await wallet.getEthereumProvider();
     const walletClient = createWalletClient({
@@ -436,6 +442,8 @@ export async function activateCartridgeSalesFree(cartridge_id:string, wallet:Con
 export async function activateCartridge(cartridge_id:string, wallet:ConnectedWallet) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
 
+    await verifyChain(wallet);
+
     const provider = await wallet.getEthereumProvider();
     const walletClient = createWalletClient({
         chain: getChain(envClient.NETWORK_CHAIN_ID),
@@ -458,6 +466,8 @@ export async function activateCartridge(cartridge_id:string, wallet:ConnectedWal
 
 export async function validateCartridge(cartridge_id:string, wallet:ConnectedWallet, payload:string, proof:Proof) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    await verifyChain(wallet);
 
     const provider = await wallet.getEthereumProvider();
     const walletClient = createWalletClient({
