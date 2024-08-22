@@ -6,13 +6,15 @@ import React, { useEffect, useState } from 'react'
 import rivesLogo from '@/public/logo.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Menu } from '@headlessui/react'
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import Image from 'next/image';
+import { verifyChain } from '../utils/util';
 
 function Navbar() {
     const pathname = usePathname();
     const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl pixelated-font`}>Connect</span>);
     const {ready, authenticated, login, user} = usePrivy();
+    const {wallets} = useWallets();
     // Disable login when Privy is not ready or the user is already authenticated
     const disableLogin = !ready || (ready && authenticated);
 
@@ -33,6 +35,20 @@ function Navbar() {
             <Link href={`/profile/${userAddress}`} className={`text-sm md:text-xl pixelated-font`}>Profile</Link>
         );
     }, [user])
+
+    useEffect(() => {
+        if (!ready || !user || (ready && !wallets)) {
+            return;
+        }
+
+        const currWallet = wallets.find((wallet) => wallet.address === user!.wallet!.address);
+        if (!currWallet) return;
+
+        verifyChain(currWallet)
+        .catch((error) => {
+            console.log((error as Error).message);
+        })
+    }, [wallets])
 
     return (
         <header className='header'>

@@ -5,7 +5,7 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { calculateTapeId, extractTxError, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash } from "../utils/util";
+import { calculateTapeId, extractTxError, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash, verifyChain } from "../utils/util";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 import { CartridgeInfo, VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
@@ -212,6 +212,19 @@ function GameplaySubmitter() {
                     message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
                     dismissible: true,
                     dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
+            return;
+        }
+        try {
+            await verifyChain(wallet);
+        } catch (error) {
+            setErrorFeedback(
+                {
+                    message: (error as Error).message, severity: "error",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined)}
                 }
             );
 
