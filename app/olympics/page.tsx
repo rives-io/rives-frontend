@@ -10,6 +10,14 @@ export const revalidate = 0 // revalidate data always
 async function OlympicsPage() {
     const data = await getOlympicsData("");
 
+    if (!data) {
+        return (
+            <main className="flex items-center justify-center h-lvh">
+                <span className={`text-4xl text-white pixelated-font` }>No Olympics data!</span>
+            </main>
+        );
+    }
+
     let addresses:Array<string> = [];
     for (let i = 0; i < data.leaderboard.length; i++) {
         const item = data.leaderboard[i];

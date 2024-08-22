@@ -599,9 +599,29 @@ export async function getProfileAchievementsSummary(address:string) {
 }
 
 
-export async function getOlympicsData(olympicId:string):Promise<OlympicData> {
-    const data = {"contests": [{"contest_id": "f2cb483d3438f2cb483d3438dbe8d70a01e1c002", "name": "Knuckle Crusher"}, {"contest_id": "f2cb483d3438f2cb483d343821779e84d52182fb", "name": "Infallible Aim 2"}, {"contest_id": "f2cb483d3438f2cb483d3438dd9d331d4d89f686", "name": "Lightning Run"}], "leaderboard": [{"profile_address": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc", "total_points": 2999.0, "total_score": 562691.0, "contests": {"f2cb483d3438f2cb483d3438dbe8d70a01e1c002": {"score": 139073, "rank": 2, "points": 999, "tape_id": "f2cb483d3438f2cb483d3438dbe8d70a01e1c002f442e68582ab2662e0500fc0"}, "f2cb483d3438f2cb483d343821779e84d52182fb": {"score": 224235, "rank": 1, "points": 1000, "tape_id": "f2cb483d3438f2cb483d343821779e84d52182fb93aaee189a58b48fad9ff71b"}, "f2cb483d3438f2cb483d3438dd9d331d4d89f686": {"score": 199383, "rank": 1, "points": 1000, "tape_id": "f2cb483d3438f2cb483d3438dd9d331d4d89f6861dec2f857449bbb2425fee5a"}}}, {"profile_address": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc", "total_points": 2997.0, "total_score": 356698.0, "contests": {"f2cb483d3438f2cb483d3438dbe8d70a01e1c002": {"score": 151553, "rank": 1, "points": 1000, "tape_id": "f2cb483d3438f2cb483d3438dbe8d70a01e1c0026f65e7321d5ee92ad13c67c4"}, "f2cb483d3438f2cb483d343821779e84d52182fb": {"score": 109367, "rank": 2, "points": 999, "tape_id": "f2cb483d3438f2cb483d343821779e84d52182fb3a8b66c0d485e389dbcad132"}, "f2cb483d3438f2cb483d3438dd9d331d4d89f686": {"score": 95778, "rank": 3, "points": 998, "tape_id": "f2cb483d3438f2cb483d3438dd9d331d4d89f6861496e9bd086874e0c7ab6d72"}}}, {"profile_address": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720", "total_points": 999.0, "total_score": 198152.0, "contests": {"f2cb483d3438f2cb483d3438dd9d331d4d89f686": {"score": 198152, "rank": 2, "points": 999, "tape_id": "f2cb483d3438f2cb483d3438dd9d331d4d89f686e6bf0938c42af5bf86e5e165"}}}]}
+export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
+    let res:Response;
+    const url = "https://storage.googleapis.com/rives-dev-public/tournament/doom-olympics/leaderboard.json";
     
+    try {
+        res = await fetch(url,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch Olympics data\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const data:OlympicData = await res.json();
+
     return data;
 }
 

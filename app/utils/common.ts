@@ -11,7 +11,7 @@ export interface PlayerOlympicData {
   profile_address:string,
   total_points:number,
   total_score:number,
-  contests:{[contest_id: string]: {score:number, rank:number, points:number, tape_id:string} | undefined}
+  contests:{[contest_id: string]: {score:number, rank:number, points:number, tape_id:string}}
 }
 
 export interface ContestDetails {
