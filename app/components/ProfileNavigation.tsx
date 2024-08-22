@@ -34,7 +34,7 @@ export default function ProfileNavigation({address, twitterInfo}:{address:string
                 <Tab
                     className={({selected}) => {return selected?"tab-navigation-item-selected grow":"tab-navigation-item grow"}}
                     >
-                        <span>Contests Participated</span>
+                        <span>Contests</span>
                 </Tab>
             </Tab.List>
 
