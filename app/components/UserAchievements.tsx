@@ -19,7 +19,7 @@ function UserAchievements({address}:{address:string}) {
     return (
         <div className="flex flex-col gap-4">
             <div className="bg-black flex flex-col px-6 pb-4 w-fit">
-                <h2 className="py-2 text-center">Console Achievements</h2>
+                <h2 className="py-2 text-center">Achievements</h2>
 
                 <div className="grid grid-cols-4 gap-2">
                     {
