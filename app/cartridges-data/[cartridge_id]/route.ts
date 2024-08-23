@@ -3,6 +3,8 @@ import { type NextRequest } from 'next/server'
 import { envClient } from "../../utils/clientEnv";
 import { cartridge } from "../../backend-libs/core/lib";
 
+export const revalidate = 0;
+
 type ResponseData = {
   message: string
 }
