@@ -601,10 +601,9 @@ export async function getProfileAchievementsSummary(address:string) {
 
 export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
     let res:Response;
-    const url = "https://storage.googleapis.com/rives-dev-public/tournament/doom-olympics/leaderboard.json";
     
     try {
-        res = await fetch(url,
+        res = await fetch(envClient.OLYMPICS_DATA_URL,
             {
                 method: "GET",
                 headers: {
