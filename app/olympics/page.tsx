@@ -109,7 +109,7 @@ async function OlympicsPage() {
 
                                                 return (
                                                     <td key={`${playerKey}-${contest.contest_id}`} className='px-2'>
-                                                        <Link href={`/tapes/${player_contest.tape_id}}`} className='flex items-center justify-center gap-2 hover:text-rives-purple'>
+                                                        <Link href={`/tapes/${player_contest.tape_id}`} className='flex items-center justify-center gap-2 hover:text-rives-purple'>
                                                             <span className='break-all pixelated-font' title={`score: ${player_contest.score}`}>
                                                                 {player_contest.rank} ({player_contest.points} points)
                                                             </span>
