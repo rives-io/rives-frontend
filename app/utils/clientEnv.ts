@@ -45,5 +45,10 @@ export const envClient = envsafe({
   AGGREGATOR: url({
     input: process.env.NEXT_PUBLIC_AGGREGATOR_URL,
     desc: "Aggregator URL."
+  }),
+  OLYMPICS_DATA_URL: url({
+    input: process.env.OLYMPICS_DATA_URL,
+    desc: "URL with the JSON that has the Olympics data.",
+    default: "https://storage.googleapis.com/rives-vanguard-public/tournament/doom-olympics/leaderboard.json"
   })
 })

@@ -294,14 +294,13 @@ td a {
   width: 768px;
 }
 
-.youtube-frame {
-  width: 640px;
-  height: 360px;
-}
-
 .cartridgePageCover {
   width: 512px;
   height: 512px;
+}
+
+.homepageContainer {
+  width: 352px;
 }
 
 /* consider height to see Score max-height 768 +64  */
@@ -379,16 +378,14 @@ td a {
   }
 }
 
-@media screen and (max-width: 640px)  {
-  .youtube-frame {
-    width: 320px;
-    height: 180px;
+@media screen and (min-width: 380px) and (max-width: 768px) {
+  .homepageContainer {
+    width: 368px;
   }
 }
 
-@media screen and (max-height: 360px)  {
-  .youtube-frame {
-    width: 320px;
-    height: 180px;
+@media screen and (min-width: 768px)  {
+  .homepageContainer {
+    width: 752px;
   }
 }

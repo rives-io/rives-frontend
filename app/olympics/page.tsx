@@ -29,33 +29,39 @@ async function OlympicsPage() {
     return (
         <main>
             <section className='flex justify-center overflow-auto'>
-                <table className="w-full text-left">
-                    <thead className="text-xsuppercase">
-                        <tr>
-                            <th scope="col" className="pixelated-font text-lg">
-                                Rank
+                <table className="text-left border-black block max-h-[580px]">
+                    <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
+                        <tr className='bg-black'>
+                            <th scope="col" className='px-2'>
+                                <span className="pixelated-font">
+                                    Rank
+                                </span>
                             </th>
-                            <th scope="col" className="pixelated-font text-lg">
-                                Player
+                            <th scope="col" className='px-2'>
+                                <span className="pixelated-font">
+                                    Player
+                                </span>
                             </th>
+
                             {
                                 data.contests.map((contest, index) => {
                                     return (
-                                        <th key={contest.name} scope="col">
-                                            <Link href={`/contests/${contest.contest_id}`} className='flex items-center gap-2 pixelated-font text-lg hover:text-rives-purple'>
+                                        <th key={contest.name} scope="col" className='px-2'>
+                                            <Link href={`/contests/${contest.contest_id}`} 
+                                            className='flex items-center gap-2 pixelated-font hover:text-rives-purple'>
                                                 {contest.name}
                                             </Link>
                                         </th>
                                     )
                                 })
                             }
-                            <th scope="col" className="pixelated-font text-lg">
+                            <th scope="col" className="pixelated-font px-2">
                                 Global
                             </th>
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody className='text-xs'>
                         {
                             data.leaderboard.map((player, index) => {
                                 const playerKey = `player-${index}`;
@@ -63,24 +69,24 @@ async function OlympicsPage() {
 
                                 return (
                                     <tr key={player.profile_address}>
-                                        <td className='pixelated-font'>
+                                        <td className='pixelated-font px-2 text-center'>
                                             {index+1}
                                         </td>
 
-                                        <td>
+                                        <td className='px-2'>
                                             <Link href={`/profile/${player.profile_address}`} className='flex items-center gap-2 hover:text-rives-purple'>
                                                 {
                                                     !user?
                                                         <>
                                                             <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
-                                                            <span className='break-all pixelated-font' title={player.profile_address}>
+                                                            <span className=' pixelated-font' title={player.profile_address}>
                                                                 {player.profile_address.substring(0,6)+"..."+player.profile_address.substring(player.profile_address.length-4,player.profile_address.length)}
                                                             </span>
                                                         </>
                                                     :
                                                         <>
                                                             <img width={48} height={48} src={user.picture_url} className='rounded-full pixelated-img' alt='' />
-                                                            <span className='break-all pixelated-font' title={player.profile_address}>
+                                                            <span className=' pixelated-font' title={player.profile_address}>
                                                                 {user.name}
                                                             </span>
                                                         </>
@@ -95,15 +101,15 @@ async function OlympicsPage() {
 
                                                 if (!player_contest) {
                                                     return (
-                                                        <td key={`${playerKey}-${contest.contest_id}`} className='pixelated-font'>
+                                                        <td key={`${playerKey}-${contest.contest_id}`} className='pixelated-font px-2 text-center'>
                                                             -
                                                         </td>
                                                     )
                                                 }
 
                                                 return (
-                                                    <td key={`${playerKey}-${contest.contest_id}`}>
-                                                        <Link href={`/tapes/${player_contest.tape_id}}`} className='flex items-center gap-2 hover:text-rives-purple'>
+                                                    <td key={`${playerKey}-${contest.contest_id}`} className='px-2'>
+                                                        <Link href={`/tapes/${player_contest.tape_id}`} className='flex items-center justify-center gap-2 hover:text-rives-purple'>
                                                             <span className='break-all pixelated-font' title={`score: ${player_contest.score}`}>
                                                                 {player_contest.rank} ({player_contest.points} points)
                                                             </span>
@@ -113,7 +119,7 @@ async function OlympicsPage() {
                                             })
                                         }
 
-                                        <td className='pixelated-font'>
+                                        <td className='pixelated-font px-2 text-center'>
                                             {player.total_points}
                                         </td>
                                     </tr>
