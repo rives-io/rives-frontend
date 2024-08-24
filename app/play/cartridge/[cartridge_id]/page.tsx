@@ -7,7 +7,7 @@ import ReportIcon from '@mui/icons-material/Report';
 
 const getCartridgeDefaultRuleID = async (cartridge_id:string) => {
     const reportOutput:InspectReport = await rules(
-        {cartridge_id:cartridge_id, name:"default"},
+        {cartridge_id:cartridge_id, name:"default", enable_deactivated: true},
         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
     );
 

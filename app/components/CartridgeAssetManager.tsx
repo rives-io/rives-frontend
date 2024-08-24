@@ -13,7 +13,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { activateCartridge, activateCartridgeSalesFree, buyCartridge, sellCartridge, validateCartridge } from "../utils/assets";
+import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, sellCartridge, validateCartridge } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
@@ -169,21 +169,20 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         // console.log("Bond Info:", bondInfo);
         // if (!bondInfo) return;
 
-        const buyPriceData = (await contract.read.getCurrentBuyPrice([`0x${cartridgeIdB32}`, 1])) as Array<bigint>;
-        setBuyPrice(buyPriceData[0]);
-
         const bond = (await contract.read.cartridgeBonds([`0x${cartridgeIdB32}`])) as Array<any>;
         setValidated(bond[6].slice(2).length > 0);
+        if (bond[0].currentSupply < bond[0].steps[bond[0].steps.length - 1].rangeMax) {
+            const buyPriceData = (await contract.read.getCurrentBuyPrice([`0x${cartridgeIdB32}`, 1])) as Array<bigint>;
+            setBuyPrice(buyPriceData[0]);
+        }
 
         const allUnclaimed = bond[0].unclaimed.mint + bond[0].unclaimed.burn + bond[0].unclaimed.consume + 
         bond[0].unclaimed.royalties + bond[0].unclaimed.undistributedRoyalties;
         setUnclaimedFees(allUnclaimed);
 
         if (bond[0].currentSupply > BigInt(0)) {
-            contract.read.getCurrentSellPrice([`0x${cartridgeIdB32}`, 1]).then((value) => {
-                const data = value as Array<bigint>;
-                setSellPrice(data[0]);
-            });
+            const sellPriceData = await (contract.read.getCurrentSellPrice([`0x${cartridgeIdB32}`, 1])) as Array<bigint>;
+            setSellPrice(sellPriceData[0]);
         }
 
         if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
@@ -549,6 +548,27 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
     }
 
+    async function activateFixed() {
+        const wallet = userReady();
+        if (!wallet) return;
+
+        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
+        try{
+            await activateFixedCartridgeSales(cartridge.id, '0x1c6bf52634000', wallet);
+
+            setReload(reload+1);
+            reloadStats();
+        } catch (error) {
+            console.log(error)
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            else errorMsg = extractTxError(errorMsg);
+            // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
+        }
+        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
+    }
+
     async function activate() {
         const wallet = userReady();
         if (!wallet) return;
@@ -602,16 +622,28 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     function activateFreeSalesOption() {
         return (
             <button
-            title={"Activate free minting for this cartidge"}
+            title={"Activate asset free minting for this cartidge"}
             className="bg-[#4e99e0] assets-btn zoom-btn"
             onClick={activateFree}
             disabled={cartridgeExists}
             >
-                Set up Free Mint
+                Free Mint
             </button>
         )
     }
 
+    function activateFixedPriceSalesOption() {
+        return (
+            <button
+            title={"Activate asset sales for this cartidge with fixed price"}
+            className="bg-[#4e99e0] assets-btn zoom-btn"
+            onClick={activateFixed}
+            disabled={cartridgeExists}
+            >
+                Fixed Price Sales
+            </button>
+        )
+    }
     function activateStdSalesOption() {
         return (
             <button
@@ -622,7 +654,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                 onClick={activate}
                 disabled={cartridgeExists}
             >
-                Set up Std. Sales
+                Std. Sales
             </button>
         )
     }
@@ -657,10 +689,10 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     }
 
     function marketplaceOptions() {
-        let buyPriceText:string = buyPrice == undefined? "":`Collect (${parseFloat(
+        let buyPriceText:string = buyPrice == undefined? "Collect":`Collect (${parseFloat(
             formatUnits(buyPrice, currency.decimals))
             .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
-        let sellPriceText:string = sellPrice == undefined? "":`Sell (${parseFloat(
+        let sellPriceText:string = sellPrice == undefined? "Sell":`Sell (${parseFloat(
             formatUnits(sellPrice, currency.decimals))
             .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
         
@@ -755,7 +787,10 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                                     <>
                                         {
                                             isOperator?
-                                                activateFreeSalesOption()
+                                                <>
+                                                    {activateFreeSalesOption()}
+                                                    {activateFixedPriceSalesOption()}
+                                                </>
                                             
                                             :
                                                 <></>                            

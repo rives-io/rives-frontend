@@ -14,7 +14,8 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
   const formatedRuleId = ruleId;
   const data = await rules(
       {
-          id:formatedRuleId
+          id:formatedRuleId,
+          enable_deactivated: true
       },
       {
           decode:true,

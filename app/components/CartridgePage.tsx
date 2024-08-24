@@ -126,9 +126,9 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Menu.Items>
                         </Menu>
 
-                        <Link aria-disabled={!selectedRule || !contestIsOpen} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
+                        <Link aria-disabled={!selectedRule || !contestIsOpen || selectedRule.deactivated} tabIndex={!selectedRule || !contestIsOpen || selectedRule.deactivated? -1:undefined} 
                         href={`/play/rule/${selectedRule?.id}`} 
-                        className={`${!selectedRule || !contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
+                        className={`${!selectedRule || !contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
                             Play
                         </Link>
                         

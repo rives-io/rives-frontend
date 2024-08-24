@@ -110,6 +110,7 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
     const data = await rules(
         {
             id:formatedRuleId,
+            enable_deactivated: true,
             full:true
         },
         {
@@ -419,7 +420,7 @@ function RivemuPlayer(
         canvasPlaying = false;
         if (isTape && totalFrames && totalFrames != 0)
             setCurrProgress(100);
-        if (!isTape && rule && signerAddress && !restarting) {
+        if (!isTape && rule && !rule.deactivated && signerAddress && !restarting) {
             let score: number | undefined = undefined;
             if (scoreFunctionEvaluator && decoder.decode(outcard.slice(0,4)) == 'JSON') {
                 const outcard_str = decoder.decode(outcard);

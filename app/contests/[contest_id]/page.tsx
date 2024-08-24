@@ -50,7 +50,7 @@ function contestStatusMessage(contest:RuleInfo) {
 }
 
 const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
-  const rulesFound:Array<RuleInfo> = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
+  const rulesFound:Array<RuleInfo> = (await rules({id: rule_id, enable_deactivated: true}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
   if (rulesFound.length == 0) return null;
 

@@ -439,6 +439,29 @@ export async function activateCartridgeSalesFree(cartridge_id:string, wallet:Con
     );
 }
 
+export async function activateFixedCartridgeSales(cartridge_id:string,cartridgePrice:string, wallet:ConnectedWallet) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+
+    const provider = await wallet.getEthereumProvider();
+    const walletClient = createWalletClient({
+        chain: getChain(envClient.NETWORK_CHAIN_ID),
+        transport: custom(provider)
+    });
+
+    const { request } = await publicClient.simulateContract({
+        account: wallet.address as `0x${string}`,
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        abi: cartridgeAbi.abi,
+        functionName: 'setCartridgeParamsCustom',
+        args: [cartridgeIdB32, cartridgePrice, ['0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0], false]
+    });
+    const txHash = await walletClient.writeContract(request);
+
+    await publicClient.waitForTransactionReceipt( 
+        { hash: txHash }
+    );
+}
+
 export async function activateCartridge(cartridge_id:string, wallet:ConnectedWallet) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
 

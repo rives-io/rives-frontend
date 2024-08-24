@@ -29,12 +29,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge, transferCartridge, formatInCard } from "../backend-libs/core/lib";
+import { CartridgesOutput, cartridge, cartridgeInfo, cartridges, createRule, insertCartridge, rules, ruleTags as getRuleTags, RuleTagsOutput, removeCartridge, transferCartridge, formatInCard, deactivateRule } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { CartridgeInfo, RuleInfo, InfoCartridge, RuleDataProxy, InsertCartridgePayloadProxy, RemoveCartridgePayloadProxy, TransferCartridgePayloadProxy, CartridgesPayload, FormatInCardPayload } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, RuleInfo, InfoCartridge, RuleDataProxy, InsertCartridgePayloadProxy, RemoveCartridgePayloadProxy, TransferCartridgePayloadProxy, CartridgesPayload, FormatInCardPayload, DeactivateRulePayloadProxy } from "../backend-libs/core/ifaces";
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { buildUrl, cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
+import { buildUrl, cartridgeIdFromBytes, formatCartridgeIdToBytes, formatRuleIdToBytes } from '../utils/util';
 
 let canvasPlaying = false;
 
@@ -595,7 +595,7 @@ function RivemuEditor() {
 
         const existingRules = await rules(
             {
-                cartridge_id: cartridgeId, name: ruleName
+                cartridge_id: cartridgeId, name: ruleName, enable_deactivated: true
             },
             {
                 decode:true,
@@ -647,6 +647,49 @@ function RivemuEditor() {
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
                 inputBoxAddress: envClient.WORLD_ADDRESS
             });
+        } catch (error) {
+            console.log(error)
+            let errorMsg = (error as Error).message;
+            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
+            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+    }
+
+    async function sendRuleDeactivation() {
+
+        if (!rule) {
+            setErrorFeedback({message:"No rule selected", severity: "warning", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
+            return;
+        }
+        
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) {
+            setErrorFeedback(
+                {
+                    message:`Please connect your wallet ${user!.wallet!.address}`, severity: "warning",
+                    dismissible: true,
+                    dissmissFunction: () => {setErrorFeedback(undefined); connectWallet();}
+                }
+            );
+
+            return;
+        }
+
+        // submit rule
+        const provider = await wallet.getEthereumProvider();
+        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
+        const inputData: DeactivateRulePayloadProxy = {
+            rule_id:formatRuleIdToBytes(rule.id)
+        }
+        try {
+            await deactivateRule(signer, envClient.DAPP_ADDR, inputData, {
+                sync:false, 
+                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
+                inputBoxAddress: envClient.WORLD_ADDRESS
+            });
+            setRuleList([]);
+            setRule(undefined);
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
@@ -913,11 +956,11 @@ function RivemuEditor() {
                     <input type="file" ref={incardFileRef} onChange={(e) => handleOnChangeIncardUpload(e)} style={{ display: 'none' }}/>
 
                     <div hidden={!enableRuleEditing}><LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimePicker label="Start (UTC)" value={ruleStart || null} onChange={(newValue: Dayjs | null) => setRuleStart(newValue||undefined)} />
+                        <DateTimePicker label="Start (local)" value={ruleStart || null} onChange={(newValue: Dayjs | null) => setRuleStart(newValue||undefined)} />
                     </LocalizationProvider></div>
 
                     <div hidden={!enableRuleEditing}><LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimePicker label="End (UTC)" value={ruleEnd || null} onChange={(newValue: Dayjs | null) => setRuleEnd(newValue||undefined)} defaultValue={null} />
+                        <DateTimePicker label="End (local)" value={ruleEnd || null} onChange={(newValue: Dayjs | null) => setRuleEnd(newValue||undefined)} defaultValue={null} />
                     </LocalizationProvider></div>
 
                     <Autocomplete
@@ -1072,6 +1115,10 @@ function RivemuEditor() {
                     
                     <button disabled={!ruleName || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRule} hidden={!enableRuleEditing}>
                         Create Rule
+                    </button>
+
+                    <button disabled={!rule || !ready || !user} className="btn mt-2 text-[10px] shadow" onClick={sendRuleDeactivation} hidden={!enableRuleEditing}>
+                        Deactivate Rule
                     </button>
                     </div>
                 </div>
