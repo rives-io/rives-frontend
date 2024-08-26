@@ -167,7 +167,7 @@ export default async function Contest({ params }: { params: { contest_id: string
               !contestIsOpen?
                 <></>
               :
-                <Link href={`/play/rule/${contest.id}`}
+                <Link href={`/play/${contest.id}`}
                 className="bg-rives-purple pixelated-font justify-self-end h-fit text-center py-2 w-full md:w-2/3 hover:scale-110"
                 >
                   PLAY
@@ -247,7 +247,9 @@ export default async function Contest({ params }: { params: { contest_id: string
 
               <div className="flex flex-col">
                 <h1 className="pixelated-font text-xl">Description</h1>
-                <p>{contest.description}</p>
+                <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web'}}>
+                    {contest.description}
+                </pre>
               </div>
 
           </div>

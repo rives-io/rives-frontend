@@ -3,10 +3,10 @@ import { ethers } from "ethers";
 import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain, baseSepolia } from 'viem/chains';
 import { isHex, fromHex, defineChain } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { cartridges, getOutputs, VerifyPayloadProxy } from "../backend-libs/core/lib";
+import { cartridgeInfo, cartridges, getOutputs, rules, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
-import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, CartridgesOutput, CartridgesPayload, RuleInfo, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
 import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated } from "./common";
 import { ConnectedWallet } from "@privy-io/react-auth";
@@ -635,3 +635,29 @@ export async function verifyChain(wallet:ConnectedWallet) {
         }
     }
 }
+
+
+export async function getCartridgeInfo(cartridge_id:string) {
+    let cartridgeWithInfo:CartridgeInfo = await cartridgeInfo(
+        {id:cartridge_id},
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    );
+
+    if (!cartridgeWithInfo.primary && cartridgeWithInfo.primary_id) {
+        cartridgeWithInfo = await cartridgeInfo(
+        {id: cartridgeWithInfo.primary_id},
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        );
+    }
+
+    return cartridgeWithInfo;
+}
+
+
+export async function getRuleInfo(rule_id:string):Promise<RuleInfo|null> {
+    const rulesFound:Array<RuleInfo> = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
+  
+    if (rulesFound.length == 0) return null;
+  
+    return rulesFound[0];
+  }
