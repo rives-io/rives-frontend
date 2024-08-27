@@ -96,7 +96,7 @@ const getCartridgeData = async (cartridgeId:string):Promise<Uint8Array> => {
     //     }
     // );
     
-    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
+    const response = await fetch(buildUrl(envClient.CARTRIDGES_URL, cartridgeId),
         {
             method: "GET",
             headers: {

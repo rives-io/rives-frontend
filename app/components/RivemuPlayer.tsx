@@ -54,12 +54,13 @@ export interface TapeInfo {
 const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
 
-    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
+    const response = await fetch(buildUrl(envClient.CARTRIDGES_URL, cartridgeId),
         {
             method: "GET",
             headers: {
                 "Content-Type": "application/octet-stream",
-            }
+            },
+            mode: 'cors'
         }
     );
     const blob = await response.blob();

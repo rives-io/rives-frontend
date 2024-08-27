@@ -50,5 +50,9 @@ export const envClient = envsafe({
     input: process.env.OLYMPICS_DATA_URL,
     desc: "URL with the JSON that has the Olympics data.",
     default: "https://storage.googleapis.com/rives-vanguard-public/tournament/doom-olympics/leaderboard.json"
-  })
+  }),
+  CARTRIDGES_URL: url({
+    input: process.env.NEXT_PUBLIC_CARTRIDGES_URL,
+    desc: "Cartridges URL."
+  }),
 })
