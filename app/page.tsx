@@ -10,6 +10,7 @@ import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
+import OlympicsBanner from "./components/OlympicsBanner";
 
 export const revalidate = 0 // revalidate data always
 
@@ -123,6 +124,8 @@ export default async function Home() {
   return (
     <main className="gap-8">
       <section className="flex flex-col items-center">
+        <OlympicsBanner/>
+        
         <div className="homepageContainer">
           <h1 className={`text-4xl pixelated-font mb-4`}>Latest Cartridges</h1>
           <div className="flex flex-wrap gap-4 w-fit">
