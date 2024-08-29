@@ -31,6 +31,7 @@ function contestStatusMessage(contest:RuleInfo) {
 
 function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
     const router = useRouter();
+    const [selectedRule, setSelectedRule] = useState(rulesInfo[0]);
     const [modalOpen, setModalOpen] = useState(false);
     const [nTapes, setNTapes] = useState<Record<string,number>>();
     const [userMap, setUserMap] = useState<Record<string, User>>(); //= JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
@@ -111,22 +112,24 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                     leaveFrom="opacity-100 scale-100"
                                     leaveTo="opacity-0 scale-95"
                                 >
-                                    <Dialog.Panel className="w-[720px] h-[360px] transform bg-gray-500 p-4 shadow-xl transition-all flex flex-col items-center">
-                                        <Dialog.Title as="h1" className="text-2xl font-medium mb-4 text-gray-900 pixelated-font">
+                                    <Dialog.Panel className="w-[372px] md:w-[720px] md:h-[376px] transform bg-gray-500 p-4 shadow-xl transition-all flex flex-col items-center">
+                                        <Dialog.Title as="h1" className="text-2xl font-medium text-gray-900 pixelated-font">
                                             Select a play mode
                                         </Dialog.Title>
+                                        <span className='text-xs pixelated-font text-black mb-4'>({selectedRule.name})</span>
                             
                                         <Tab.Group>
-                                            <div className='w-full h-full grid grid-cols-4 gap-2'>
-                                                <Tab.List className="flex flex-col gap-2 h-[224px] overflow-y-scroll">
+                                            <div className='w-full h-full flex flex-col md:grid md:grid-cols-4 gap-2'>
+                                                <Tab.List className="flex gap-2 overflow-x-scroll w-72 md:w-auto md:flex-col md:h-[224px] md:overflow-y-scroll">
                                                     {
                                                         rulesInfo.map((rule, index) => {
                                                             return (
                                                                 <Tab
                                                                 key={rule.id}
-                                                                className={({selected}) => {return selected? "tab-navigation-item-selected":"tab-navigation-item"}}
+                                                                onClick={() => setSelectedRule(rule)}
+                                                                className={({selected}) => {return selected? "tab-navigation-item-selected h-24":"tab-navigation-item h-24"}}
                                                                 >
-                                                                    <span className='text-xl text-left pixelated-font'>{rule.name}</span>
+                                                                    <span className='text-sm md:text-xl text-center md:text-left pixelated-font line-clamp-2'>{rule.name}</span>
                                                                 </Tab>                                                                
                                                             )
                                                         })
@@ -149,7 +152,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                 <Tab.Panel key={rule.id} className="h-full flex flex-1 flex-col justify-between">
                                                                     {
                                                                         rule.name.toLowerCase() == "default"?
-                                                                            <span className='pixelated-font text-left p-2'>
+                                                                            <span className='pixelated-font text-left p-2 h-[224px]'>
                                                                                 This is the standard play mode of the cartridge.
                                                                             </span>
                                                                         :
