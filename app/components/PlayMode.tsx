@@ -8,9 +8,9 @@ import Link from 'next/link';
 import { Dialog, Tab, Transition } from '@headlessui/react';
 import { useRouter } from 'next/navigation';
 import { formatTime, timeToDateUTCString } from '../utils/util';
-import { User } from '@privy-io/react-auth';
 import { tapes } from '../backend-libs/core/lib';
 import { envClient } from '../utils/clientEnv';
+import { getUsersByAddress, User } from '../utils/privyApi';
 
 
 
@@ -33,6 +33,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
     const router = useRouter();
     const [modalOpen, setModalOpen] = useState(false);
     const [nTapes, setNTapes] = useState<Record<string,number>>();
+    const [userMap, setUserMap] = useState<Record<string, User>>(); //= JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
 
     useEffect(() => {
         const getRulesNTapes = async () => {
@@ -50,7 +51,20 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
             return nTapesTmp;
         }
 
+        const getContestCreatorsUser = async () => {
+            let rule:RuleInfo;
+            let userAddresses:Set<string> = new Set();
+            for (let i = 0; i < rulesInfo.length; i++) {
+                rule = rulesInfo[i];
+                userAddresses.add(rule.created_by);
+            }
+
+
+            return JSON.parse(await getUsersByAddress(Array.from(userAddresses)));
+        }
+
         getRulesNTapes().then(setNTapes);
+        getContestCreatorsUser().then(setUserMap);
     }, []);
 
     function handle_play_click() {
@@ -59,6 +73,15 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
         } else {
             setModalOpen(true);
         }
+    }
+
+    if (!nTapes || !userMap) {
+        return (
+            <button disabled
+            className={`bg-rives-purple p-3 flex justify-center`}>
+                <div className='w-6 h-6 border-2 rounded-full border-current border-r-transparent animate-spin'></div>
+            </button>
+        )
     }
 
     return (
@@ -95,7 +118,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                             
                                         <Tab.Group>
                                             <div className='w-full h-full grid grid-cols-4 gap-2'>
-                                                <Tab.List className="flex flex-col gap-2">
+                                                <Tab.List className="flex flex-col gap-2 h-[224px] overflow-y-scroll">
                                                     {
                                                         rulesInfo.map((rule, index) => {
                                                             return (
@@ -119,12 +142,11 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
 
                                                             const contestCreatorAddr = rule.created_by.toLowerCase();
                                                             const formatedContestCreator = `${contestCreatorAddr.slice(0, 6)}...${contestCreatorAddr.substring(contestCreatorAddr.length-4,contestCreatorAddr.length)}`;
-                                                            let contestCreatorUser = null as User|null;
+                                                            const contestCreatorUser = userMap[rule.created_by.toLowerCase()];
                                                           
                                                         
                                                             return (
                                                                 <Tab.Panel key={rule.id} className="h-full flex flex-1 flex-col justify-between">
-                                                                    {/* <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id} /> */}
                                                                     {
                                                                         rule.name.toLowerCase() == "default"?
                                                                             <span className='pixelated-font text-left p-2'>
@@ -159,17 +181,17 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                                         <span className="text-gray-400">Contest Creator</span>
                                                                                         {
                                                                                             contestCreatorUser?
-                                                                                            <Link className="text-rives-purple hover:underline"
-                                                                                            title={rule.created_by}
-                                                                                            href={`/profile/${rule.created_by}`}>
-                                                                                                {rule.name}
-                                                                                            </Link>
+                                                                                                <Link className="text-rives-purple hover:underline"
+                                                                                                title={rule.created_by}
+                                                                                                href={`/profile/${rule.created_by}`}>
+                                                                                                    {contestCreatorUser.name}
+                                                                                                </Link>
                                                                                             :
-                                                                                            <Link className="text-rives-purple hover:underline"
-                                                                                            title={rule.created_by}
-                                                                                            href={`/profile/${rule.created_by}`}>
-                                                                                                {formatedContestCreator}
-                                                                                            </Link>  
+                                                                                                <Link className="text-rives-purple hover:underline"
+                                                                                                title={rule.created_by}
+                                                                                                href={`/profile/${rule.created_by}`}>
+                                                                                                    {formatedContestCreator}
+                                                                                                </Link>  
                                                                                         }
 
                                                                                         {/* {
@@ -210,7 +232,6 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                                     <h1 className="pixelated-font text-lg">Description</h1>
                                                                                     <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web'}}>
                                                                                         {rule.description}
-                                                                                        {rule.description}{rule.description}{rule.description}{rule.description}{rule.description}
                                                                                     </pre>
                                                                                 </div>
 
