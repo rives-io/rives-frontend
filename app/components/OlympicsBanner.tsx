@@ -5,14 +5,15 @@ import CartesiLogo from "@/public/cartesi_icon.png";
 import winnerAchievementIcon from "@/public/contest.png";
 import participationAchievementIcon from "@/public/contestparticipant.png";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import olympicsLogo from "@/public/doom-olympics-logo.png";
 
 
 function OlympicsBanner() {
   return (
     <Link href={"/olympics"}
-    className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 place-content-center bg-[#fefa97] text-black p-8 mb-8'>
+    className='homepageContainer lg:w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 place-content-center bg-[#fefa97] text-black p-8 mb-8'>
         <div className='flex flex-col gap-2 items-center'>
-            <div className='h-32 w-48 border'></div>
+            <Image src={olympicsLogo} width={192} alt="" />
             <div className='flex flex-col items-center'>
                 <span className='pixelated-font text-xl'>DOOM OLYMPICS</span>
                 <span className='pixelated-font text-sm'>SEP 12-19</span>
