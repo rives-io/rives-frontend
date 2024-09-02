@@ -4,11 +4,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import rivesCheck from "@/public/default_profile.png";
 import { getUsersByAddress, User } from '../utils/privyApi';
+import Accordion from '../components/Accordion';
 
 export const revalidate = 0 // revalidate data always
 
 async function OlympicsPage() {
     const data = await getOlympicsData("");
+    const accordionItems = [
+        {
+            title: "Prizes",
+            content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquam fringilla luctus. Suspendisse potenti. Sed at ex ut est volutpat placerat id at massa. Vestibulum in ipsum ornare, tristique arcu et, aliquam ligula. Donec dapibus eu elit eget rutrum. Fusce facilisis, purus sit amet molestie cursus, purus elit commodo sapien, eget dictum lorem metus at mauris. Donec tincidunt vel justo eu blandit. Donec ac tortor commodo, sodales nibh tincidunt, porta nunc. Maecenas non felis rutrum, vulputate libero pulvinar, tincidunt erat."
+        },
+        {
+            title: "How to participate?",
+            content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum auctor convallis lacus, nec faucibus ligula ullamcorper eget. Duis at egestas."
+        }
+    ];
 
     if (!data) {
         return (
@@ -28,7 +39,9 @@ async function OlympicsPage() {
 
     return (
         <main>
-            <section className='hidden xl:flex justify-center overflow-auto'>
+            <section className='hidden xl:flex flex-col gap-4 items-center overflow-auto'>
+                <Accordion items={accordionItems}/>
+
                 <table className="text-left border-black block max-h-[580px]">
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
                         <tr className='bg-black'>
@@ -131,9 +144,10 @@ async function OlympicsPage() {
                 </table>
             </section>
 
-            <section className='xl:hidden flex justify-center'>
-    
-                <table>
+            <section className='xl:hidden grid gap-4 items-center'>
+                <Accordion items={accordionItems}/>
+
+                <table className=''>
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
                         <tr className='bg-black'>
                             <th scope="col" className='px-2'>
@@ -204,8 +218,10 @@ async function OlympicsPage() {
                                                     if (!player_contest) {
                                                         return (
                                                             <div key={player_contest_key} className='px-2 grid grid-cols-2 w-full'>
-                                                                <span className='pixelated-font'>{contest.name}:</span>
-                                                                <span className='pixelated-font place-self-end'>-</span>
+                                                                <div className='text-xs md:text-sm hidden sm:block'>
+                                                                    <span className='pixelated-font line-clamp-1'>{contest.name}:</span>    
+                                                                </div>
+                                                                <span className='pixelated-font text-xs md:text-sm place-self-center sm:place-self-end col-span-2 sm:col-span-1'>-</span>
                                                             </div>
                                                         )
                                                     }
@@ -214,11 +230,14 @@ async function OlympicsPage() {
                                                         <div key={player_contest_key} className='px-2 w-full'>
                                                             <Link href={`/tapes/${player_contest.tape_id}`} 
                                                             className='hover:text-rives-purple grid grid-cols-2 gap-2'>
-                                                                <span className='pixelated-font' title={`score: ${player_contest.score}`}>
-                                                                    {contest.name}:
-                                                                </span>
+                                                                <div className='text-xs md:text-sm hidden sm:block'>
+                                                                    <span 
+                                                                    className='pixelated-font line-clamp-1' title={`score: ${player_contest.score}`}>
+                                                                        {contest.name}:
+                                                                    </span>
+                                                                </div>
 
-                                                                <span className='pixelated-font place-self-end'>
+                                                                <span className='pixelated-font text-xs md:text-sm place-self-center sm:place-self-end col-span-2 sm:col-span-1'>
                                                                     {player_contest.rank} ({player_contest.points} points)
                                                                 </span>
                                                             </Link>
