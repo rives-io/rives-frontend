@@ -22,8 +22,10 @@ function Accordion({items}:{items:Array<{title:string, content:string}>}) {
                                     />
                                 </Disclosure.Button>
 
-                                <Disclosure.Panel className="px-4 pb-2 pt-4 text-white">
-                                    {item.content}
+                                <Disclosure.Panel className="p-2 text-white">
+                                    <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web'}}>
+                                        {item.content}
+                                    </pre>
                                 </Disclosure.Panel>
                             </>
                             )}
