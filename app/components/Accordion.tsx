@@ -3,9 +3,10 @@
 
 import { Disclosure } from '@headlessui/react'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import React from 'react';
 
 
-function Accordion({items}:{items:Array<{title:string, content:string}>}) {
+function Accordion({items}:{items:Array<{title:string, content:React.JSX.Element}>}) {
   return (
         <div className="mx-auto w-full bg-black text-black p-2">
             {
@@ -23,9 +24,7 @@ function Accordion({items}:{items:Array<{title:string, content:string}>}) {
                                 </Disclosure.Button>
 
                                 <Disclosure.Panel className="p-2 text-white">
-                                    <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web'}}>
-                                        {item.content}
-                                    </pre>
+                                    {item.content}
                                 </Disclosure.Panel>
                             </>
                             )}
