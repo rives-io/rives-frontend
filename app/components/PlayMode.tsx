@@ -123,6 +123,12 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                 <Tab.List className="flex gap-2 overflow-x-scroll w-72 md:w-auto md:flex-col md:h-[224px] md:overflow-y-scroll">
                                                     {
                                                         rulesInfo.map((rule, index) => {
+                                                            const status = getContestStatus(rule);
+                                                            const isContest = rule.start && rule.end;
+                                                            const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
+
+                                                            if (!contestIsOpen) return <></>;
+                                                            
                                                             return (
                                                                 <Tab
                                                                 key={rule.id}
@@ -142,6 +148,8 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                             const status = getContestStatus(rule);
                                                             const isContest = rule.start && rule.end;
                                                             const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
+
+                                                            if (!contestIsOpen) return <></>;
 
                                                             const contestCreatorAddr = rule.created_by.toLowerCase();
                                                             const formatedContestCreator = `${contestCreatorAddr.slice(0, 6)}...${contestCreatorAddr.substring(contestCreatorAddr.length-4,contestCreatorAddr.length)}`;

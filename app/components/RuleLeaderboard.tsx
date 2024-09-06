@@ -240,14 +240,14 @@ function RuleLeaderboard({cartridge_id, rule}:{
                                 <tr key={index}
                                 className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-rives-gray":""}`}
                                 >
-                                    <td className=''>
+                                    <td className='linkTableData'>
                                         <Link href={`/tapes/${tapeId}`}>
                                             {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
                                         </Link>
                                     </td>
                                     {
                                         !user?
-                                            <td>
+                                            <td className='linkTableData'>
                                                 <Link href={`/tapes/${tapeId}`} className='flex items-center gap-2'>
                                                     <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
                                                     <span className='break-all' title={sender}>
@@ -256,7 +256,7 @@ function RuleLeaderboard({cartridge_id, rule}:{
                                                 </Link>
                                             </td>
                                         :
-                                            <td>
+                                            <td className='linkTableData'>
                                                 <Link href={`/tapes/${tapeId}`} className='flex items-center gap-2'>
                                                     <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
                                                     <span title={sender}>{user.name}</span>
@@ -264,12 +264,12 @@ function RuleLeaderboard({cartridge_id, rule}:{
                                             </td>
                                     }
 
-                                    <td>
+                                    <td className='linkTableData'>
                                         <Link href={`/tapes/${tapeId}`}>
                                             {timeToDateUTCString(Number(tapets))}
                                         </Link>
                                     </td>
-                                    <td className=''>
+                                    <td className='linkTableData'>
                                         <Link href={`/tapes/${tapeId}`}>
                                             {score}
                                         </Link>

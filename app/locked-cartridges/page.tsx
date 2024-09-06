@@ -55,27 +55,27 @@ export default async function LockedCartridges() {
                             lockedCartridges.map((cartridge: CartridgeInfo, index: number) => {
                                 return (
                                     <tr key={index} className="hover:bg-rives-purple">
-                                        <td>
+                                        <td className="linkTableData">
                                             <Link href={`/cartridges/${cartridge.id}`}>
                                                 <span className="me-6">{index+1}</span>
                                             </Link>
                                         </td>
-                                        <td>
+                                        <td className="linkTableData">
                                             <Link href={`/cartridges/${cartridge.id}`}>
                                                 {cartridge.id}
                                             </Link>
                                         </td>
-                                        <td>
+                                        <td className="linkTableData">
                                             <Link href={`/cartridges/${cartridge.id}`}>
                                                 {cartridge.name}
                                             </Link>
                                         </td>
-                                        <td>
+                                        <td className="linkTableData">
                                             <Link href={`/cartridges/${cartridge.id}`}>
                                                 {timeToDateUTCString(cartridge.created_at)}
                                             </Link>
                                         </td>
-                                        <td>
+                                        <td className="linkTableData">
                                             <Link href={`/cartridges/${cartridge.id}`}>
                                                 {cartridge.user_address}
                                             </Link>
