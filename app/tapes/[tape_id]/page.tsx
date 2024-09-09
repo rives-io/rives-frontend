@@ -58,7 +58,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
-    res = await rules({id: ruleIdFromBytes(tape.rule_id)}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
+    res = await rules({id: ruleIdFromBytes(tape.rule_id), enable_deactivated: true}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const contest:RuleInfo = res.data[0];
 
     const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});

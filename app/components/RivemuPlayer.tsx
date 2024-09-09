@@ -54,12 +54,13 @@ export interface TapeInfo {
 const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
 
-    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
+    const response = await fetch(buildUrl(envClient.CARTRIDGES_URL, cartridgeId),
         {
             method: "GET",
             headers: {
                 "Content-Type": "application/octet-stream",
-            }
+            },
+            mode: 'cors'
         }
     );
     const blob = await response.blob();
@@ -110,6 +111,7 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
     const data = await rules(
         {
             id:formatedRuleId,
+            enable_deactivated: true,
             full:true
         },
         {
@@ -419,7 +421,7 @@ function RivemuPlayer(
         canvasPlaying = false;
         if (isTape && totalFrames && totalFrames != 0)
             setCurrProgress(100);
-        if (!isTape && rule && signerAddress && !restarting) {
+        if (!isTape && rule && !rule.deactivated && signerAddress && !restarting) {
             let score: number | undefined = undefined;
             if (scoreFunctionEvaluator && decoder.decode(outcard.slice(0,4)) == 'JSON') {
                 const outcard_str = decoder.decode(outcard);

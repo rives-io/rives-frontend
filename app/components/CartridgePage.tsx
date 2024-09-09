@@ -17,6 +17,7 @@ import { timeToDateUTCString } from '../utils/util';
 import { getUsersByAddress, User } from '../utils/privyApi';
 import CartridgeUnlocker from './CartridgeUnlocker';
 import CartridgeAssetManager from './CartridgeAssetManager';
+import PlayMode from './PlayMode';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
@@ -38,8 +39,18 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
     return (
         <main>
             <section className='flex flex-col items-center gap-8'>
-                <div className='cartridgePageCover flex justify-center relative'>
-                    <Image className='pixelated-img' style={{objectFit: "contain"}} fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
+                <div className='flex flex-col gap-4'>
+                    <div className='cartridgePageCover flex justify-center relative'>
+                        <Image 
+                        className='pixelated-img' 
+                        style={{objectFit: "contain"}} 
+                        fill 
+                        quality={100} 
+                        src={"data:image/png;base64,"+cartridge.cover} 
+                        alt={"Not found"} />
+                    </div>
+
+                    <PlayMode rulesInfo={rulesInfo}/>
                 </div>
 
                 <div className='w-full flex flex-col gap-2'>
@@ -126,11 +137,11 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Menu.Items>
                         </Menu>
 
-                        <Link aria-disabled={!selectedRule || !contestIsOpen} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
-                        href={`/play/rule/${selectedRule?.id}`} 
-                        className={`${!selectedRule || !contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
+                        {/* <Link aria-disabled={!selectedRule || !contestIsOpen || selectedRule.deactivated} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
+                        href={`/play/${selectedRule?.id}`} 
+                        className={`${!selectedRule || !contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
                             Play
-                        </Link>
+                        </Link> */}
                         
                     </div>
 

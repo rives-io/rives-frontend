@@ -30,6 +30,8 @@ import { CartridgeInfo, InfoCartridge, InsertCartridgePayloadProxy } from "../ba
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import Link from 'next/link';
+import CartridgeModelSetup from './CartridgeModelSetup';
+import { cartridgeIdFromBytes } from '../utils/util';
 
 let canvasPlaying = false;
 
@@ -85,6 +87,9 @@ function RivemuUploader() {
     
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
 
+    const [cartridgeInserted, setCartridgeInserted] = useState<boolean>();
+    const [submittingTx, setSubmittingTx] = useState<boolean>();
+
     // signer
     const {user, ready, connectWallet} = usePrivy();
     const {wallets} = useWallets();
@@ -136,6 +141,16 @@ function RivemuUploader() {
         return "Send Cartridge to RIVES";
     }
 
+    function clean() {
+        setTape(new Uint8Array([]));
+        setOutcard(undefined);
+        setCartridgeData(undefined);
+        setSelectedCartridge(undefined);
+        setInfoCartridge(undefined);
+        setCartridgeInserted(false);
+        setSubmittingTx(false);
+    }
+
     function handleOnChangeCartridgeUpload(e: any) {
         changeCartridgeUpload(e.target.files[0]);
     }
@@ -144,11 +159,7 @@ function RivemuUploader() {
         const reader = new FileReader();
         reader.onload = async (readerEvent) => {
             rivemuRef.current?.stop();
-            setTape(new Uint8Array([]));
-            setOutcard(undefined);
-            setCartridgeData(undefined);
-            setSelectedCartridge(undefined);
-            setInfoCartridge(undefined);
+            clean();
             const data = readerEvent.target?.result;
             if (data) {
                 setCartridgeData(new Uint8Array(data as ArrayBuffer));
@@ -329,19 +340,23 @@ function RivemuUploader() {
             data: ethers.utils.hexlify(cartridgeData)
         }
         try {
+            setSubmittingTx(true);
             await insertCartridge(signer, envClient.DAPP_ADDR, inputData, {
                 sync:false, 
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
                 inputBoxAddress: envClient.WORLD_ADDRESS
             });
             setInfoCartridge(undefined);
+            setSubmittingTx(false);
+            setCartridgeInserted(true);
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
+            setCartridgeInserted(undefined);
         }
+        setSubmittingTx(false);
     }
 
     return (
@@ -462,6 +477,7 @@ function RivemuUploader() {
                     <input type="file" ref={incardFileRef} onChange={(e) => handleOnChangeIncardUpload(e)} style={{ display: 'none' }}/>
 
                 </div>
+                { !cartridgeInserted ?
                 <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
 
                     <div className='flex justify-end'>
@@ -483,13 +499,25 @@ function RivemuUploader() {
                     </div>
 
                     <div className='grid grid-cols-1'>
-                        <button disabled={!cartridgeData || !infoCartridge?.name || !wallet} className="btn mt-2 text-sm" onClick={sendCartridge}
+                        <button disabled={!cartridgeData || !infoCartridge?.name || !wallet || cartridgeInserted || submittingTx} className="btn mt-2 text-sm" onClick={sendCartridge}
                             title={getTitleMessage()}>
                             Upload Cartridge
                         </button>
 
                     </div>
                 </div>
+                : <>
+                {cartridgeData ? 
+                    <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
+                        <div className='grid grid-cols-1 gap-4 border border-stone-500 p-4 text-white'>
+                            <CartridgeModelSetup cartridgeId={cartridgeIdFromBytes(ethers.utils.hexlify(cartridgeData))} 
+                                reloadFn={() => {}} cancelFn={clean} 
+                            /> 
+                        </div>
+                    </div>
+                    : <></>}  
+                </>
+                }
 
             {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
             </div>

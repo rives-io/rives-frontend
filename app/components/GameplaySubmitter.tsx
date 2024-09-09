@@ -5,11 +5,11 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { calculateTapeId, extractTxError, formatRuleIdToBytes, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash, verifyChain } from "../utils/util";
+import { calculateTapeId, extractTxError, formatRuleIdToBytes, getChain, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash, verifyChain } from "../utils/util";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 import { CartridgeInfo, VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
-import { registerExternalVerification, verify } from "../backend-libs/core/lib";
+import { models } from "../backend-libs/core/lib";
 import { Dialog, Transition } from '@headlessui/react';
 import { TwitterShareButton, TwitterIcon } from 'next-share';
 import { SOCIAL_MEDIA_HASHTAGS } from "../utils/common";
@@ -20,8 +20,9 @@ import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
-import { buyCartridge, getUserCartridgeBondInfo } from "../utils/assets";
+import { buyCartridge, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
 import CartridgeCard from "./CartridgeCard";
+import { createWalletClient, custom, toFunctionSelector } from "viem";
 
 
 enum MODAL_STATE {
@@ -94,10 +95,11 @@ function GameplaySubmitter() {
     const [amountOwned,setAmountOwned] = useState<BigNumber>();
 
     const [cartridge, setCartridge] = useState<CartridgeInfo>();
-    const [cartridgePrice, setCartridgePrice] = useState<BigNumber>();
+    const [price, setPrice] = useState<BigNumber>();
     const [currency, setCurrency] = useState<{
         symbol:string, decimals:number, token:string|undefined
     }>({symbol: "ETH", decimals: 18, token: undefined});
+    const [submitModel, setSubmitModel] = useState<TAPE_SUBMIT_MODEL>();
 
     // modal state variables
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -143,11 +145,11 @@ function GameplaySubmitter() {
             setModalState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
             return;
         }
-        getCartridgesAmountOwned();
+        prepareModal();
         //prepareSubmission();
     }, [gameplay])
 
-    async function getCartridgesAmountOwned() {
+    async function prepareModal() {
         if (ready && !user) {
             setAmountOwned(undefined);
             return;
@@ -157,32 +159,64 @@ function GameplaySubmitter() {
             setAmountOwned(undefined);
             return;
         }
-        const bond = await getUserCartridgeBondInfo(user!.wallet!.address.toLowerCase(), gameplay.cartridge_id);
-        if (bond) {
-            setAmountOwned(bond.amountOwned);
-            
-            if (bond.amountOwned?.gt(0)) {
-                await prepareSubmission();
-                setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
-            } else {
-                setCartridgePrice(bond.buyPrice);
-                setCurrency({
-                    symbol: bond.currencySymbol, 
-                    decimals: bond.currencyDecimals, 
-                    token: bond.currencyToken
-                });
+        const model = await getTapeSubmissionModelFromCartridge(gameplay.cartridge_id);
+        setSubmitModel(model[0]);
+
+        if (model[0] == TAPE_SUBMIT_MODEL.FREE) {
+            const res:CartridgeInfo = await cartridgeInfo(
+                {id: gameplay.cartridge_id},
+                {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+            );
+            setCartridge(res);
+            await prepareSubmission();
+            setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
+
+        } else if (model[0] == TAPE_SUBMIT_MODEL.OWNERSHIP) {
+            const bond = await getUserCartridgeBondInfo(user!.wallet!.address.toLowerCase(), gameplay.cartridge_id);
+            if (bond) {
+                setAmountOwned(bond.amountOwned);
                 
+                if (bond.amountOwned?.gt(0)) {
+                    await prepareSubmission();
+                    setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
+                } else {
+                    setPrice(bond.buyPrice);
+                    setCurrency({
+                        symbol: bond.currencySymbol, 
+                        decimals: bond.currencyDecimals, 
+                        token: bond.currencyToken
+                    });
+                    
+                    const res:CartridgeInfo = await cartridgeInfo(
+                        {id: gameplay.cartridge_id},
+                        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+                    );
+
+                    setCartridge(res);
+                    setModalState({isOpen: true, state: MODAL_STATE.BUY});
+                    
+                    await prepareSubmission();
+                }
+            }
+        } else if (model[0] == TAPE_SUBMIT_MODEL.FEE) { 
+            const priceInfo = await getSubmitPrice(model[1]);
+
+            if (priceInfo) {
+                setPrice(BigNumber.from(priceInfo.value));
+                setCurrency({
+                    symbol: priceInfo.symbol, 
+                    decimals: priceInfo.decimals, 
+                    token: priceInfo.token
+                });
                 const res:CartridgeInfo = await cartridgeInfo(
                     {id: gameplay.cartridge_id},
                     {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
                 );
-
                 setCartridge(res);
-                setModalState({isOpen: true, state: MODAL_STATE.BUY});
-                
                 await prepareSubmission();
+                setModalState({isOpen: true, state: MODAL_STATE.SUBMIT});
             }
-        }
+        } 
     }
     async function prepareSubmission() {
         try {
@@ -230,14 +264,15 @@ function GameplaySubmitter() {
 
             return;
         }
+        if (!models['VerifyPayloadProxy']) return;
+        const exporter = models['VerifyPayloadProxy'].exporter;
+        if (!exporter) return;
+        const abiTypes = models['VerifyPayloadProxy'].abiTypes;
 
         // get cartridgeInfo asynchronously
         cartridgeInfo({id:gameplay.cartridge_id},{decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL})
         .then(setGameInfo);
 
-        // submit the gameplay
-        const provider = await wallet.getEthereumProvider();
-        const signer = new ethers.providers.Web3Provider(provider, 'any').getSigner();
         const inputData: VerifyPayloadProxy = {
             rule_id: formatRuleIdToBytes(gameplay.rule_id),
             outcard_hash: '0x' + gameplay.outcard.hash,
@@ -245,14 +280,49 @@ function GameplaySubmitter() {
             claimed_score: gameplay.score || 0,
             tapes:gameplay.tapes||[],
             in_card:gameplay.in_card ? ethers.utils.hexlify(gameplay.in_card):'0x'
-        }
+        };
+
+        const functionPayload = exporter(inputData);
+
+        const selector = toFunctionSelector(`core.register_external_verification(${abiTypes.join(',')})`);
+
+        const payload = selector + functionPayload.replace('0x','');
+
+        // submit the gameplay
         try {
-            setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
-            const receipt:ContractReceipt = await registerExternalVerification(signer, envClient.DAPP_ADDR, inputData, {
-                sync:false, 
-                cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
-                inputBoxAddress: envClient.WORLD_ADDRESS
-            }) as ContractReceipt;
+            await verifyChain(wallet);
+
+            const provider = await wallet.getEthereumProvider();
+            const walletClient = createWalletClient({
+                chain: getChain(envClient.NETWORK_CHAIN_ID),
+                transport: custom(provider)
+            });
+        
+            let value:bigint = BigInt(0);
+            if (price?.gt(0))
+                if (!currency.token) {
+                    value = price.toBigInt();
+                } else {
+                    // const allowance: BigNumber = await erc20Contract.allowance(signerAddress,cartridgeContract.address);
+                    // if (allowance.lt(slippage)) {
+                    //     const approveTx = await erc20Contract.approve(cartridgeContract.address,slippage.sub(allowance));
+                    //     const approveTxReceipt = await approveTx.wait(1);
+                    // }
+                }
+        
+            const { request } = await publicClient.simulateContract({
+                account: wallet.address as `0x${string}`,
+                address: envClient.WORLD_ADDRESS as `0x${string}`,
+                abi: worldAbi,
+                functionName: 'addInput',
+                args: [envClient.DAPP_ADDR, payload],
+                value: value
+            });
+            const txHash = await walletClient.writeContract(request);
+        
+            await publicClient.waitForTransactionReceipt( 
+                { hash: txHash }
+            )
         } catch (error) {
             console.log(error)
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
@@ -327,12 +397,12 @@ function GameplaySubmitter() {
         let modalBodyContent:JSX.Element;
 
         if (modalState.state == MODAL_STATE.BUY) {
-            let buyPriceText = cartridgePrice == undefined? "":`Collect (${parseFloat(
-                ethers.utils.formatUnits(cartridgePrice, currency.decimals))
+            let buyPriceText = price == undefined? "":`Collect (${parseFloat(
+                ethers.utils.formatUnits(price, currency.decimals))
                 .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
             
-            if (cartridgePrice?.eq(0)) {
-                buyPriceText = "Collect (FREE)";
+            if (price?.eq(0)) {
+                buyPriceText = `Collect (- ${currency.symbol})`;
             }
             modalBodyContent = (
                 <>
@@ -371,6 +441,16 @@ function GameplaySubmitter() {
             )
 
         } else if (modalState.state == MODAL_STATE.SUBMIT) {
+            let submitText = "Submit";
+            if (submitModel == TAPE_SUBMIT_MODEL.FEE) {
+                submitText = price == undefined? "Submit":`Submit (${parseFloat(
+                    ethers.utils.formatUnits(price, currency.decimals))
+                    .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
+                
+                if (price?.eq(0)) {
+                    submitText = `Submit (- ${currency.symbol})`;
+                }
+            }
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
@@ -402,7 +482,7 @@ function GameplaySubmitter() {
                         type="button"
                         onClick={submitLog}
                         >
-                            Submit
+                            {submitText}
                         </button>
                     </div>
                 </>
