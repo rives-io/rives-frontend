@@ -10,6 +10,7 @@ import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
+import OlympicsBanner from "./components/OlympicsBanner";
 
 export const revalidate = 0 // revalidate data always
 
@@ -123,8 +124,10 @@ export default async function Home() {
   return (
     <main className="gap-8">
       <section className="flex flex-col items-center">
+        <OlympicsBanner/>
+        
         <div className="homepageContainer">
-          <h1 className={`text-4xl pixelated-font`}>Latest Cartridges</h1>
+          <h1 className={`text-4xl pixelated-font mb-4`}>Latest Cartridges</h1>
           <div className="flex flex-wrap gap-4 w-fit">
             {
               cartridges.map((cartridge, index) => {
@@ -137,7 +140,7 @@ export default async function Home() {
 
       <section className="flex flex-col items-center">
         <div className="homepageContainer">
-          <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
+          <h1 className={`text-4xl pixelated-font mb-4`}>Latest Tapes</h1>
           <div className="flex flex-wrap gap-4 w-fit">
             {
               tapes.map((tape, index) => {
@@ -150,7 +153,7 @@ export default async function Home() {
 
       <section className="flex flex-col items-center">
         <div className="homepageContainer">
-          <h1 className={`text-4xl pixelated-font`}>Open Contests</h1>
+          <h1 className={`text-4xl pixelated-font mb-4`}>Open Contests</h1>
           <div className={`flex flex-wrap gap-4 justify-center ${contests.length < 2? "md:justify-start":"md:justify-between"}`}>
             {
               contests.length == 0?
@@ -174,7 +177,7 @@ export default async function Home() {
 
       <section className="flex flex-col items-center">
         <div className="homepageContainer">
-          <h1 className={`text-4xl pixelated-font`}>Latest Tapes</h1>
+          <h1 className={`text-4xl pixelated-font mb-4`}>Stats</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
             <div className='p-8 bg-rives-gray flex flex-col text-center'>
               <span className={`text-3xl pixelated-font`}>Total Cartridges Created</span>
