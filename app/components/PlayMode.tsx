@@ -127,7 +127,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                             const isContest = rule.start && rule.end;
                                                             const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
-                                                            if (!contestIsOpen) return <></>;
+                                                            if (!contestIsOpen || selectedRule.deactivated) return <></>;
                                                             
                                                             return (
                                                                 <Tab
@@ -149,7 +149,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                             const isContest = rule.start && rule.end;
                                                             const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
-                                                            if (!contestIsOpen) return <></>;
+                                                            if (!contestIsOpen || selectedRule.deactivated) return <></>;
 
                                                             const contestCreatorAddr = rule.created_by.toLowerCase();
                                                             const formatedContestCreator = `${contestCreatorAddr.slice(0, 6)}...${contestCreatorAddr.substring(contestCreatorAddr.length-4,contestCreatorAddr.length)}`;

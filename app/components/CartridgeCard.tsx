@@ -82,8 +82,8 @@ export default function CartridgeCard(
                         }
                     });
                 } else {
-                    setCurrentPrice("Blocked");
-                    setPriceBg("bg-red-400");
+                    setCurrentPrice("Demo");
+                    setPriceBg("bg-slate-400");
                 }
             });
         }
