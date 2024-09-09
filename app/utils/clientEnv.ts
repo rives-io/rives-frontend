@@ -55,4 +55,20 @@ export const envClient = envsafe({
     input: process.env.NEXT_PUBLIC_CARTRIDGES_URL,
     desc: "Cartridges URL."
   }),
+  CARTRIDGE_FREE_INSERTION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_CARTRIDGE_FREE_INSERTION_MODEL,
+    desc: "Cartridges insertion model address."
+  }),
+  TAPE_FREE_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_FREE_SUBMISSION_MODEL,
+    desc: "Free tape submission model address."
+  }),
+  TAPE_OWNERSHIP_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_OWNERSHIP_SUBMISSION_MODEL,
+    desc: "Ownership tape submission model address."
+  }),
+  TAPE_FEE_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_FEE_SUBMISSION_MODEL,
+    desc: "Fee tape submission model address."
+  }),
 })

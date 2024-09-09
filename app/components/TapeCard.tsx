@@ -102,8 +102,18 @@ export default function TapeCard({tapeInput, creator, deactivateLink=false}:{tap
 
         if (tapeId) {
             getTapeBondInfo(tapeId,true).then((bond: BondInfo|null) => {
-                if (bond && bond.buyPrice)
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+                if (bond)
+                    if (bond.currentSupply.eq(bond.steps[bond.steps.length - 1].rangeMax)) {
+                        setCurrentPrice(`Sold out`);
+                    } else if (bond.buyPrice)
+                        if (bond.buyPrice.eq(0)) {
+                            setCurrentPrice(`- ${bond.currencySymbol}`);
+                        } else {
+                            setCurrentPrice(`${parseFloat(
+                                ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals))
+                                .toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`
+                            );
+                        }
             });
         }
     

@@ -2,7 +2,7 @@
 
 
 import { extractTxError, formatCartridgeIdToBytes, getChain } from "../utils/util";
-import { createPublicClient, formatUnits, getContract, GetContractReturnType, http, PublicClient, WalletClient } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, getContract, GetContractReturnType, http, PublicClient, WalletClient } from "viem";
 
 import { envClient } from "../utils/clientEnv";
 import { VerificationOutput, getOutputs, CartridgeEvent } from "../backend-libs/core/lib";
@@ -13,11 +13,12 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, sellCartridge, validateCartridge } from "../utils/assets";
+import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
 import Link from "next/link";
+import CartridgeModelSetup from "./CartridgeModelSetup";
 
 const cartridgeAbi = cartridgeAbiFile;
 const chain = getChain(envClient.NETWORK_CHAIN_ID);
@@ -26,24 +27,9 @@ const publicClient = createPublicClient({
     transport: http(),
 });
 
-const erc20abi = [
-    // Read-Only Functions
-    "function balanceOf(address owner) view returns (uint256)",
-    "function decimals() view returns (uint8)",
-    "function symbol() view returns (string)",
-    "function allowance(address owner, address spender) view returns (uint256)",
-
-    // Authenticated Functions
-    "function transfer(address to, uint256 amount) returns (bool)",
-    "function approve(address spender, uint256 amount) returns (bool)",
-
-    // Events
-    "event Transfer(address indexed from, address indexed to, uint256 amount)",
-    "event Approval(address indexed owner, address indexed spender, uint256 value)"
-];
-
 enum MODAL_STATE {
     NOT_PREPARED,
+    SETUP,
     BUY,
     SELL,
     VALIDATE,
@@ -86,6 +72,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     const [cartridgeExists, setCartridgeExists] = useState<boolean>();
     const [validated, setValidated] = useState<boolean>();
     const [buyPrice, setBuyPrice] = useState<bigint>();
+    const [soldOut,setSoldOut] = useState<boolean>(false);
     const [sellPrice, setSellPrice] = useState<bigint>();
     const [currency, setCurrency] = useState({symbol: "ETH", decimals: 18});
     const [unclaimedFees,setUnclaimedFees] = useState<bigint>();
@@ -94,7 +81,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     
     // contract instance used for execute view functions (contract.read.method)
     const [cartridgeContractReading, setCartridgeContractReading] = useState<GetContractReturnType<typeof cartridgeAbi.abi, PublicClient | WalletClient>>();
-    const [erc20Contract, setErc20Contract] = useState<GetContractReturnType<typeof erc20abi, PublicClient | WalletClient>>();
+    const [erc20Contract, setErc20Contract] = useState<GetContractReturnType<typeof erc20Abi, PublicClient | WalletClient>>();
 
     // Modal State
     const [modalState, setModalState] = useState({isOpen: false, state: MODAL_STATE.NOT_PREPARED});
@@ -102,6 +89,8 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     const [modalPreviewPrice, setModalPreviewPrice] = useState<bigint>();
     const [modalSlippage, setModalSlippage] = useState<number>(0);
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
+    const [tapeSubmissionModel, setTapeSubmissionModel] = useState<[string,string]|null>();
+    const [tapeSubmitPriceText, setTapeSubmitPriceText] = useState<string>();
 
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge.id).slice(2);
     const userAddress = (ready && authenticated)? user?.wallet?.address.toLowerCase(): "";
@@ -115,24 +104,8 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
             setCartridgeOwner(cartridge.user_address);
             getCartridgeOutput(cartridge.id).then((out) => setCartridgeOutput(out))
         }
+        setupTapeSubmissionModel();
 
-        publicClient.getCode({
-            address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
-        }).then((bytecode) => {
-            if (bytecode == '0x') {
-                console.log("Couldn't get cartridge contract")
-                return;
-            }
-
-            const contract = getContract({
-                address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
-                abi: cartridgeAbi.abi,
-                client: publicClient,
-            });
-            setCartridgeContractReading(contract);
-
-            getCartridgeMarketInfo(contract);
-        });
     }, [])
 
     useEffect(() => {
@@ -153,6 +126,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     }, [cartridgeContractReading, user, reload])
 
     useEffect(() => {
+        setupTapeSubmissionModel();
         if (!cartridgeContractReading) return;
         
         getCartridgeMarketInfo(cartridgeContractReading);
@@ -174,6 +148,10 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         if (bond[0].currentSupply < bond[0].steps[bond[0].steps.length - 1].rangeMax) {
             const buyPriceData = (await contract.read.getCurrentBuyPrice([`0x${cartridgeIdB32}`, 1])) as Array<bigint>;
             setBuyPrice(buyPriceData[0]);
+            setSoldOut(false);
+        } else {
+            setBuyPrice(undefined);
+            setSoldOut(true);
         }
 
         const allUnclaimed = bond[0].unclaimed.mint + bond[0].unclaimed.burn + bond[0].unclaimed.consume + 
@@ -183,6 +161,8 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         if (bond[0].currentSupply > BigInt(0)) {
             const sellPriceData = await (contract.read.getCurrentSellPrice([`0x${cartridgeIdB32}`, 1])) as Array<bigint>;
             setSellPrice(sellPriceData[0]);
+        } else {
+            setSellPrice(undefined);
         }
 
         if (bond[0].currencyToken != "0x0000000000000000000000000000000000000000") {
@@ -203,7 +183,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
 
             const contract = getContract({
                 address: bond[0].currencyToken as `0x${string}`,
-                abi: erc20abi,
+                abi: erc20Abi,
                 // 1a. Insert a single client
                 client: publicClient,
             });
@@ -221,6 +201,41 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         }
     }
 
+    async function setupTapeSubmissionModel() {
+
+        const model: [string,string]|null = await getTapeSubmissionModel(cartridgeIdB32)
+        setTapeSubmissionModel(model);
+        if (model && model[0] == envClient.TAPE_OWNERSHIP_SUBMISSION_MODEL) {
+
+            publicClient.getCode({
+                address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
+            }).then((bytecode) => {
+                if (bytecode == '0x') {
+                    console.log("Couldn't get cartridge contract")
+                    return;
+                }
+
+                const contract = getContract({
+                    address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+                    abi: cartridgeAbi.abi,
+                    client: publicClient,
+                });
+                setCartridgeContractReading(contract);
+
+                getCartridgeMarketInfo(contract);
+            });
+        } else if (model && model[0] == envClient.TAPE_FEE_SUBMISSION_MODEL) {
+            getSubmitPrice(model[1]).then(submitPrice => {
+                let priceText:string = "";
+                if (submitPrice) {
+                    priceText = `${parseFloat(
+                        formatUnits(submitPrice.value, submitPrice.decimals))
+                        .toLocaleString("en", {minimumFractionDigits: 6,})} ${submitPrice.symbol}`;
+                }
+                setTapeSubmitPriceText(priceText);
+            });
+        }
+    }
 
     //
     // Modal Functions
@@ -260,12 +275,12 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         let modalBodyContent:JSX.Element;
 
         if (modalState.state == MODAL_STATE.BUY) {
-            let buyPriceText:string = buyPrice == undefined? "":`Collect (${parseFloat(
+            let buyPriceText:string = buyPrice == undefined? "Collect":`Collect (${parseFloat(
                 formatUnits(buyPrice, currency.decimals))
                 .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
             
             if (buyPrice == BigInt(0)) {
-                buyPriceText = "Collect (FREE)";
+                buyPriceText = `Collect (- ${currency.symbol})`;
             }
         
             modalBodyContent = (
@@ -308,8 +323,16 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         </button>
                     </div>
                 </>
-            )
+            );
         } else if (modalState.state == MODAL_STATE.SELL) {
+            let sellPriceText:string = modalPreviewPrice == undefined? "Sell":`Sell (${parseFloat(
+                formatUnits(modalPreviewPrice, currency.decimals))
+                .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
+            
+            if (modalPreviewPrice == BigInt(0)) {
+                sellPriceText = `Sell (- ${currency.symbol})`;
+            }
+        
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
@@ -337,18 +360,11 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         onClick={sell}
                         disabled={modalValue != undefined && (modalValue < 1 || !amountOwned || amountOwned < modalValue)}
                         >
-                            Sell {
-                            modalPreviewPrice? 
-                                `(${parseFloat(
-                                    formatUnits(modalPreviewPrice, currency.decimals))
-                                    .toLocaleString("en", { minimumFractionDigits: 6 })} ${currency.symbol})`
-                            :
-                                ""
-                            }
+                            {sellPriceText}
                         </button>
                     </div>
                 </>
-            )
+            );
         } else if(modalState.state == MODAL_STATE.SUBMITTING) {
             modalBodyContent = (
                 <>
@@ -361,7 +377,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                     </div>
 
                 </>
-            )
+            );
         } else if (modalState.state == MODAL_STATE.SUBMITTED_BUY) {
             modalBodyContent = (
                 <>
@@ -387,7 +403,16 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         </Link>
                     </div>                    
                 </>
-            )
+            );
+        } else if (modalState.state == MODAL_STATE.SETUP) {
+            modalBodyContent = (
+                <>
+                    <Dialog.Title as="h3" className="text-xl font-medium leading-6 text-gray-900 pixelated-font">
+                        Setup Tape Submisstion Model
+                    </Dialog.Title>
+                    <CartridgeModelSetup cartridgeId={cartridge.id} reloadFn={() => {setReload(reload+1);closeModal()}} cancelFn={closeModal} />
+                </>
+            );
         } else {
             modalBodyContent = (
                 <>
@@ -406,11 +431,11 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         </button>
                     </div>
                 </>
-            )
+            );
         }
 
         return (
-            <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-gray-500 p-4 shadow-xl transition-all flex flex-col items-center">
+            <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-gray-500 p-4 shadow-xl transition-all flex flex-col items-center text-black">
                 {modalBodyContent}
             </Dialog.Panel>
         )
@@ -527,68 +552,6 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         }
     }
 
-    async function activateFree() {
-        const wallet = userReady();
-        if (!wallet) return;
-
-        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
-        try{
-            await activateCartridgeSalesFree(cartridge.id, wallet);
-
-            setReload(reload+1);
-            reloadStats();
-        } catch (error) {
-            console.log(error)
-            let errorMsg = (error as Error).message;
-            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            else errorMsg = extractTxError(errorMsg);
-            // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
-        }
-        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
-    }
-
-    async function activateFixed() {
-        const wallet = userReady();
-        if (!wallet) return;
-
-        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
-        try{
-            await activateFixedCartridgeSales(cartridge.id, '0x1c6bf52634000', wallet);
-
-            setReload(reload+1);
-            reloadStats();
-        } catch (error) {
-            console.log(error)
-            let errorMsg = (error as Error).message;
-            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            else errorMsg = extractTxError(errorMsg);
-            // else if (errorMsg.toLowerCase().indexOf("d7b78412") > -1) errorMsg = "Slippage error";
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
-        }
-        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
-    }
-
-    async function activate() {
-        const wallet = userReady();
-        if (!wallet) return;
-
-        setModalState({isOpen: true, state: MODAL_STATE.SUBMITTING});
-        try{
-            await activateCartridge(cartridge.id, wallet);
-
-            setReload(reload+1);
-            reloadStats();
-        } catch (error) {
-            console.log(error)
-            let errorMsg = (error as Error).message;
-            if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
-            else errorMsg = extractTxError(errorMsg);
-            setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction:()=>setErrorFeedback(undefined)});
-        }
-        setModalState({...modalState, state: MODAL_STATE.NOT_PREPARED});
-    }
-
     async function validate() {
         const wallet = userReady();
         if (!wallet) return;
@@ -619,42 +582,32 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     //
     // JSX
     //
-    function activateFreeSalesOption() {
-        return (
-            <button
-            title={"Activate asset free minting for this cartidge"}
-            className="bg-[#4e99e0] assets-btn zoom-btn"
-            onClick={activateFree}
-            disabled={cartridgeExists}
-            >
-                Free Mint
-            </button>
-        )
-    }
+    function setupModel() {
+        let title = "Setup Tape Submission Model";
+        let buttonText = "Setup";
 
-    function activateFixedPriceSalesOption() {
+        if (tapeSubmissionModel) {
+            const model = getTapeSubmissionModelFromAddress(tapeSubmissionModel[0]);
+            buttonText = "Change model";
+            if (model == TAPE_SUBMIT_MODEL.FREE) {
+                title = "Currently Free Model";
+            } else if (model == TAPE_SUBMIT_MODEL.OWNERSHIP) {
+                title = "Currently Ownership Model";
+            } else if (model == TAPE_SUBMIT_MODEL.FEE) {
+                title = "Currently Submit Fee Model";
+            } else {
+                buttonText = "Setup";
+            }
+        }
         return (
             <button
-            title={"Activate asset sales for this cartidge with fixed price"}
+            title={title}
             className="bg-[#4e99e0] assets-btn zoom-btn"
-            onClick={activateFixed}
-            disabled={cartridgeExists}
+            onClick={() => {
+                openModal(MODAL_STATE.SETUP);
+                }}
             >
-                Fixed Price Sales
-            </button>
-        )
-    }
-    function activateStdSalesOption() {
-        return (
-            <button
-                title={
-                "Activate asset sales for this cartidge with standard parameters"
-                }
-                className="bg-[#4e99e0] assets-btn zoom-btn"
-                onClick={activate}
-                disabled={cartridgeExists}
-            >
-                Std. Sales
+                {buttonText}
             </button>
         )
     }
@@ -689,43 +642,82 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     }
 
     function marketplaceOptions() {
-        let buyPriceText:string = buyPrice == undefined? "Collect":`Collect (${parseFloat(
-            formatUnits(buyPrice, currency.decimals))
-            .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
-        let sellPriceText:string = sellPrice == undefined? "Sell":`Sell (${parseFloat(
-            formatUnits(sellPrice, currency.decimals))
-            .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
-        
-        if (buyPrice == BigInt(0)) {
-            buyPriceText = "Collect (FREE)";
-        }
-        if (sellPrice == BigInt(0)) {
-            sellPriceText = "Sell (FREE)";
-        }
-        return (
-            <>
-                <button
-                    title={amountOwned && amountOwned > 0 ? "" : "No balance"}
-                    className="bg-[#e04ec3] assets-btn zoom-btn"
-                    onClick={() => {
-                    openModal(MODAL_STATE.SELL);
-                    }}
-                    disabled={sellPrice == undefined || !amountOwned}
-                >
-                    {sellPriceText}
-                </button>
+        if (tapeSubmissionModel) {
+            const model = getTapeSubmissionModelFromAddress(tapeSubmissionModel[0]);
+            if (model == TAPE_SUBMIT_MODEL.OWNERSHIP && cartridgeExists) {
+                let buyPriceText:string = buyPrice == undefined? "Collect":`Collect (${parseFloat(
+                    formatUnits(buyPrice, currency.decimals))
+                    .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
+                let sellPriceText:string = sellPrice == undefined? "Sell":`Sell (${parseFloat(
+                    formatUnits(sellPrice, currency.decimals))
+                    .toLocaleString("en", {minimumFractionDigits: 6,})} ${currency.symbol})`;
+                
+                if (buyPrice == BigInt(0)) {
+                    buyPriceText = `Collect (- ${currency.symbol})`;
+                } else if (soldOut) {
+                    buyPriceText = `Sold Out`;
+                }
+                if (sellPrice == BigInt(0)) {
+                    sellPriceText = `Sell (- ${currency.symbol})`;
+                }
+                return (
+                    <>
+                        {
+                            (isOwner || isOperator)?
+                                validateCartridgeOption()
+                            : <></>
+                        }
+                        <button
+                            title={amountOwned && amountOwned > 0 ? "" : "No balance"}
+                            className="bg-[#e04ec3] assets-btn zoom-btn"
+                            onClick={() => {
+                            openModal(MODAL_STATE.SELL);
+                            }}
+                            disabled={sellPrice == undefined || !amountOwned}
+                        >
+                            {sellPriceText}
+                        </button>
 
-                <button
-                    className="bg-[#53fcd8] assets-btn zoom-btn"
-                    onClick={() => {
-                    openModal(MODAL_STATE.BUY);
-                    }}
-                    disabled={buyPrice == undefined}
-                >
-                    {buyPriceText}
-                </button>
-            </>
-        )
+                        <button
+                            className="bg-[#53fcd8] assets-btn zoom-btn"
+                            onClick={() => {
+                            openModal(MODAL_STATE.BUY);
+                            }}
+                            disabled={buyPrice == undefined}
+                        >
+                            {buyPriceText}
+                        </button>
+                    </>
+                );
+            } else if (model == TAPE_SUBMIT_MODEL.FREE) {
+                return (
+                    <>
+                        <button
+                            className="bg-[#53fcd8] assets-btn zoom-btn"
+                            disabled={true}
+                        >
+                            Free Submission
+                        </button>
+                    </>
+                );
+
+            } else if (model == TAPE_SUBMIT_MODEL.FEE) {
+                let priceText = '';
+                if (tapeSubmitPriceText)
+                    priceText = `(${tapeSubmitPriceText})`;
+                return (
+                    <>
+                        <button
+                            className="bg-[#53fcd8] assets-btn zoom-btn"
+                            disabled={true}
+                        >
+                            Fee {priceText}
+                        </button>
+                    </>
+                );
+            }
+
+        }
     }
 
 
@@ -768,40 +760,13 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
             </Transition>
 
             <div className="justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2">
-                { 
-                    cartridgeExists?
-                        <>
-                            {
-                                (isOwner || isOperator)?
-                                    validateCartridgeOption()
-                                : <></>
-                            }
-
-                            {marketplaceOptions()}
-                        </>
-                    :
-                        <>
-                            {
-                                user && wallets?.length > 0 && (isOperator ||
-                                (cartridgeOutput?.cartridge_user_address?.toLowerCase() == userAddress))?
-                                    <>
-                                        {
-                                            isOperator?
-                                                <>
-                                                    {activateFreeSalesOption()}
-                                                    {activateFixedPriceSalesOption()}
-                                                </>
-                                            
-                                            :
-                                                <></>                            
-                                        }
-                                        
-                                        {activateStdSalesOption()}
-                                    </>
-                                : <></>
-                            }
-                        </>
+                {
+                    user && wallets?.length > 0 && (isOperator ||
+                    (cartridgeOutput?.cartridge_user_address?.toLowerCase() == userAddress))?
+                        setupModel()
+                    : <></>
                 }
+                {marketplaceOptions()}
             </div>
         </>
     )
