@@ -4,7 +4,6 @@ import ProfileOptions from "@/app/components/ProfileOptions";
 import ProfileSummary from "@/app/components/ProfileSummary";
 import TapeFeesManager from "@/app/components/TapeFeeManager";
 import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
-//import Link from "next/link";
 import UserAchievements from "@/app/components/UserAchievements";
 
 
@@ -41,9 +40,6 @@ export default async function ProfilePage({ params }: { params: { address: strin
     
     return (
         <main>
-            {/* <section className="flex justify-end">
-                <Link className='pixelated-font btn mt-2 text-xs shadow' href={"/upload-cartridge"}>Upload Cartridge</Link>
-            </section> */}
             <section className="flex flex-col items-center gap-8">
                 <div className="flex flex-wrap gap-8 items-center justify-center">
                     <div className="flex flex-col gap-2">
@@ -55,7 +51,8 @@ export default async function ProfilePage({ params }: { params: { address: strin
                 </div>
                 
                 <div className="w-full flex flex-wrap gap-8">
-                    <div className="md:flex-1">
+                    <div className="
+                    flex-1">
                         <div className="w-full flex flex-col gap-2">
                             <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
                         </div>
