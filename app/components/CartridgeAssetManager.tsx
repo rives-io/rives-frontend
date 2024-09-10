@@ -13,7 +13,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge } from "../utils/assets";
+import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge, ZERO_ADDRESS } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
@@ -176,7 +176,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                 address: bond[0].currencyToken as `0x${string}`
             })
             
-            if (bytecode == '0x') {
+            if (!bytecode || bytecode == '0x') {
                 console.log("Couldn't get erc20 contract")
                 return;
             }
@@ -205,12 +205,13 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
 
         const model: [string,string]|null = await getTapeSubmissionModel(cartridgeIdB32)
         setTapeSubmissionModel(model);
-        if (model && model[0] == envClient.TAPE_OWNERSHIP_SUBMISSION_MODEL) {
+        if (model && model[0] != ZERO_ADDRESS) {
+            if (model[0] == envClient.TAPE_OWNERSHIP_SUBMISSION_MODEL) {
 
-            publicClient.getCode({
-                address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
-            }).then((bytecode) => {
-                if (bytecode == '0x') {
+                const bytecode = await publicClient.getCode({
+                    address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
+                });
+                if (!bytecode || bytecode == '0x') {
                     console.log("Couldn't get cartridge contract")
                     return;
                 }
@@ -223,9 +224,8 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                 setCartridgeContractReading(contract);
 
                 getCartridgeMarketInfo(contract);
-            });
-        } else if (model && model[0] == envClient.TAPE_FEE_SUBMISSION_MODEL) {
-            getSubmitPrice(model[1]).then(submitPrice => {
+            } else if (model && model[0] == envClient.TAPE_FEE_SUBMISSION_MODEL) {
+                const submitPrice = await getSubmitPrice(model[1]);
                 let priceText:string = "";
                 if (submitPrice) {
                     priceText = `${parseFloat(
@@ -233,7 +233,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         .toLocaleString("en", {minimumFractionDigits: 6,})} ${submitPrice.symbol}`;
                 }
                 setTapeSubmitPriceText(priceText);
-            });
+            }
         }
     }
 

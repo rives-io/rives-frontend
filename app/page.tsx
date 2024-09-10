@@ -189,15 +189,15 @@ export default async function Home() {
               <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
             </div>
 
-            <div className='p-8 bg-rives-gray flex flex-col text-center'>
+            {total_collected_cartridges ? <div className='p-8 bg-rives-gray flex flex-col text-center'>
               <span className={`text-3xl pixelated-font`}>Total Cartridges Collected</span>
               <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
-            </div>
+            </div> : <></>}
 
-            <div className='p-8 bg-rives-gray flex flex-col text-center'>
+            {total_collected_tapes ? <div className='p-8 bg-rives-gray flex flex-col text-center'>
               <span className={`text-3xl pixelated-font`}>Total Tapes Collected</span>
               <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
-            </div>
+            </div> : <></>}
           </div>
         </div>
       </section>
