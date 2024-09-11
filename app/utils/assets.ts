@@ -34,7 +34,7 @@ const humanWorldAbi = [
     "function getCartridgeInsertionModel() view returns ((address,bytes))",
     "function getTapeSubmissionModel(bytes32) view returns ((address,bytes))",
     "function getCartridgeOwner(bytes32) view returns (address)",
-    "function core__getRegisteredModel(address) view returns (bool)",
+    "function getRegisteredModel(address) view returns (bool)",
 
     // Authenticated Functions
     "function setTapeSubmissionModel(bytes32 cartridgeId,address modelAddress, bytes config)",
