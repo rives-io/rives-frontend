@@ -1,5 +1,5 @@
-name: build-frontend-dev
-run-name: Building Frontend Image for Dev Deploy
+name: build-frontend-testnet-v5
+run-name: Building Frontend Image for Testnet-v5 Deploy
 on:
   workflow_dispatch:
 
@@ -9,7 +9,7 @@ env:
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
-    environment: Dev
+    environment: Testnet-v5
 
     permissions:
       packages: write
@@ -85,7 +85,7 @@ jobs:
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          VERSION=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y%m%d.%H%M).$(git rev-parse --short HEAD)-dev
+          VERSION=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y%m%d.%H%M).$(git rev-parse --short HEAD)-testnet-v5
 
           echo Will push $IMAGE_ID:$VERSION
 
