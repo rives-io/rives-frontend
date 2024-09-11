@@ -88,7 +88,7 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
                     <>
                     <Link title={"Test"} 
                             className='bg-rives-purple assets-btn zoom-btn' 
-                            href={buildUrl(`https://emulator.rives.io/#cartridge=${envClient.DEPLOYMENT_URL}`,buildUrl(envClient.CARTRIDGES_URL, cartridge.id))}>
+                            href={`https://emulator.rives.io/#cartridge=${buildUrl(envClient.CARTRIDGES_URL, cartridge.id)}`}>
                         Test on Emulator
                     </Link>
                     <button title={"Reject"} 

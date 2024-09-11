@@ -275,7 +275,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
             : <></> }
             <button onClick={handle_play_click}
             disabled={!selectedRule}
-            className={`p-3 pixelated-font ${!selectedRule? "pointer-events-none cursor-not-allowed bg-slate-600" : "hover:scale-110 bg-rives-purple"}`}>
+            className={`p-3 pixelated-font ${!selectedRule? "pointer-events-none bg-slate-600" : "hover:scale-110 bg-rives-purple"}`}>
                 Play
             </button>
         </>
