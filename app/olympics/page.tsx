@@ -6,7 +6,6 @@ import { getUsersByAddress, User } from '../utils/privyApi';
 import Accordion from '../components/Accordion';
 import WarningIcon from '@mui/icons-material/Warning';
 import olympicsLogo from "@/public/doom-olympics-logo.png";
-import CartesiLogo from "@/public/cartesi_icon.png";
 import OlumpicsPageMsg from '../components/OlumpicsPageMsg';
 import OlympicsLeaderboard from '../components/OlympicsLeaderboard';
 import CartesiLockup from "@/public/cartesi_lockup_white.png";
@@ -65,9 +64,9 @@ async function OlympicsPage() {
                             </ul>
                         </li>
                         <li>
-                            JokeRace - $750:
+                            Galxe - $750:
                             <ul className='ps-8'>
-                                <li>See Galxe for details</li>
+                                <li>See <Link href="https://app.galxe.com/quest/cartesi/GCr5TtxKcC" className='text-rives-purple hover:underline'>Galxe</Link> for details</li>
                             </ul>
                         </li>
                     </ul>
@@ -99,18 +98,20 @@ async function OlympicsPage() {
         }
     ];
 
-    if (!data) {
-        return (
-            <main className="flex items-center justify-center h-lvh">
-                <span className={`text-4xl text-white pixelated-font` }>No Olympics data!</span>
-            </main>
-        );
-    }
+    // if (!data) {
+    //     return (
+    //         <main className="flex items-center justify-center h-lvh">
+    //             <span className={`text-4xl text-white pixelated-font` }>No Olympics data!</span>
+    //         </main>
+    //     );
+    // }
 
     let addresses:Array<string> = [];
-    for (let i = 0; i < data.leaderboard.length; i++) {
-        const item = data.leaderboard[i];
-        addresses.push(item.profile_address);
+    if (data) {
+        for (let i = 0; i < data.leaderboard.length; i++) {
+            const item = data.leaderboard[i];
+            addresses.push(item.profile_address);
+        }    
     }
 
     const addressUsersMap:Record<string, User> = JSON.parse(await getUsersByAddress(addresses));
@@ -165,7 +166,12 @@ async function OlympicsPage() {
                 <OlumpicsPageMsg/>
                 <Accordion items={accordionItems}/>
 
-                <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap} />
+                {
+                    !data?
+                        <></>
+                    :
+                        <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap} />
+                }
             </section>
         </main>
     )

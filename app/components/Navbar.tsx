@@ -61,10 +61,14 @@ function Navbar() {
                 {
                     logged?
                         <Link href={`/profile/${user?.wallet?.address}`} 
-                        className={`grid grid-cols-1 h-full items-center navbar-item 
-                        ${onMyProfile? "md:link-active" : "" } text-sm md:text-xl pixelated-font`}
+                        title={user?.wallet?.address}
+                        className={`grid grid-cols-1 h-full items-center place-content-center justify-items-center navbar-item 
+                        ${onMyProfile? "md:link-active" : "" }`}
                         >
-                            Profile
+                            <span className='text-sm md:text-xl pixelated-font'>Profile</span>
+                            <span className='text-xs pixelated-font'>
+                                {user?.wallet?.address.substring(0, 6)}...{user?.wallet?.address.substring(user.wallet.address.length-4)}
+                            </span>
                         </Link>
                     :
                         <button className={`navbar-item ${onMyProfile? "md:link-active" : "" }`}

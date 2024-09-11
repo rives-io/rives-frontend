@@ -601,6 +601,7 @@ export async function getProfileAchievementsSummary(address:string) {
 
 export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
     let res:Response;
+    let data:OlympicData|null;
     
     try {
         res = await fetch(envClient.OLYMPICS_DATA_URL,
@@ -613,13 +614,13 @@ export async function getOlympicsData(olympicId:string):Promise<OlympicData|null
                     revalidate: 30 // revalidate cache 300 seconds
                 }
             }
-        )            
+        )
+        
+        data = await res.json();
     } catch (error) {
         console.log(`Failed to fetch Olympics data\nError: ${(error as Error).message}`);
-        return null;
+        data = null;
     }
-
-    const data:OlympicData = await res.json();
 
     return data;
 }
