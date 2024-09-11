@@ -21,7 +21,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { getCartridgeBondInfo, getCartridgeOwner, getSubmitPrice, getTapeSubmissionModelAddress, getTapeSubmissionModelFromAddress, setupTapeSubmission, TAPE_SUBMIT_MODEL, worldAbi, ZERO_ADDRESS, } from "../utils/assets";
+import { getCartridgeBondInfo, getCartridgeOwner, getSubmissionModelActive, getSubmitPrice, getTapeSubmissionModelAddress, getTapeSubmissionModelFromAddress, setupTapeSubmission, TAPE_SUBMIT_MODEL, worldAbi, ZERO_ADDRESS, } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
@@ -72,6 +72,9 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
     const [currencyError,setCurrencyError] = useState<string>();
     const [currentModelInfo,setCurrentModelInfo] = useState<string>();
     const [automaticTapeSales, setAutomaticTapeSales] = useState<boolean>(false);
+    const [freeModelActive, setFreeModelActive] = useState<boolean>(false);
+    const [ownershipModelActive, setOwnershipModelActive] = useState<boolean>(false);
+    const [feeModelActive, setFeeModelActive] = useState<boolean>(false);
     
     // contract instance used for execute view functions (contract.read.method)
     const [cartridgeContractReading, setCartridgeContractReading] = useState<GetContractReturnType<typeof cartridgeAbi.abi, PublicClient | WalletClient>>();
@@ -100,7 +103,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
         publicClient.getCode({
             address: envClient.WORLD_ADDRESS as `0x${string}`
         }).then((bytecode) => {
-            if (bytecode == '0x') {
+            if (!bytecode || bytecode == '0x') {
                 console.log("Couldn't get world contract")
                 return;
             }
@@ -118,7 +121,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
         publicClient.getCode({
             address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
         }).then((bytecode) => {
-            if (bytecode == '0x') {
+            if (!bytecode || bytecode == '0x') {
                 console.log("Couldn't get cartridge contract")
                 return;
             }
@@ -146,6 +149,10 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
 
         setTapeSubmitModel(getTapeSubmissionModelFromAddress(model[0]));
         getCurrentModelInfo(model);
+
+        setFreeModelActive(await getSubmissionModelActive(TAPE_SUBMIT_MODEL.FREE));
+        setOwnershipModelActive(await getSubmissionModelActive(TAPE_SUBMIT_MODEL.OWNERSHIP));
+        setFeeModelActive(await getSubmissionModelActive(TAPE_SUBMIT_MODEL.FEE));
     }
 
     async function getCartridgeMarketInfo(contract:GetContractReturnType<typeof cartridgeAbi.abi, PublicClient | WalletClient>) {
@@ -586,12 +593,12 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
                         onChange={setSelectedModel}
                         name="radio-buttons-group"
                     >
-                        <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.FREE]} control={<Radio />} label="Free" 
-                            title="Users can submit tapes for free"  />
-                        <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.OWNERSHIP]} control={<Radio />} label="Cartridge Ownership" 
-                            title="Users must own cartridge asset to submit tapes" />
-                        <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.FEE]} control={<Radio />} label="Submission Fee" 
-                            title="Users must pay a fee each time to submit tapes" />
+                        { freeModelActive? <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.FREE]} control={<Radio />} label="Free" 
+                            title="Users can submit tapes for free"  /> : <></>}
+                        { ownershipModelActive? <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.OWNERSHIP]} control={<Radio />} label="Cartridge Ownership" 
+                            title="Users must own cartridge asset to submit tapes" /> : <></>}
+                        { feeModelActive? <FormControlLabel value={TAPE_SUBMIT_MODEL[TAPE_SUBMIT_MODEL.FEE]} control={<Radio />} label="Submission Fee" 
+                            title="Users must pay a fee each time to submit tapes" /> : <></>}
                     </RadioGroup>
                 </FormControl>
                 {setupSubmissionOptions(selectedTapeSubmitModel)}

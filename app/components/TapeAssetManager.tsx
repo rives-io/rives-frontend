@@ -138,7 +138,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
     
             const curContract = new ethers.Contract(envClient.TAPE_CONTRACT_ADDR,tapeAbi.abi,curSigner);
             curContract.provider.getCode(curContract.address).then((code) => {
-                if (code == '0x') {
+                if (!code || code == '0x') {
                     console.log("Couldn't get tape contract")
                     return;
                 }
@@ -192,7 +192,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
                         const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
                         curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                            if (code == '0x') {
+                            if (!code || code == '0x') {
                                 console.log("Couldn't get erc20 contract")
                                 return;
                             }
@@ -661,7 +661,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                 {marketplaceOptions()}
                 </> :
                 <> <div></div><div></div>
-                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || tapeCreator?.toLowerCase() == signerAddress) ? 
+                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || tapeCreator?.toLowerCase() == signerAddress) && tapeContract ? 
                     <button title={"Activate asset sales for this tape with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={tapeExists}>

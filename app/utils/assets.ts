@@ -34,6 +34,7 @@ const humanWorldAbi = [
     "function getCartridgeInsertionModel() view returns ((address,bytes))",
     "function getTapeSubmissionModel(bytes32) view returns ((address,bytes))",
     "function getCartridgeOwner(bytes32) view returns (address)",
+    "function getRegisteredModel(address) view returns (bool)",
 
     // Authenticated Functions
     "function setTapeSubmissionModel(bytes32 cartridgeId,address modelAddress, bytes config)",
@@ -143,7 +144,7 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
             steps:bond[0].steps
         };
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading cartridge contract");
         return null;
     }
 }
@@ -199,14 +200,25 @@ export async function getTapeBondInfo(tapeId: string, getBuyPrice = false): Prom
             steps:bond[0].steps
         };
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading tape contract");
         return null;
     }
 }
 
-export async function getUserCartridges(user: string): Promise<string[]> {
+export async function getUserCartridges(user: string): Promise<string[]|null> {
 
-    if (!user) return [];
+    if (!user) return null;
+
+    if (envClient.CARTRIDGE_CONTRACT_ADDR.toLowerCase() == ZERO_ADDRESS.toLowerCase())
+        return null;
+    
+    const bytecode = await publicClient.getCode({
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
+    });
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get cartridge contract")
+        return null;
+    }
 
     const event = getAbiItem({abi:cartridgeAbi.abi,name:"TransferSingle"}) as AbiEvent;
     let logs:any = [];
@@ -262,21 +274,36 @@ export async function getUserCartridgeBondInfo(user: string, cartridgeId:string)
 export async function getUserCartridgesBondInfo(user: string): Promise<BondInfo[]> {
     const bondCartridges = new Array<BondInfo>();
     try {
-        for (const cartridgeId of await getUserCartridges(user)) {
-            const bond = await getUserCartridgeBondInfo(user,cartridgeId);
-            if (bond) {
-                bondCartridges.push(bond);
+        const cartridges = await getUserCartridges(user);
+        if (cartridges) {
+            for (const cartridgeId of cartridges) {
+                const bond = await getUserCartridgeBondInfo(user,cartridgeId);
+                if (bond) {
+                    bondCartridges.push(bond);
+                }
             }
         }
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading cartridge contract");
     }
     return bondCartridges;
 }
 
-export async function getUserTapes(user: string): Promise<string[]> {
+export async function getUserTapes(user: string): Promise<string[]|null> {
 
-    if (!user) return [];
+    if (!user) return null;
+
+    if (envClient.TAPE_CONTRACT_ADDR.toLowerCase() == ZERO_ADDRESS.toLowerCase())
+        return null;
+    
+    const bytecode = await publicClient.getCode({
+        address: envClient.TAPE_CONTRACT_ADDR as `0x${string}`
+    });
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get tape contract")
+        return null;
+    }
+
 
     const event = getAbiItem({abi:tapeAbi.abi,name:"TransferSingle"}) as AbiEvent;
     let logs:Array<any> = [];
@@ -314,28 +341,31 @@ export async function getUserTapes(user: string): Promise<string[]> {
 export async function getUserTapesBondInfo(user: string): Promise<BondInfo[]> {
     const bondTapes = new Array<BondInfo>();
     try {
-        for (const tapeId of await getUserTapes(user)) {
-            const bond = await getTapeBondInfo(tapeId);
-            if (bond) {
-                const balance: any[] = await publicClient.readContract({
-                    address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
-                    abi: tapeAbi.abi,
-                    functionName: "balanceOf",
-                    args: [user,formatTapeIdToBytes(tapeId)]
-                }) as any[];
-                if (balance) {
-                    bond.amountOwned = BigNumber.from(balance);
+        const tapes = await getUserTapes(user);
+        if (tapes) {
+            for (const tapeId of tapes) {
+                const bond = await getTapeBondInfo(tapeId);
+                if (bond) {
+                    const balance: any[] = await publicClient.readContract({
+                        address: `0x${envClient.TAPE_CONTRACT_ADDR.slice(2)}`,
+                        abi: tapeAbi.abi,
+                        functionName: "balanceOf",
+                        args: [user,formatTapeIdToBytes(tapeId)]
+                    }) as any[];
+                    if (balance) {
+                        bond.amountOwned = BigNumber.from(balance);
+                    }
+                    bondTapes.push(bond);
                 }
-                bondTapes.push(bond);
             }
         }
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading tape contract");
     }
     return bondTapes;
 }
 
-export async function getTotalTapes(): Promise<BigNumber> {
+export async function getTotalTapes(): Promise<BigNumber|null> {
 
     try {
         const nAssets: any[] = await publicClient.readContract({
@@ -348,12 +378,12 @@ export async function getTotalTapes(): Promise<BigNumber> {
             return BigNumber.from(nAssets);
         }
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading tape contract");
     }
-    return BigNumber.from(0);
+    return null;
 }
 
-export async function getTotalCartridges(): Promise<BigNumber> {
+export async function getTotalCartridges(): Promise<BigNumber|null> {
 
     try {
         const nAssets: any[] = await publicClient.readContract({
@@ -366,9 +396,9 @@ export async function getTotalCartridges(): Promise<BigNumber> {
             return BigNumber.from(nAssets);
         }
     } catch (e) {
-        console.log("Error reading contract");
+        console.log("Error reading cartridge contract");
     }
-    return BigNumber.from(0);
+    return null;
 }
 
 
@@ -585,12 +615,31 @@ export async function getTapeSubmissionModel(cartridgeId: string): Promise<[stri
             return model;
         }
     } catch (e) {
-        console.log("Error reading contract",e);
+        console.log("Error reading world contract",e);
     }
     return null;
 }
 
+export async function getSubmissionModelActive(model: TAPE_SUBMIT_MODEL): Promise<boolean> {
+    try {
+        const modelAddr = getTapeSubmissionModelAddress(model);
+        const active = await publicClient.readContract({
+            address: `0x${envClient.WORLD_ADDRESS.slice(2)}`,
+            abi: worldAbi,
+            functionName: "core__getRegisteredModel",
+            args: [modelAddr]
+        }) as boolean;
+        return active;
+    } catch (e) {
+        console.log("Error reading world contract",e);
+    }
+    return false;
+}
+
 export function getTapeSubmissionModelFromAddress(modelAddr: string): TAPE_SUBMIT_MODEL {
+
+    if (modelAddr.toLowerCase() == ZERO_ADDRESS.toLowerCase())
+        return TAPE_SUBMIT_MODEL.NOT_DEFINED;
 
     if (modelAddr.toLowerCase() == envClient.TAPE_FREE_SUBMISSION_MODEL.toLowerCase())
         return TAPE_SUBMIT_MODEL.FREE;

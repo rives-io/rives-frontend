@@ -17,7 +17,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const [cartridgesCreated, setCartridgesCreated] = useState<Array<Array<CartridgeInfo>>>([]);
     const [cartridgesCreatedPage, setCartridgesCreatedPage] = useState(0);
     
-    const [cartridgesCollect, setCartridgesCollect] = useState<Array<Array<CartridgeInfo>>>([]);
+    const [cartridgesCollect, setCartridgesCollect] = useState<Array<Array<CartridgeInfo>>>();
     const [cartridgesCollectedPage, setCartridgesCollectedPage] = useState(0);
     
     const [cartridgesCreatedPageToLoad, setCartridgesCreatedPageToLoad] = useState(1);
@@ -81,6 +81,8 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const CartridgesCollectedByProfile = async () => {
         const page_size = 6;
 
+        if (!cartridgesCollect) return;
+
         if (cartridgesCollectedList.length == 0 || cartridgesCollect[cartridgesCollectedPageToLoad-1]) {
             setCartridgesCollectedLoading(false);
             setCartridgesCollectedPage(cartridgesCollectedPageToLoad);
@@ -124,7 +126,11 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
 
     useEffect(() => {
         CartridgesCreatedByProfile();
-        getUserCartridges(address).then(out => setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t))));
+        getUserCartridges(address).then(out => {
+            if (out) {
+                setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t)))}
+            }
+        );
     }, [])
 
     useEffect(() => {
@@ -189,7 +195,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                 }
             </div>
 
-            <div className="flex flex-col gap-4">
+            {cartridgesCollect ? <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Cartridges Collected</h1>
                 </div>
@@ -231,7 +237,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                                 </div>
                         }
                     </>}
-            </div>
+            </div> : <></>}
         </div>
     )
 }

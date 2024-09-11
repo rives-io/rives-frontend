@@ -62,7 +62,7 @@ function TapeFeesManager({address}:{address:string}) {
 
             const curContract = new ethers.Contract(envClient.TAPE_CONTRACT_ADDR,tapeAbi.abi,curSigner);
             curContract.provider.getCode(curContract.address).then((code) => {
-                if (code == '0x') {
+                if (!code || code == '0x') {
                     console.log("Couldn't get tape contract")
                     return;
                 }
