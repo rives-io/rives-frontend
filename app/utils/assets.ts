@@ -626,7 +626,7 @@ export async function getSubmissionModelActive(model: TAPE_SUBMIT_MODEL): Promis
         const active = await publicClient.readContract({
             address: `0x${envClient.WORLD_ADDRESS.slice(2)}`,
             abi: worldAbi,
-            functionName: "core__getRegisteredModel",
+            functionName: "getRegisteredModel",
             args: [modelAddr]
         }) as boolean;
         return active;
