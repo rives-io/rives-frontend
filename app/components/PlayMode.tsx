@@ -87,7 +87,8 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
 
     return (
         <>
-            <Transition appear show={modalOpen} as={Fragment}>
+            { selectedRule ?
+                <Transition appear show={modalOpen} as={Fragment}>
                     <Dialog as="div" className="relative z-10" onClose={() => setModalOpen(false)}>
                         <Transition.Child
                             as={Fragment}
@@ -271,9 +272,10 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                         </div>
                     </Dialog>
                 </Transition>
-            
-            <button  onClick={handle_play_click}
-            className={`bg-rives-purple p-3 hover:scale-110 pixelated-font`}>
+            : <></> }
+            <button onClick={handle_play_click}
+            disabled={!selectedRule}
+            className={`p-3 pixelated-font ${!selectedRule? "pointer-events-none cursor-not-allowed bg-slate-600" : "hover:scale-110 bg-rives-purple"}`}>
                 Play
             </button>
         </>
