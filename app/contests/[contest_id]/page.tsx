@@ -190,7 +190,7 @@ export default async function Contest({ params }: { params: { contest_id: string
                   {contestStatusMessage(contest)}
 
                   <span className="text-gray-400">Start</span>
-                  {timeToDateUTCString(contest.created_at)}
+                  {contest.start? timeToDateUTCString(contest.start):"-"}
 
                   <span className="text-gray-400">End</span>
                   {contest.end? timeToDateUTCString(contest.end):"-"}
