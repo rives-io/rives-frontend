@@ -290,6 +290,7 @@ function GameplaySubmitter() {
 
         // submit the gameplay
         try {
+            setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
             await verifyChain(wallet);
 
             const provider = await wallet.getEthereumProvider();

@@ -54,6 +54,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
     const {wallets} = useWallets();
 
     const [cartridgeOwner, setCartridgeOwner] = useState<String>();
+    const [isOwner, setIsOwner] = useState<boolean>(false);
     const [reload,setReload] = useState<number>(0);
     
     // cartridge Marketplace State
@@ -87,7 +88,6 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
 
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridgeId).slice(2);
     const userAddress = (ready && authenticated)? user?.wallet?.address.toLowerCase(): "";
-    const isOwner = cartridgeOwner?.toLowerCase() == userAddress;
     const isOperator = envClient.OPERATOR_ADDR?.toLowerCase() == userAddress;
 
 
@@ -95,8 +95,10 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
         if (cartridgeIdB32) {
             // getCartridgeInsetOutput(cartridgeIdB32).then((out) => setCartridgeOutput(out))
             getCartridgeOwner(cartridgeIdB32).then(addr => {
-                if (addr)
+                if (addr) {
                     setCartridgeOwner(addr);
+                    setIsOwner(cartridgeOwner?.toLowerCase() == userAddress);
+                }
             });
         }
 
