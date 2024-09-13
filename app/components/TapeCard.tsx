@@ -184,9 +184,13 @@ export default function TapeCard({tapeInput, creator, deactivateLink=false}:{tap
                 <div className="w-44 px-[10px] ms-2">
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
-                        <span className="pixelated-font text-xs truncate">
-                            By <button onClick={handleClick}
-                                className="pixelated-font text-rives-purple hover:underline">
+                        <div className="text-xs max-w-full h-4 flex gap-1">
+                            <span className="pixelated-font">
+                                By
+                            </span>
+                            
+                            <button onClick={handleClick}
+                                className="pixelated-font text-rives-purple hover:underline truncate">
                                     {
                                         playerName?
                                             playerName
@@ -194,7 +198,7 @@ export default function TapeCard({tapeInput, creator, deactivateLink=false}:{tap
                                             player
                                     }
                             </button>
-                        </span>
+                        </div>
                     </div>
 
                 </div>
