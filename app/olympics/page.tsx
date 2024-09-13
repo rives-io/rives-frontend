@@ -118,7 +118,7 @@ async function OlympicsPage() {
 
     return (
         <main>
-            <section className='grid gap-4 items-center overflow-auto'>
+            <section className='grid gap-4 items-center'>
                 <div className='hidden md:flex items-center justify-between px-8 w-full'>
                     <div className='flex flex-col'>
                         <span className='pixelated-font text-xl'>$15 k</span>

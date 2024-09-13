@@ -208,7 +208,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
             <div className='w-full hidden xl:grid'>
                 <h1 className='text-5xl pixelated-font mb-4'>Olympics Leaderboard</h1>
 
-                <table className="text-left w-full max-h-[580px]">
+                <table className="w-full">
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
                         <tr className='bg-black'>
                             <th scope="col" className='pixelated-font px-2 text-center'>
