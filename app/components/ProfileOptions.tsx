@@ -9,9 +9,14 @@ import Link from "next/link";
 
 
 export default function ProfileOptions({address, twitterInfo}:{address:string, twitterInfo:User}) {
-    const {ready, authenticated, logout, user, linkTwitter} = usePrivy();
+    const {ready, authenticated, logout, user, linkTwitter, unlinkTwitter} = usePrivy();
     const formated_addr = address.substring(0,6)+"..."+address.substring(address.length-4,address.length);
-    
+
+    const handleUnlinkTwitter = async () => {
+        if (!user?.twitter?.subject) return;
+
+        await unlinkTwitter(user.twitter.subject);
+    }
 
     return (
         <div id="profile_pic" className="flex flex-col gap-4">
@@ -46,10 +51,18 @@ export default function ProfileOptions({address, twitterInfo}:{address:string, t
                                 <span>{twitterInfo.name}</span>
                                 <span title={address} className="text-xs">{formated_addr}</span>
                             </div>
-                            <Link href={`https://twitter.com/${twitterInfo.username}`} rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>
-                                <XIcon/> <span className='hover:underline'>{twitterInfo.username}</span>
-                            </Link>
 
+                            {
+                                ready && authenticated && user?.wallet?.address.toLowerCase() == address.toLowerCase() && user.twitter?
+                                    <button onClick={handleUnlinkTwitter} 
+                                    className="hover:underline">
+                                        Unlink Twitter
+                                    </button>
+                                :
+                                    <Link href={`https://twitter.com/${twitterInfo.username}`} rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>
+                                        <XIcon/> <span className='hover:underline'>{twitterInfo.username}</span>
+                                    </Link>
+                            }
                         </div>
                     </div>
             }
