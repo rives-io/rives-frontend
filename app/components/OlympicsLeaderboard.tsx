@@ -31,7 +31,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                 </td>
 
                 <td className='px-2'>
-                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
+                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center justify-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
                         {
                             currUserRow?
                                 <td className='px-2 h-12 pixelated-font flex items-center'>
@@ -74,7 +74,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
 
                         return (
                             <td key={`${playerKey}-${contest.contest_id}`} className='px-2'>
-                                <Link href={`/tapes/${player_contest.tape_id}`} className={`flex items-center justify-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
+                                <Link href={`/tapes/${player_contest.tape_id}`} className={`block text-center ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
                                     <span className='break-all pixelated-font' title={`score: ${player_contest.score}`}>
                                         {player_contest.rank} ({player_contest.points} points)
                                     </span>
@@ -102,7 +102,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                 </th>
 
                 <td className='px-2 border-r'>
-                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
+                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center justify-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
                         {
                             currUserRow?
                                 <td className='px-2 h-12 pixelated-font flex items-center'>
@@ -114,14 +114,14 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                                         !user?
                                             <>
                                                 <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
-                                                <span className='pixelated-font text-xs sm:text-base overflow-hidden' title={player.profile_address}>
+                                                <span className='pixelated-font text-xs md:text-sm overflow-hidden' title={player.profile_address}>
                                                     {player.profile_address.substring(0,6)+"..."+player.profile_address.substring(player.profile_address.length-4,player.profile_address.length)}
                                                 </span>
                                             </>
                                         :
                                             <>
                                                 <img width={48} height={48} src={user.picture_url} className='rounded-full pixelated-img' alt='' />
-                                                <span className='pixelated-font text-xs sm:text-base overflow-hidden' title={player.profile_address}>
+                                                <span className='pixelated-font text-xs md:text-sm overflow-hidden' title={player.profile_address}>
                                                     {user.name}
                                                 </span>
                                             </>
@@ -131,7 +131,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                     </Link>
                 </td>
 
-                <td className='flex flex-col items-start border-r'>
+                <td className='grid'>
                     {
                         data.contests.map((contest, index) => {
                             const player_contest = player.contests[contest.contest_id];
@@ -139,11 +139,14 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
 
                             if (!player_contest) {
                                 return (
-                                    <div key={player_contest_key} className={`${currUserRow? "hover:text-black":"hover:text-rives-purple"} px-2 grid grid-cols-2 w-full`}>
-                                        <div className='text-xs md:text-sm hidden sm:block'>
-                                            <span className='pixelated-font line-clamp-1'>{contest.name}:</span>    
+                                    <div key={player_contest_key} className={`px-2 w-full grid grid-cols-2 gap-2`}>
+                                        <div className='w-full hidden sm:flex justify-end'>
+                                            <span className='pixelated-font line-clamp-1 text-xs md:text-sm'>{contest.name}:</span>    
                                         </div>
-                                        <span className='pixelated-font text-xs md:text-sm place-self-center sm:place-self-end col-span-2 sm:col-span-1'>-</span>
+
+                                        <div className='col-span-2 sm:col-span-1 w-full flex justify-center sm:justify-start'>
+                                            <span className='pixelated-font text-xs md:text-sm text-center sm:text-start'>-</span>
+                                        </div>
                                     </div>
                                 )
                             }
@@ -152,16 +155,18 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                                 <div key={player_contest_key} className='px-2 w-full'>
                                     <Link href={`/tapes/${player_contest.tape_id}`} 
                                     className={`${currUserRow? "hover:text-black":"hover:text-rives-purple"} grid grid-cols-2 gap-2`}>
-                                        <div className='text-xs md:text-sm hidden sm:block'>
+                                        <div className='w-full hidden sm:flex justify-end'>
                                             <span 
-                                            className='pixelated-font line-clamp-1' title={`score: ${player_contest.score}`}>
+                                            className='pixelated-font line-clamp-1 text-xs md:text-sm' title={`score: ${player_contest.score}`}>
                                                 {contest.name}:
                                             </span>
                                         </div>
 
-                                        <span className='pixelated-font text-xs md:text-sm place-self-center text-center sm:place-self-end col-span-2 sm:col-span-1'>
-                                            {player_contest.rank} ({player_contest.points} points)
-                                        </span>
+                                        <div className='col-span-2 sm:col-span-1 w-full flex justify-center sm:justify-start'>
+                                            <span className='pixelated-font text-xs md:text-sm text-center sm:text-start'>
+                                                {player_contest.rank} ({player_contest.points} points)
+                                            </span>
+                                        </div>
                                     </Link>
                                 </div>
                             )
@@ -170,7 +175,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
 
                 </td>
 
-                <td className='pixelated-font px-2 text-center'>
+                <td className='pixelated-font px-2 text-center border-l'>
                     {player.total_points}
                 </td>
             </tr>
@@ -206,15 +211,11 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                 <table className="text-left w-full max-h-[580px]">
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
                         <tr className='bg-black'>
-                            <th scope="col" className='px-2'>
-                                <span className="pixelated-font">
-                                    Rank
-                                </span>
+                            <th scope="col" className='pixelated-font px-2 text-center'>
+                                Rank
                             </th>
-                            <th scope="col" className='px-2'>
-                                <span className="pixelated-font">
-                                    Player
-                                </span>
+                            <th scope="col" className='pixelated-font px-2 text-center'>
+                                Player
                             </th>
 
                             {
@@ -222,14 +223,14 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                                     return (
                                         <th key={contest.name} scope="col" className='px-2'>
                                             <Link href={`/contests/${contest.contest_id}`} 
-                                            className='flex items-center gap-2 pixelated-font text-center hover:text-rives-purple'>
+                                            className='block pixelated-font text-center hover:text-rives-purple'>
                                                 {contest.name}
                                             </Link>
                                         </th>
                                     )
                                 })
                             }
-                            <th scope="col" className="pixelated-font px-2">
+                            <th scope="col" className="pixelated-font px-2 text-center">
                                 Global
                             </th>
                         </tr>
