@@ -46,14 +46,6 @@ function OlympicsBanner() {
                     </div>
 
                 </div>
-                
-                <button 
-                className='lg:hidden pixelated-font text-white bg-[#df50c4] flex items-center justify-center gap-2 p-2 w-48 hover:scale-110'
-                onClick={handleSignUpClick}
-                >
-                    <AddCircleOutlineIcon/>
-                    <span className='pixelated-font'>Sign Me Up!</span>
-                </button>
             </div>
         </div>
 
@@ -82,13 +74,6 @@ function OlympicsBanner() {
                 </div>
             </div>
 
-            <button 
-            className='text-white bg-[#df50c4] flex items-center justify-center gap-2 p-2 hover:scale-110'
-            onClick={handleSignUpClick}
-            >
-                <AddCircleOutlineIcon/>
-                <span className='pixelated-font'>Sign Me Up!</span>
-            </button>
         </div>
     </Link>
   )
