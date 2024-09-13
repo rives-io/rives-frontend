@@ -11,6 +11,8 @@ import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./util
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
 import OlympicsBanner from "./components/OlympicsBanner";
+import ReactGA from "react-ga4";
+
 
 export const revalidate = 0 // revalidate data always
 
@@ -75,6 +77,9 @@ export default async function Home() {
   let tapes:Array<VerifyPayloadProxy>;
   let contests:Array<RuleInfo>;
   let userAddresses:Set<string> = new Set();
+
+  ReactGA.initialize(envClient.GOOGLE_ANALYTICS_MEASUREMENT_ID);
+  ReactGA.send({ hitType: "pageview", page: "/", title: "Landing Page" });
   
   [cartridges, tapes, contests, total_collected_cartridges, total_collected_tapes] = await Promise.all(promises)
 

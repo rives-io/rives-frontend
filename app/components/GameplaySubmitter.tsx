@@ -23,6 +23,7 @@ import TapeCard from "./TapeCard";
 import { buyCartridge, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
 import CartridgeCard from "./CartridgeCard";
 import { createWalletClient, custom, toFunctionSelector } from "viem";
+import ReactGA from "react-ga4";
 
 
 enum MODAL_STATE {
@@ -116,6 +117,10 @@ function GameplaySubmitter() {
     function onTapeTitleChange(e: React.FormEvent<HTMLInputElement>) {
         setTapeTitle(e.currentTarget.value);
     }
+
+    useEffect(() => {
+        ReactGA.initialize(envClient.GOOGLE_ANALYTICS_MEASUREMENT_ID);
+    }, []);
 
     useEffect(() => {
         // show warning message if user is not connected
@@ -324,6 +329,12 @@ function GameplaySubmitter() {
             await publicClient.waitForTransactionReceipt( 
                 { hash: txHash }
             )
+
+            ReactGA.event({
+                category:'Gameplay',
+                action: 'Transaction',
+                label: tapeId
+            });
         } catch (error) {
             console.log(error)
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});
