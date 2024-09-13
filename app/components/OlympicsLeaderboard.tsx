@@ -31,7 +31,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                 </td>
 
                 <td className='px-2'>
-                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center justify-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
+                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
                         {
                             currUserRow?
                                 <td className='px-2 h-12 pixelated-font flex items-center'>
@@ -102,7 +102,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
                 </th>
 
                 <td className='px-2 border-r'>
-                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center justify-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
+                    <Link href={`/profile/${player.profile_address}`} className={`flex items-center gap-2 ${currUserRow? "hover:text-black":"hover:text-rives-purple"}`}>
                         {
                             currUserRow?
                                 <td className='px-2 h-12 pixelated-font flex items-center'>
