@@ -73,8 +73,8 @@ export function formatTime(time:number):string {
         val = Math.round(time / 60);
         return val == 1? `${val} minute`:`${val} minutes`;
     }
-  
-    return `${time} seconds`
+
+    return `${Math.round(time)} seconds`
 }
 
 // time in seconds
