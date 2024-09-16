@@ -25,10 +25,13 @@ function UserAchievements({address}:{address:string}) {
                     {/* list achievements onwed */}
                     {
                         userAchievements?.map((userAchievement, index) => {
+                            const i = achievementsList?.findIndex(achievement => userAchievement.ca_slug === achievement.slug);
+                            if (!i) return <></>;
+
                             return (
                                 <Image 
-                                onClick={() => setAchievementHover(index)} // for mobile
-                                onMouseOver={() => setAchievementHover(index)} 
+                                onClick={() => setAchievementHover(i)} // for mobile
+                                onMouseOver={() => setAchievementHover(i)} 
                                 onMouseLeave={() => setAchievementHover(-1)}
                                 key={`${userAchievement.ca_slug}-${index}`}
                                 src={`data:image/png;base64,${userAchievement.image_data}`}
