@@ -22,19 +22,35 @@ function UserAchievements({address}:{address:string}) {
                 <h2 className="py-2 text-center">Achievements</h2>
 
                 <div className="grid grid-cols-4 gap-2">
+                    {/* list achievements onwed */}
+                    {
+                        userAchievements?.map((userAchievement, index) => {
+                            return (
+                                <Image 
+                                onClick={() => setAchievementHover(index)} // for mobile
+                                onMouseOver={() => setAchievementHover(index)} 
+                                onMouseLeave={() => setAchievementHover(-1)}
+                                key={`${userAchievement.ca_slug}-${index}`}
+                                src={`data:image/png;base64,${userAchievement.image_data}`}
+                                width={48}
+                                height={48}
+                                alt=""
+                                />
+                            )
+                        })
+                    }
+
+                    {/* list the rest of the achievements */}
                     {
                         achievementsList?.map((achievement, index) => {
-                            if (!achievement) return <></>;
-
-                            let obtained:boolean = false;
                             const i = userAchievements?.findIndex(userAchievement => userAchievement.ca_slug === achievement.slug);
-                            if (i && i > -1) obtained = true;
+                            if (i && i > -1) return <></>;
 
                             return <Image 
                             onClick={() => setAchievementHover(index)} // for mobile
                             onMouseOver={() => setAchievementHover(index)} 
                             onMouseLeave={() => setAchievementHover(-1)}
-                            className={`${obtained? "":"opacity-40"}`}
+                            className="grayscale"
                             key={`${achievement.slug}-${index}`}
                             src={`data:image/png;base64,${achievement.image_data}`}
                             width={48}
@@ -62,7 +78,7 @@ function UserAchievements({address}:{address:string}) {
 
                         <div className="flex flex-col">
                             <span>{achievementsList![achievementHover].name}</span>
-                            <span className="text-xs mb-1">{achievementsList![achievementHover].points} points</span>
+                            {/* <span className="text-xs mb-1">{achievementsList![achievementHover].points} points</span> */}
                             <p className="text-xs">
                                 {achievementsList![achievementHover].description}
                             </p>
