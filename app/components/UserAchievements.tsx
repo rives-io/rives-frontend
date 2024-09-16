@@ -26,7 +26,7 @@ function UserAchievements({address}:{address:string}) {
                     {
                         userAchievements?.map((userAchievement, index) => {
                             const i = achievementsList?.findIndex(achievement => userAchievement.ca_slug === achievement.slug);
-                            if (!i) return <></>;
+                            if (i == undefined) return <></>;
 
                             return (
                                 <Image 
