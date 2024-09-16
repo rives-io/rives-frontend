@@ -8,7 +8,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import CartridgeCard from "./CartridgeCard";
 import Loading from "./Loading";
-import { getUserCartridges } from "../utils/assets";
+import { checkCartridgeContract, getUserCartridges } from "../utils/assets";
 import { CartridgesOutput } from "../backend-libs/core/ifaces";
 import { User } from "../utils/privyApi";
 
@@ -17,7 +17,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const [cartridgesCreated, setCartridgesCreated] = useState<Array<Array<CartridgeInfo>>>([]);
     const [cartridgesCreatedPage, setCartridgesCreatedPage] = useState(0);
     
-    const [cartridgesCollect, setCartridgesCollect] = useState<Array<Array<CartridgeInfo>>>();
+    const [cartridgesCollect, setCartridgesCollect] = useState<Array<Array<CartridgeInfo>>>([]);
     const [cartridgesCollectedPage, setCartridgesCollectedPage] = useState(0);
     
     const [cartridgesCreatedPageToLoad, setCartridgesCreatedPageToLoad] = useState(1);
@@ -29,7 +29,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(true);
     const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(true);
     
-    const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>([]);
+    const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>();
 
     const disablePrevCartridgesCreatedPage = cartridgesCreatedPage == 1;
     const disablePrevCartridgesCollectedPage = cartridgesCollectedPage == 1;
@@ -81,7 +81,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const CartridgesCollectedByProfile = async () => {
         const page_size = 6;
 
-        if (!cartridgesCollect) return;
+        if (!cartridgesCollectedList) return;
 
         if (cartridgesCollectedList.length == 0 || cartridgesCollect[cartridgesCollectedPageToLoad-1]) {
             setCartridgesCollectedLoading(false);
@@ -126,11 +126,17 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
 
     useEffect(() => {
         CartridgesCreatedByProfile();
-        getUserCartridges(address).then(out => {
-            if (out) {
-                setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t)))}
+        
+        checkCartridgeContract().then(exists => {
+            if (exists) {
+                setCartridgesCollectedList([]);
+                getUserCartridges(address).then(out => {
+                    if (out) {
+                        setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t)))}
+                    }
+                );
             }
-        );
+        });
     }, [])
 
     useEffect(() => {
@@ -195,7 +201,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                 }
             </div>
 
-            {cartridgesCollect ? <div className="flex flex-col gap-4">
+            {cartridgesCollectedList ? <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Cartridges Collected</h1>
                 </div>

@@ -21,7 +21,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { getCartridgeBondInfo, getCartridgeOwner, getSubmissionModelActive, getSubmitPrice, getTapeSubmissionModelAddress, getTapeSubmissionModelFromAddress, setupTapeSubmission, TAPE_SUBMIT_MODEL, worldAbi, ZERO_ADDRESS, } from "../utils/assets";
+import { checkCartridgeContract, checkWorldContract, getCartridgeBondInfo, getCartridgeOwner, getSubmissionModelActive, getSubmitPrice, getTapeSubmissionModelAddress, getTapeSubmissionModelFromAddress, setupTapeSubmission, TAPE_SUBMIT_MODEL, worldAbi, ZERO_ADDRESS, } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
@@ -97,16 +97,13 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
             getCartridgeOwner(cartridgeIdB32).then(addr => {
                 if (addr) {
                     setCartridgeOwner(addr);
-                    setIsOwner(cartridgeOwner?.toLowerCase() == userAddress);
+                    setIsOwner(addr?.toLowerCase() == userAddress);
                 }
             });
         }
 
-        publicClient.getCode({
-            address: envClient.WORLD_ADDRESS as `0x${string}`
-        }).then((bytecode) => {
-            if (!bytecode || bytecode == '0x') {
-                console.log("Couldn't get world contract")
+        checkWorldContract().then((exists) => {
+            if (!exists) {
                 return;
             }
 
@@ -120,11 +117,8 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
             getCartridgeModelInfo(contract);
         });
 
-        publicClient.getCode({
-            address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
-        }).then((bytecode) => {
-            if (!bytecode || bytecode == '0x') {
-                console.log("Couldn't get cartridge contract")
+        checkCartridgeContract().then((exists) => {
+            if (!exists) {
                 return;
             }
 
