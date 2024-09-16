@@ -26,7 +26,7 @@ function UserAchievements({address}:{address:string}) {
                     {
                         userAchievements?.map((userAchievement, index) => {
                             const i = achievementsList?.findIndex(achievement => userAchievement.ca_slug === achievement.slug);
-                            if (!i) return <></>;
+                            if (i == undefined) return <></>;
 
                             return (
                                 <Image 
@@ -46,8 +46,8 @@ function UserAchievements({address}:{address:string}) {
                     {/* list the rest of the achievements */}
                     {
                         achievementsList?.map((achievement, index) => {
-                            const i = userAchievements?.findIndex(userAchievement => userAchievement.ca_slug === achievement.slug);
-                            if (i && i > -1) return <></>;
+                            const i = userAchievements?.findIndex(userAchievement => achievement.slug == userAchievement.ca_slug);
+                            if (i == undefined || i > -1) return <></>;
 
                             return <Image 
                             onClick={() => setAchievementHover(index)} // for mobile
