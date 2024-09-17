@@ -34,8 +34,9 @@ import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
 import { buildUrl, cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
-import ReactGA from "react-ga4";
-
+// import ReactGA from "react-ga4";
+// import { sendEvent } from "../utils/googleAnalytics";
+import { sendGAEvent } from '@next/third-parties/google'
 
 let canvasPlaying = false;
 
@@ -204,8 +205,6 @@ function RivemuPlayer(
     },[user]);
 
     useEffect(() => {
-        ReactGA.initialize(envClient.GOOGLE_ANALYTICS_MEASUREMENT_ID);
-
         if (rule_id) {
             loadRule(rule_id);
         }
@@ -455,11 +454,9 @@ function RivemuPlayer(
     };
 
     async function play() {
-        ReactGA.event({
-            category: isTape? "Watch":'Play',
-            action: 'Rivemu',
-            label: isTape? `Watch ${rule?.cartridge_id} tape.`: `Play ${rule?.cartridge_id}`
-        });
+        const eventName = isTape? "Watch":"Play";
+        const eventLabel = isTape? `Watch ${tape_id}`: `Play ${rule?.id}`
+        sendGAEvent('event', eventName, { event_category: "Rivemu", event_label: eventLabel });
 
         setSpeed(1.0);
         setPaused(false);
