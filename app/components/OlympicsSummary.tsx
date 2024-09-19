@@ -3,11 +3,14 @@
 
 
 import { Dialog, Transition } from '@headlessui/react';
-import { PlayerOlympicData, ProfileAchievementAggregated } from '../utils/common'
+import { PlayerOlympicData, ProfileAchievementAggregated, SOCIAL_MEDIA_HASHTAGS } from '../utils/common'
 import { Fragment, useEffect, useState } from 'react';
 import Image from 'next/image';
 import olympicsLogo from "@/public/doom-olympics-logo.png";
 import { getProfileAchievementsSummary } from '../utils/util';
+import { User } from '../utils/privyApi';
+import Link from 'next/link';
+import { TwitterIcon, TwitterShareButton } from 'next-share';
 
 export interface PlayerDataWithRank extends PlayerOlympicData {
   rank:number
@@ -18,11 +21,13 @@ const prizesMap = {
   global: [1000, 500, 300, 50, 15]
 }
 
-function OlympicsSummary({player, contests}:{player:PlayerDataWithRank, contests:Array<{contest_id:string, name:string}>}) {
+function OlympicsSummary({player, contests, searchedUser}:
+{player:PlayerDataWithRank, contests:Array<{contest_id:string, name:string}>, searchedUser?:{address:string, user?:User}}) {
   const [modalOpen, setModalOpen] = useState(true);
   
   const [totalPrizes, setTotalPrizes] = useState(0);
   const [userAchievements, setUserAchievements] = useState<Array<ProfileAchievementAggregated>|null|undefined>(undefined);
+  const [summaryUrl, setSummaryURL] = useState("");
 
   useEffect(() => {
     getProfileAchievementsSummary(player.profile_address).then(setUserAchievements);
@@ -45,6 +50,14 @@ function OlympicsSummary({player, contests}:{player:PlayerDataWithRank, contests
     }
 
     setTotalPrizes(prizeCounter);
+
+    if (typeof window !== "undefined") {
+      if (searchedUser) {
+        setSummaryURL(`${window.location.origin}/${searchedUser.address}`);
+      } else {
+        setSummaryURL(`${window.location.origin}/${player.profile_address}`);
+      }
+    }
   }, [])
 
   if (userAchievements == undefined) return <></>;
@@ -78,7 +91,25 @@ function OlympicsSummary({player, contests}:{player:PlayerDataWithRank, contests
                       <Dialog.Panel className="w-[372px] md:w-[720px] h-fit transform bg-[#fefa97] p-4 shadow-xl transition-all grid gap-4">
                           <Dialog.Title as="h1" className="grid gap-2 place-content-center justify-items-center">
                             <Image src={olympicsLogo} width={128} alt="" />
-                            <span className='pixelated-font text-2xl'>Your Olympics Summary</span>
+                            {
+                              !searchedUser?
+                                <span className='pixelated-font text-2xl'>Your Olympics Summary</span>
+                              :
+                                <div className='flex gap-3'>
+                                  {
+                                    searchedUser.user? 
+                                      <Link href={`/profile/${searchedUser.address}`} className='pixelated-font text-2xl text-rives-purple hover:underline'>
+                                        {searchedUser.user.name}
+                                      </Link>
+                                    : 
+                                      <Link href={`/profile/${searchedUser.address}`} className='pixelated-font text-2xl text-rives-purple hover:underline'>
+                                        {`${searchedUser.address.substring(0, 6)}...${searchedUser.address.substring(searchedUser.address.length-6)}`}
+                                      </Link>
+                                  }
+                                  <span className='pixelated-font text-2xl'>Olympics Summary</span>
+                                </div>
+                            }
+                            
                           </Dialog.Title>
 
                           <div className='grid'>
@@ -133,7 +164,7 @@ function OlympicsSummary({player, contests}:{player:PlayerDataWithRank, contests
 
                             </div>
 
-                            <div className='flex flex-wrap gap-2 items-end'>
+                            <div className='flex flex-wrap gap-2 items-end justify-center'>
                               <span className='pixelated-font text-3xl'>${totalPrizes}</span>
                               <span className='text-gray-400 text-sm'>Paid in CTSI on Ethereum Mainnet</span>
                             </div>
@@ -144,9 +175,21 @@ function OlympicsSummary({player, contests}:{player:PlayerDataWithRank, contests
                               Share Feedback
                             </button>
 
-                            <button className='p-2 h-fit bg-green-400 hover:scale-105'>
-                              Share on X
-                            </button>
+                            <TwitterShareButton
+                              url={summaryUrl}
+                              title={
+                                searchedUser?
+                                  `Check out ${searchedUser.user? searchedUser.user.name:searchedUser.address} result on @rives_io DOOM Olympics`
+                                :
+                                  "Check out my result on @rives_io DOOM Olympics"
+                              }
+                              hashtags={SOCIAL_MEDIA_HASHTAGS}
+                              >
+                                <div className="p-2 h-fit bg-green-400 hover:scale-105 flex gap-2 items-center">
+                                  <span>Share on</span> <TwitterIcon size={24} round />
+                                </div>
+                                  
+                            </TwitterShareButton>
                           </div>
 
                       </Dialog.Panel>

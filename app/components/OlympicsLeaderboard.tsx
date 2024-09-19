@@ -15,7 +15,8 @@ import OlympicsSummary, { PlayerDataWithRank } from './OlympicsSummary';
 const OLYMPICS_END = 1726842600000; // Sep/20/2024, 14:30:00 UTC
 
 
-function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:{data:OlympicData, addressUsersMap:Record<string, User>, searchedUser?:string}) {
+function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:
+{data:OlympicData, addressUsersMap:Record<string, User>, searchedUser?:{address:string, user?:User}}) {
     const {ready, authenticated, user} = usePrivy();
     const [currUser, setCurrUser] = useState<PlayerDataWithRank | null | undefined>();
 
@@ -185,7 +186,7 @@ function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:{data:Olympic
     useEffect(() => {
         if (!(ready || authenticated || user)) return;
         
-        const userAddress = searchedUser? searchedUser.toLowerCase(): user?.wallet?.address.toLowerCase();
+        const userAddress = searchedUser? searchedUser.address: user?.wallet?.address.toLowerCase();
         for (let i = 0; i < data.leaderboard.length; i++) {
             if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
                 setCurrUser({...data.leaderboard[i], rank: i+1});
@@ -207,7 +208,7 @@ function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:{data:Olympic
         <>
             {
                 currUser && new Date().getTime() >= OLYMPICS_END? // time > 2024/09/23 00:00:00
-                    <OlympicsSummary player={currUser} contests={data.contests} />
+                    <OlympicsSummary player={currUser} contests={data.contests} searchedUser={searchedUser} />
                 :
                     <></>
             }
@@ -295,7 +296,7 @@ function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:{data:Olympic
                     </thead>
                     <tbody>
                         {
-                            !currUser || currUser.rank < 10?
+                            searchedUser || !currUser || currUser.rank < 10?
                                 <></>
                             :
                                 tableRowMobileScreen(currUser as PlayerOlympicData, currUser.rank, true)

@@ -9,15 +9,23 @@ import olympicsLogo from "@/public/doom-olympics-logo.png";
 import OlumpicsPageMsg from '../components/OlumpicsPageMsg';
 import OlympicsLeaderboard from '../components/OlympicsLeaderboard';
 import CartesiLockup from "@/public/cartesi_lockup_white.png";
+import { Metadata } from "next";
 
 export const revalidate = 0 // revalidate data always
 
+export const metadata: Metadata = {
+    title: 'Olympics',
+    description: 'RIVES Olympics',
+}
 
 async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: string | string[] | undefined }}) {
-    const requestedCartridgeId = searchParams? searchParams["user"]:null;
+    const searchedAddress = searchParams? searchParams["user"]:null;
+    let searchedUserAddress:string|null = null;
 
-	if (requestedCartridgeId && typeof requestedCartridgeId == "string") {
-        
+	if (searchedAddress && typeof searchedAddress == "string") {
+        if (searchedAddress.startsWith("0x") && searchedAddress.length == 42) {
+            searchedUserAddress = searchedAddress.toLowerCase();
+        }
     }
 
 
@@ -169,7 +177,8 @@ async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: stri
                     !data?
                         <></>
                     :
-                        <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap} />
+                        <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap}
+                        searchedUser={searchedUserAddress? {address: searchedUserAddress, user: addressUsersMap[searchedUserAddress]}: undefined} />
                 }
             </section>
         </main>
