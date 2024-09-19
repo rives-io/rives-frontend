@@ -9,7 +9,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
 import Loading from "./Loading";
-import { getUserTapes } from "../utils/assets";
+import { checkTapeContract, getUserTapes } from "../utils/assets";
 import { User } from "../utils/privyApi";
 
 
@@ -17,7 +17,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
     const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCreatedPage, setTapesCreatedPage] = useState(0);
     
-    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayloadProxy>>>();
+    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCollectedPage, setTapesCollectedPage] = useState(0);
     
     const [tapesCreatedPageToLoad, setTapesCreatedPageToLoad] = useState(1);
@@ -29,7 +29,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
     const [tapesCreatedLoading, setTapesCreatedLoading] = useState(true);
     const [tapesCollectedLoading, setTapesCollectedLoading] = useState(true);
     
-    const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
+    const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>();
 
     const disablePrevTapesCreatedPage = tapesCreatedPage == 1;
     const disablePrevTapesCollectedPage = tapesCollectedPage == 1;
@@ -78,7 +78,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
 
     const TapesCollectedByProfile = async () => {
         const page_size = 6;
-        if (!tapesCollect) return;
+        if (!tapesCollectedList) return;
         if (tapesCollectedList.length == 0 || tapesCollect[tapesCollectedPageToLoad-1]) {
             setTapesCollectedPage(tapesCollectedPageToLoad);
             setTotalTapesCollectedPages(Math.ceil(tapesCollectedList.length / page_size));
@@ -141,9 +141,13 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
 
     useEffect(() => {
         TapesCreatedByProfile();
-        getUserTapes(address).then(out => {
-            if (out) {
-                setTapesCollectedList(out.map((t,i) => tapeIdFromBytes(t)))
+        checkTapeContract().then(exists => {
+            if (exists) {
+                getUserTapes(address).then(out => {
+                    if (out) {
+                        setTapesCollectedList(out.map((t,i) => tapeIdFromBytes(t)))
+                    }
+                });
             }
         });
     }, [])
@@ -210,7 +214,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
                 }
             </div>
 
-            {tapesCollect ? <div className="flex flex-col gap-4">
+            {tapesCollectedList ? <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Tapes Collected</h1>
                 </div>

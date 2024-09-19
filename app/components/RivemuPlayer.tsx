@@ -527,7 +527,8 @@ function RivemuPlayer(
                         <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
                         title={isTape ? "Restart" :"Record"}
                         onKeyDown={() => null} onKeyUp={() => null}
-                        onClick={play}>
+                        onClick={play}
+                        onMouseDown={(event:any) => event.preventDefault()}>
                             {isTape ? <RestartIcon/> : <FiberManualRecordIcon/>}
                         </button>
                         <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
@@ -535,6 +536,7 @@ function RivemuPlayer(
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={pause}
+                        onMouseDown={(event:any) => event.preventDefault()}
                         >
                             <PauseIcon/>
                         </button>
@@ -544,6 +546,7 @@ function RivemuPlayer(
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={stop}
+                        onMouseDown={(event:any) => event.preventDefault()}
                         >
                             <StopIcon/>
                         </button>
