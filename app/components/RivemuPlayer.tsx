@@ -129,18 +129,6 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
     return data.data[0];
 }
 
-const getScore = async (tapeId:string):Promise<string> => {
-    const out:Array<VerificationOutput> = (await getOutputs(
-        {
-            tags: ["score",tapeId],
-            type: 'notice'
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    )).data;
-    if (out.length === 0) return "";
-    return out[0].score.toString();
-}
-
 const getTapePayload = async (tapeId:string):Promise<VerifyPayloadProxy> => {
     const replayLogs:Array<VerifyPayloadProxy> = (await getOutputs(
         {
@@ -166,7 +154,6 @@ function RivemuPlayer(
     const [cartridgeData, setCartridgeData] = useState<Uint8Array>();
     const [rule, setRule] = useState<RuleInfo>();
     const [tape, setTape] = useState<VerifyPayloadProxy>();
-    const [tapeInfo, setTapeInfo] = useState<TapeInfo>();
     const [entropy, setEntropy] = useState<string>("entropy");
     const [currScore, setCurrScore] = useState<number>();
     const [playing, setPlaying] = useState({isPlaying: false, playCounter: 0})
@@ -246,7 +233,7 @@ function RivemuPlayer(
 
     }, [rule,tapeInCard,usedTapes]);
 
-    const loadRule = (ruleId:string, currTapeInfo?: TapeInfo) => {
+    const loadRule = (ruleId:string) => {
         setLoadingMessage("Loading rule");
         getRule(ruleId).then((out: RuleInfo) => {
             if (!out) {
@@ -264,9 +251,6 @@ function RivemuPlayer(
                 setLoadingMessage(undefined);
             });
 
-            if (tape_id) { //} && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(out)) > -1) {
-                getScore(tape_id).then((out) => setTapeInfo({...currTapeInfo,score:out}))
-            }
         });
     }
 
@@ -279,15 +263,9 @@ function RivemuPlayer(
             }
             setTape(out);
 
-            const player = `${out._msgSender.slice(0, 6)}...${out._msgSender.substring(out._msgSender.length-4,out._msgSender.length)}`;
-            const timestamp = timeToDateUTCString(out._timestamp*1000);
-            const size = formatBytes(out.tape.length);
-            const currTapeInfo: TapeInfo = {player,timestamp,size};
-
-            setTapeInfo({...tapeInfo,...{player,timestamp,size}});
             setEntropy(generateEntropy(out._msgSender,ruleIdFromBytes(out.rule_id)));
             if (loadRuleFromTape) {
-                loadRule(ruleIdFromBytes(out.rule_id),currTapeInfo)
+                loadRule(ruleIdFromBytes(out.rule_id))
             } else {
                 setLoadingMessage(undefined);
             }
@@ -581,7 +559,7 @@ function RivemuPlayer(
                     
                 <div className="relative">
                 { !playing.isPlaying?
-                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
+                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 border border-gray-500'} onClick={play}
                     title={isTape ? "Replay": "Record"}>
                         {
                             playing.playCounter === 0?

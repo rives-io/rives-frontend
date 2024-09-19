@@ -73,10 +73,10 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                                                 <span title={cartridge.user_address}>{creator.name}</span>
                                     </Link>
                             }
-                            <div className='flex'>
+                            { cartridge.created_at > 0 ? <div className='flex'>
                                 <span className='pixelated-font me-2'>On:</span>
                                 <div>{timeToDateUTCString(cartridge.created_at)}</div>
-                            </div>
+                            </div> : <></> }
                         </div>
 
                         <CartridgeAssetManager cartridge={cartridge} reloadStats={() => setReload(reload+1)} />

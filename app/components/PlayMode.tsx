@@ -185,7 +185,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                                         }
 
                                                                                         <span className="text-gray-400">Start</span>
-                                                                                        {timeToDateUTCString(rule.created_at)}
+                                                                                        {rule.start? timeToDateUTCString(rule.start):"-"}
 
                                                                                         <span className="text-gray-400">End</span>
                                                                                         {rule.end? timeToDateUTCString(rule.end):"-"}
