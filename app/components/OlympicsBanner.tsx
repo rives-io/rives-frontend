@@ -7,16 +7,10 @@ import Link from 'next/link';
 import CartesiLogo from "@/public/cartesi_icon.png";
 import winnerAchievementIcon from "@/public/contest.png";
 import participationAchievementIcon from "@/public/contestparticipant.png";
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import olympicsLogo from "@/public/doom-olympics-logo.png";
 
 
 function OlympicsBanner() {
-
-    function handleSignUpClick(e:React.MouseEvent<HTMLElement>) {
-        e.preventDefault();
-        window.open(`https://bit.ly/3XcT5Gv`,"_blank");
-    }
 
   return (
     <Link href={"/olympics"}

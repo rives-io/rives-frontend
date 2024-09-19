@@ -9,15 +9,15 @@ import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
 import Loading from './Loading';
 import { useEffect, useState } from 'react';
+import OlympicsSummary, { PlayerDataWithRank } from './OlympicsSummary';
 
 
-interface PlayerData extends PlayerOlympicData {
-    rank:number
-}
+const OLYMPICS_END = 1726842600000; // Sep/20/2024, 14:30:00 UTC
 
-function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUsersMap:Record<string, User>}) {
+
+function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:{data:OlympicData, addressUsersMap:Record<string, User>, searchedUser?:string}) {
     const {ready, authenticated, user} = usePrivy();
-    const [currUser, setCurrUser] = useState<PlayerData | null | undefined>();
+    const [currUser, setCurrUser] = useState<PlayerDataWithRank | null | undefined>();
 
 
     function tableRowDesktopScreen(player:PlayerOlympicData, rank:number, currUserRow=false) {
@@ -185,7 +185,7 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
     useEffect(() => {
         if (!(ready || authenticated || user)) return;
         
-        const userAddress = user?.wallet?.address.toLowerCase();
+        const userAddress = searchedUser? searchedUser.toLowerCase(): user?.wallet?.address.toLowerCase();
         for (let i = 0; i < data.leaderboard.length; i++) {
             if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
                 setCurrUser({...data.leaderboard[i], rank: i+1});
@@ -205,6 +205,12 @@ function OlympicsLeaderboard({data, addressUsersMap}:{data:OlympicData, addressU
 
     return (
         <>
+            {
+                currUser && new Date().getTime() >= OLYMPICS_END? // time > 2024/09/23 00:00:00
+                    <OlympicsSummary player={currUser} contests={data.contests} />
+                :
+                    <></>
+            }
             <div className='w-full hidden xl:grid'>
                 <h1 className='text-5xl pixelated-font mb-4'>Olympics Leaderboard</h1>
 

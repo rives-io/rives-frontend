@@ -13,7 +13,14 @@ import CartesiLockup from "@/public/cartesi_lockup_white.png";
 export const revalidate = 0 // revalidate data always
 
 
-async function OlympicsPage() {
+async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: string | string[] | undefined }}) {
+    const requestedCartridgeId = searchParams? searchParams["user"]:null;
+
+	if (requestedCartridgeId && typeof requestedCartridgeId == "string") {
+        
+    }
+
+
     const data = await getOlympicsData("");
     const accordionItems = [
         {
@@ -97,14 +104,6 @@ async function OlympicsPage() {
             )
         }
     ];
-
-    // if (!data) {
-    //     return (
-    //         <main className="flex items-center justify-center h-lvh">
-    //             <span className={`text-4xl text-white pixelated-font` }>No Olympics data!</span>
-    //         </main>
-    //     );
-    // }
 
     let addresses:Array<string> = [];
     if (data) {
