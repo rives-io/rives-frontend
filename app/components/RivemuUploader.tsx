@@ -31,7 +31,8 @@ import { CartridgeInfo, InfoCartridge, InsertCartridgePayloadProxy } from "../ba
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import Link from 'next/link';
 import CartridgeModelSetup from './CartridgeModelSetup';
-import { cartridgeIdFromBytes } from '../utils/util';
+import { calculateCartridgeId, cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
+import { getCartridgeOwner } from '../utils/assets';
 
 let canvasPlaying = false;
 
@@ -89,6 +90,8 @@ function RivemuUploader() {
 
     const [cartridgeInserted, setCartridgeInserted] = useState<boolean>();
     const [submittingTx, setSubmittingTx] = useState<boolean>();
+    const [settingUpModel, setSettingUpModel] = useState<boolean>(false);
+    const [checkingOwner, setCheckingOwner] = useState<boolean>(false);
 
     // signer
     const {user, ready, connectWallet} = usePrivy();
@@ -359,6 +362,28 @@ function RivemuUploader() {
         setSubmittingTx(false);
     }
 
+    async function checkCartridgeOwner() {
+        if (!cartridgeData) return;
+
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) return;
+
+        setCheckingOwner(true);
+
+        const cartridgeId = calculateCartridgeId(cartridgeData);
+        const formattedCartridgeId = formatCartridgeIdToBytes(calculateCartridgeId(cartridgeData));
+        console.log("checkCartridgeOwner", cartridgeId, formattedCartridgeId)
+
+        const addr = await getCartridgeOwner(formattedCartridgeId.slice(2));
+        console.log("checkCartridgeOwner addr", addr ,wallet.address)
+
+        if (addr?.toLowerCase() == wallet.address.toLowerCase())
+            setSettingUpModel(true);
+
+        setCheckingOwner(false);
+    }
+
+
     return (
         <ThemeProvider theme={darkTheme}>
         <CssBaseline />
@@ -498,24 +523,32 @@ function RivemuUploader() {
                                 InputLabelProps={{ shrink: true }} />
                     </div>
 
-                    <div className='grid grid-cols-1'>
-                        <button disabled={!cartridgeData || !infoCartridge?.name || !wallet || cartridgeInserted || submittingTx} className="btn mt-2 text-sm" onClick={sendCartridge}
+                    <div className='grid grid-cols-1 justify-center'>
+                        <button disabled={!cartridgeData || !infoCartridge?.name || !wallet || cartridgeInserted || submittingTx} className="btn mt-2 text-sm flex justify-center" onClick={sendCartridge}
                             title={getTitleMessage()}>
-                            Upload Cartridge
+                            { !submittingTx ? "Upload Cartridge" : <div className='w-6 h-6 border-2 rounded-full border-current border-r-transparent animate-spin'></div>}
                         </button>
 
                     </div>
                 </div>
                 : <>
                 {cartridgeData ? 
+                    settingUpModel ?
                     <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
                         <div className='grid grid-cols-1 gap-4 border border-stone-500 p-4 text-white'>
-                            <CartridgeModelSetup cartridgeId={cartridgeIdFromBytes(ethers.utils.hexlify(cartridgeData))} 
+                            Setup Tape Submisstion Model
+                            <CartridgeModelSetup cartridgeId={calculateCartridgeId(cartridgeData)} 
                                 reloadFn={() => {}} cancelFn={clean} 
                             /> 
                         </div>
+                    </div> : 
+                    <div className='grid grid-cols-1 justify-center xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4'>
+                        <button disabled={!cartridgeData || !wallet || !cartridgeInserted || submittingTx || checkingOwner} className="btn mt-2 text-sm flex justify-center" onClick={checkCartridgeOwner}
+                            >
+                            { !checkingOwner ? "Setup Model" : <div className='w-6 h-6 border-2 rounded-full border-current border-r-transparent animate-spin'></div>}
+                        </button>
                     </div>
-                    : <></>}  
+                : <></>}  
                 </>
                 }
 

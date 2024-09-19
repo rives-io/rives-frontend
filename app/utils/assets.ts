@@ -91,6 +91,17 @@ export const publicClient = createPublicClient({
     //transport: http(envClient.NETWORK_CHAIN_ID == "0xAA36A7" ? "https://ethereum-sepolia-rpc.publicnode.com" : undefined)
 })
 
+export async function checkCartridgeContract(): Promise<boolean> {
+    const bytecode = await publicClient.getCode({
+        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
+    })
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get cartridge contract")
+        return false;
+    }
+    return true;
+}
+
 export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
@@ -149,6 +160,17 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
     }
 }
 
+
+export async function checkTapeContract(): Promise<boolean> {
+    const bytecode = await publicClient.getCode({
+        address: envClient.TAPE_CONTRACT_ADDR as `0x${string}`
+    })
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get tape contract")
+        return false;
+    }
+    return true;
+}
 
 export async function getTapeBondInfo(tapeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
@@ -212,11 +234,7 @@ export async function getUserCartridges(user: string): Promise<string[]|null> {
     if (envClient.CARTRIDGE_CONTRACT_ADDR.toLowerCase() == ZERO_ADDRESS.toLowerCase())
         return null;
     
-    const bytecode = await publicClient.getCode({
-        address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
-    });
-    if (!bytecode || bytecode == '0x') {
-        console.log("Couldn't get cartridge contract")
+    if (!await checkCartridgeContract()) {
         return null;
     }
 
@@ -296,11 +314,7 @@ export async function getUserTapes(user: string): Promise<string[]|null> {
     if (envClient.TAPE_CONTRACT_ADDR.toLowerCase() == ZERO_ADDRESS.toLowerCase())
         return null;
     
-    const bytecode = await publicClient.getCode({
-        address: envClient.TAPE_CONTRACT_ADDR as `0x${string}`
-    });
-    if (!bytecode || bytecode == '0x') {
-        console.log("Couldn't get tape contract")
+    if (! await checkTapeContract()) {
         return null;
     }
 
@@ -587,22 +601,34 @@ export async function validateCartridge(cartridge_id:string, wallet:ConnectedWal
     );
 }
 
+export async function checkWorldContract(): Promise<boolean> {
+    const bytecode = await publicClient.getCode({
+        address: envClient.WORLD_ADDRESS as `0x${string}`
+    })
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get world contract")
+        return false;
+    }
+    return true;
+}
+
 export async function getCartridgeOwner(cartridgeIdB32: string): Promise<string|null> {
     try {
-        const model: [string] = await publicClient.readContract({
+        const res: string = await publicClient.readContract({
             address: `0x${envClient.WORLD_ADDRESS.slice(2)}`,
             abi: worldAbi,
             functionName: "getCartridgeOwner",
             args: [`0x${cartridgeIdB32}`]
-        }) as [string];
-        if (model) {
-            return model[0];
+        }) as string;
+        if (res) {
+            return res;
         }
     } catch (e) {
         console.log("Error reading contract",e);
     }
     return null;
 }
+
 export async function getTapeSubmissionModel(cartridgeId: string): Promise<[string,string]|null> {
     try {
         const model: [string,string] = await publicClient.readContract({

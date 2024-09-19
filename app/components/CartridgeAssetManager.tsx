@@ -13,7 +13,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge, ZERO_ADDRESS } from "../utils/assets";
+import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, checkCartridgeContract, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge, ZERO_ADDRESS } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
@@ -208,11 +208,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
         if (model && model[0] != ZERO_ADDRESS) {
             if (model[0] == envClient.TAPE_OWNERSHIP_SUBMISSION_MODEL) {
 
-                const bytecode = await publicClient.getCode({
-                    address: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`
-                });
-                if (!bytecode || bytecode == '0x') {
-                    console.log("Couldn't get cartridge contract")
+                if (! await checkCartridgeContract()) {
                     return;
                 }
 

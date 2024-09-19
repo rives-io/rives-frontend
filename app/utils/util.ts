@@ -460,6 +460,10 @@ export function calculateTapeId(ruleId:string, log: Uint8Array): string {
     return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
 }
 
+export function calculateCartridgeId(log: Uint8Array): string {
+    return cartridgeIdFromBytes(truncateTapeHash(ethers.utils.keccak256(log)));
+}
+
 export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
     for (let cartridge of cartridges) {
