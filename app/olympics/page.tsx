@@ -9,13 +9,56 @@ import olympicsLogo from "@/public/doom-olympics-logo.png";
 import OlumpicsPageMsg from '../components/OlumpicsPageMsg';
 import OlympicsLeaderboard from '../components/OlympicsLeaderboard';
 import CartesiLockup from "@/public/cartesi_lockup_white.png";
-import { Metadata } from "next";
+import { Metadata, ResolvingMetadata } from "next";
 
 export const revalidate = 0 // revalidate data always
 
-export const metadata: Metadata = {
-    title: 'Olympics',
-    description: 'RIVES Olympics',
+type Props = {
+    params: { id: string }
+    searchParams: { [key: string]: string | string[] | undefined }
+}
+export async function generateMetadata(
+    { params, searchParams }: Props,
+    parent: ResolvingMetadata
+  ): Promise<Metadata> {
+
+    const searchedAddress = searchParams? searchParams["user"]:null;
+    let searchedUserAddress:string|null = null;
+
+	if (searchedAddress && typeof searchedAddress == "string") {
+        if (searchedAddress.startsWith("0x") && searchedAddress.length == 42) {
+            searchedUserAddress = searchedAddress.toLowerCase();
+        }
+    }
+
+    const title = "Olympics";
+    const desc = "RIVES Olympics";
+    if (!searchedUserAddress) {
+        return {
+            title: title,
+            description: desc,
+        }
+    }
+    
+    const shareTitle = `Olympics - ${searchedUserAddress} | RIVES`;
+    const olympicsResultBanner = `/olympics-result/${searchedUserAddress}`;
+    
+    return {
+        title: title,
+        openGraph: {
+            images: [olympicsResultBanner], 
+            siteName: 'rives.io',
+            title: shareTitle,
+            description: desc
+        },
+        twitter: {
+            images: [olympicsResultBanner],
+            title: shareTitle,
+            card: 'summary',
+            creator: '@rives_io',
+            description: desc
+        },
+    }
 }
 
 async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: string | string[] | undefined }}) {
