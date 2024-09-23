@@ -102,6 +102,50 @@ export async function checkCartridgeContract(): Promise<boolean> {
     return true;
 }
 
+export async function checkContract(addr: `0x${string}`): Promise<boolean> {
+    const bytecode = await publicClient.getCode({
+        address: addr
+    })
+    if (!bytecode || bytecode == '0x') {
+        console.log("Couldn't get contract")
+        return false;
+    }
+    return true;
+}
+
+export async function checkAndSetupErc20Allowance(token: `0x${string}`,wallet:ConnectedWallet,spender: `0x${string}`, value: bigint) {
+    const currAllowance = await publicClient.readContract({
+        address: token,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [wallet.address as `0x${string}`,spender]
+    });
+
+    if (currAllowance < value) {
+
+        await verifyChain(wallet);
+
+        const provider = await wallet.getEthereumProvider();
+        const walletClient = createWalletClient({
+            chain: getChain(envClient.NETWORK_CHAIN_ID),
+            transport: custom(provider)
+        });
+    
+        const { request } = await publicClient.simulateContract({
+            account: wallet.address as `0x${string}`,
+            address: token,
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: [spender,value]
+        });
+        const txHash = await walletClient.writeContract(request);
+    
+        await publicClient.waitForTransactionReceipt( 
+            { hash: txHash }
+        )
+    }
+}
+
 export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = false): Promise<BondInfo|null> {
     let symbol = "ETH";
     let decimals = 18;
@@ -140,7 +184,7 @@ export async function getCartridgeBondInfo(cartridgeId: string, getBuyPrice = fa
                 functionName: "getCurrentBuyPrice",
                 args: [formatCartridgeIdToBytes(cartridgeId),1]
             }) as any[];
-            buyPrice = BigNumber.from(buyPriceOut[0]).sub(BigNumber.from(buyPriceOut[1]));
+            buyPrice = BigNumber.from(buyPriceOut[0]);//.sub(BigNumber.from(buyPriceOut[1]));
         }
         const price = BigNumber.from(bond[0].currentPrice);
         const marketcap = supply.mul(price);
@@ -455,6 +499,7 @@ export async function buyCartridge(cartridge_id:string, wallet:ConnectedWallet, 
     if (!erc20TokenAddr) {
         value = slippage;
     } else {
+        await checkAndSetupErc20Allowance(`0x${erc20TokenAddr.slice(2)}`,wallet,`0x${envClient.CARTRIDGE_CONTRACT_ADDR.slice(2)}`, slippage);
         // const allowance: BigNumber = await erc20Contract.allowance(signerAddress,cartridgeContract.address);
         // if (allowance.lt(slippage)) {
         //     const approveTx = await erc20Contract.approve(cartridgeContract.address,slippage.sub(allowance));
