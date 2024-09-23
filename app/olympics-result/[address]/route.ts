@@ -1,11 +1,9 @@
 import { type NextRequest } from 'next/server';
-import DOOMOlympicsLogo from "@/public/doom-olympics-logo.png";
-import RivesLogo from "@/public/logo_cutted.png";
-import DefaultProfile from "@/public/default_profile.png";
-import { buildUrl, getOlympicsData } from '@/app/utils/util';
+import { getOlympicsData } from '@/app/utils/util';
 import { notFound } from 'next/navigation';
 import { getUsersByAddress, User } from '@/app/utils/privyApi';
 
+export const revalidate = 10;
 
 const sharp = require('sharp');
 const bannerWidth = 1280;
@@ -38,36 +36,14 @@ export async function GET(request: NextRequest, { params }: { params: { address:
     }
 
     // DOOM Olympics Logo
-    let response = await fetch(buildUrl(request.nextUrl.origin, DOOMOlympicsLogo.src),
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "image/png",
-            },
-        }
-    );
-    let blob = await response.blob();
-    let data = new Uint8Array(await blob.arrayBuffer());
-
     const resizedDoomLogoWidth = 512;
-    const resizedDoomLogo = await sharp(data).resize({ width: resizedDoomLogoWidth }).toBuffer();
+    const resizedDoomLogo = await sharp("./public/doom-olympics-logo.png").resize({ width: resizedDoomLogoWidth }).toBuffer();
     const resizedDoomLogoHeight = 384;
     const resizedDoomLogoPositionTop = bannerHeight/2 - resizedDoomLogoHeight/2;
 
     // RIVES Logo
-    response = await fetch(buildUrl(request.nextUrl.origin, RivesLogo.src),
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "image/png",
-            },
-        }
-    );
-    blob = await response.blob();
-    data = new Uint8Array(await blob.arrayBuffer());
-
     const resizedRIVESLogoWidth = 256;
-    const resizedRIVESLogo = await sharp(data).resize({ width: resizedRIVESLogoWidth }).toBuffer();
+    const resizedRIVESLogo = await sharp("./public/logo_cutted.png").resize({ width: resizedRIVESLogoWidth }).toBuffer();
     const resizedRIVESLogoHeight = 68;
     const resizedRIVESLogoPositionTop = resizedDoomLogoPositionTop - resizedRIVESLogoHeight/2 -10;
     const resizedRIVESLogoPositionLeft = resizedDoomLogoWidth/2 + 60 - resizedRIVESLogoWidth/2;
@@ -76,20 +52,24 @@ export async function GET(request: NextRequest, { params }: { params: { address:
     const doomOlympicsTextImg = await sharp({
         text: {
           text: `<span foreground="white">DOOM Olympics</span>`,
+          fontfile: "./public/Silkscreen-Regular.ttf",
+          font: "Silkscreen",
           rgba: true,
-          width: 300,
+          width: 350,
           height: 64,
           channels: 4
         },
     }).png().toBuffer()
     const doomOlympicsTextPositionTop = bannerHeight/2 + resizedDoomLogoHeight/2 + 10;
-    const doomOlympicsTextPositionLeft = resizedDoomLogoWidth/2 + 60 - 150; // Minus this text width
+    const doomOlympicsTextPositionLeft = resizedDoomLogoWidth/2 + 60 - 175; // Minus this text width
 
     
     // User Rank Text
     const rankTextImg = await sharp({
         text: {
           text: `<span foreground="white">#${userRank}</span>`,
+          fontfile: "./public/Silkscreen-Regular.ttf",
+          font: "Silkscreen",
           rgba: true,
           width: 500,
           height: 100,
@@ -114,24 +94,12 @@ export async function GET(request: NextRequest, { params }: { params: { address:
     const userTextPositionTop = bannerHeight/2 + 50 + 10;
 
     // user image
-    const fetchDefaultProfile = async () => {
-        response = await fetch(buildUrl(request.nextUrl.origin, DefaultProfile.src),
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "image/png",
-                },
-            }
-        );
-        blob = await response.blob();
-        data = new Uint8Array(await blob.arrayBuffer()); 
-    }
-
+    let data:Uint8Array|string;
     if (!user) {
-        await fetchDefaultProfile();
+        data = "./public/default_profile.png"
     } else {
         try {
-            response = await fetch(user.picture_url,
+            let response = await fetch(user.picture_url,
                 {
                     method: "GET",
                     headers: {
@@ -139,10 +107,10 @@ export async function GET(request: NextRequest, { params }: { params: { address:
                     },
                 }
             );
-            blob = await response.blob();
+            let blob = await response.blob();
             data = new Uint8Array(await blob.arrayBuffer());                
         } catch (error) {
-            await fetchDefaultProfile()
+            data = "./public/default_profile.png"
         }
     }
     const profileImg = await sharp(data).toBuffer();

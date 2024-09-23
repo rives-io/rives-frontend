@@ -11,6 +11,7 @@ import { getProfileAchievementsSummary } from '../utils/util';
 import { User } from '../utils/privyApi';
 import Link from 'next/link';
 import { TwitterIcon, TwitterShareButton } from 'next-share';
+import { usePrivy } from '@privy-io/react-auth';
 
 export interface PlayerDataWithRank extends PlayerOlympicData {
   rank:number
@@ -24,6 +25,7 @@ const prizesMap = {
 function OlympicsSummary({player, contests, searchedUser}:
 {player:PlayerDataWithRank, contests:Array<{contest_id:string, name:string}>, searchedUser?:{address:string, user?:User}}) {
   const [modalOpen, setModalOpen] = useState(true);
+  const {ready, user, linkTwitter} = usePrivy();
   
   const [totalPrizes, setTotalPrizes] = useState(0);
   const [userAchievements, setUserAchievements] = useState<Array<ProfileAchievementAggregated>|null|undefined>(undefined);
@@ -53,9 +55,9 @@ function OlympicsSummary({player, contests, searchedUser}:
 
     if (typeof window !== "undefined") {
       if (searchedUser) {
-        setSummaryURL(`${window.location.origin}/${searchedUser.address}`);
+        setSummaryURL(`${window.location.origin}/olympics?user=${searchedUser.address}`);
       } else {
-        setSummaryURL(`${window.location.origin}/${player.profile_address}`);
+        setSummaryURL(`${window.location.origin}/olympics?user=${player.profile_address}`);
       }
     }
   }, [])
@@ -119,11 +121,11 @@ function OlympicsSummary({player, contests, searchedUser}:
                             </div>
 
                             {
-                              contests.map((contest, index) => {
+                              contests.map((contest) => {
                                 const player_contest = player.contests[contest.contest_id];
 
                                 return (
-                                  <div key={index} className='flex'>
+                                  <div key={contest.contest_id} className='flex'>
                                     <span className='p-1 bg-white flex-1 text-start border-r-2 border-black'>{contest.name}</span>
                                     <span className='p-1 bg-rives-purple text-white w-16'>{player_contest? player_contest.rank:"NA"}</span>
                                   </div>
@@ -137,7 +139,16 @@ function OlympicsSummary({player, contests, searchedUser}:
                             </div>
                           </div>
 
-                          <div className='p-2 bg-black text-white grid gap-2 justify-items-center'>
+                          <div className='p-2 bg-black text-white grid gap-2 justify-items-center relative'>
+                            {
+                              !searchedUser && ready && !user?.twitter?
+                                <button onClick={linkTwitter}
+                                className='absolute top-0 start-0 bg-black bg-opacity-60 h-full w-full z-10 flex justify-center items-center text-xl hover:text-2xl'>
+                                  <span className='pixelated-font'>Link Twitter to receive the prizes</span>
+                                </button>
+                              :
+                                <></>
+                            }
                             <span className='pixelated-font text-xl'>Prizes</span>
 
                             <div className='flex flex-wrap gap-2'>
@@ -171,9 +182,11 @@ function OlympicsSummary({player, contests, searchedUser}:
                           </div>
 
                           <div className='flex gap-4 justify-center'>
-                            <button className='p-2 h-fit bg-orange-400 hover:scale-105'>
+                            <Link rel="noopener noreferrer" target="_blank"
+                            href={"https://app.deform.cc/form/847452e7-6bf6-4c34-9a63-e489dd065716"}
+                            className='p-2 h-fit bg-orange-400 hover:scale-105'>
                               Share Feedback
-                            </button>
+                            </Link>
 
                             <TwitterShareButton
                               url={summaryUrl}
