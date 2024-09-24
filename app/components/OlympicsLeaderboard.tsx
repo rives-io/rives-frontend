@@ -19,7 +19,40 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
 {data:OlympicData, socialPrizesData:RaffleData|null, addressUsersMap:Record<string, User>, searchedUser?:{address:string, user?:User}}) {
     const {ready, authenticated, user} = usePrivy();
     const [currUser, setCurrUser] = useState<PlayerSummary | null | undefined>();
+    const [searchedUserSummary, setSearchedUserSummary] = useState<PlayerSummary | null | undefined>();
 
+    function olympicsSummary() {
+        if (new Date().getTime() < OLYMPICS_END) return <></>;
+
+        return (
+            <div className='flex-1 flex gap-2 justify-end'>
+                {
+                    currUser?
+                        <>
+                            {
+                                !searchedUserSummary? // curUser and !searchedUser
+                                    <OlympicsSummary player={currUser} contests={data.contests} openOnLoad={true} />
+                                : // curUser and searchedUser
+                                    <>
+                                        <OlympicsSummary player={currUser} contests={data.contests} openOnLoad={false} />
+                                        <OlympicsSummary player={searchedUserSummary} contests={data.contests} openOnLoad={true} />
+                                    </>
+
+                            }
+                        </>
+                    :
+                        <>
+                            {
+                                !searchedUserSummary? // !curUser and !searchedUser
+                                    <></>
+                                : // searchedUser
+                                    <OlympicsSummary player={searchedUserSummary} contests={data.contests} openOnLoad={true} />
+                            }
+                        </>
+                }
+            </div>
+        )
+    }
 
     function tableRowDesktopScreen(player:PlayerOlympicData, rank:number, currUserRow=false) {
         const playerKey = `player-${rank}`;
@@ -186,7 +219,11 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
     useEffect(() => {
         if (!(ready || authenticated || user)) return;
         
-        const userAddress = searchedUser? searchedUser.address: user?.wallet?.address.toLowerCase();
+        const userAddress = user?.wallet?.address.toLowerCase();
+        let exit_counter = 2;
+        if (!searchedUser) exit_counter = exit_counter -1;
+        if (!user?.wallet?.address) exit_counter = exit_counter -1;
+
         for (let i = 0; i < data.leaderboard.length; i++) {
             if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
                 let prizes:Array<Raffle>|undefined;
@@ -194,8 +231,31 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
                     prizes = socialPrizesData[userAddress];
                 }
 
-                setCurrUser({...data.leaderboard[i], rank: i+1, socialPrizes: prizes? prizes: []});
-                return;
+                setCurrUser({...data.leaderboard[i], 
+                    rank: i+1, 
+                    socialPrizes: prizes? prizes: [], 
+                    searched: false
+                });
+
+                exit_counter = exit_counter -1;
+                if (exit_counter == 0) return;
+            }
+
+            if (searchedUser && data.leaderboard[i].profile_address.toLowerCase() == searchedUser.address) {
+                let prizes:Array<Raffle>|undefined;
+                if (socialPrizesData) {
+                    prizes = socialPrizesData[searchedUser.address];
+                }
+
+                setSearchedUserSummary({...data.leaderboard[i], 
+                    rank: i+1, 
+                    socialPrizes: prizes? prizes: [], 
+                    searched: true, 
+                    user: searchedUser.user
+                });
+
+                exit_counter = exit_counter -1;
+                if (exit_counter == 0) return;
             }
         }
 
@@ -211,14 +271,11 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
 
     return (
         <>
-            {
-                currUser && new Date().getTime() >= OLYMPICS_END? // time > 2024/09/23 00:00:00
-                    <OlympicsSummary player={currUser} contests={data.contests} searchedUser={searchedUser} />
-                :
-                    <></>
-            }
             <div className='w-full hidden xl:grid'>
-                <h1 className='text-5xl pixelated-font mb-4'>Olympics Leaderboard</h1>
+                <div className='flex gap-2 items-center'>
+                    <h1 className='text-5xl pixelated-font mb-4'>Olympics Leaderboard</h1>
+                    {olympicsSummary()}
+                </div>
 
                 <table className="w-full">
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
@@ -250,7 +307,7 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
 
                     <tbody className='text-xs'>
                         {
-                            searchedUser || !currUser || currUser.rank < 10?
+                            !currUser || currUser.rank < 10?
                                 <></>
                             :
                                 tableRowDesktopScreen(currUser as PlayerOlympicData, currUser.rank, true)
@@ -269,9 +326,13 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
 
 
             {/* Mobile Leaderboard */}
-            <div className='w-full xl:hidden grid '>
-                <h1 className='text-xl mb-4 sm:text-2xl md:text-4xl lg:text-5xl pixelated-font'>Olympics Leaderboard</h1>
-                <table className='w-full'>
+            <div className='w-full xl:hidden grid'>
+                <div className='flex gap-2 items-center'>
+                    <h1 className='text-xl mb-4 sm:text-2xl md:text-4xl lg:text-5xl pixelated-font'>Olympics Leaderboard</h1>
+                    {olympicsSummary()}
+                </div>
+
+                <table className='w-full' style={{tableLayout: 'fixed'}}>
                     <thead className="text-xsuppercase sticky top-0 w-full min-h-fit h-12">
                         <tr className='bg-black'>
                             <th scope="col" className='px-2'>
@@ -301,7 +362,7 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
                     </thead>
                     <tbody>
                         {
-                            searchedUser || !currUser || currUser.rank < 10?
+                            !currUser || currUser.rank < 10?
                                 <></>
                             :
                                 tableRowMobileScreen(currUser as PlayerOlympicData, currUser.rank, true)

@@ -7,7 +7,7 @@ import { PlayerOlympicData, ProfileAchievementAggregated, Raffle, SOCIAL_MEDIA_H
 import { Fragment, useEffect, useState } from 'react';
 import Image from 'next/image';
 import olympicsLogo from "@/public/doom-olympics-logo.png";
-import { getProfileAchievementsSummary, getSocialPrizes } from '../utils/util';
+import { getProfileAchievementsSummary } from '../utils/util';
 import { User } from '../utils/privyApi';
 import Link from 'next/link';
 import { TwitterIcon, TwitterShareButton } from 'next-share';
@@ -15,7 +15,9 @@ import { usePrivy } from '@privy-io/react-auth';
 
 export interface PlayerSummary extends PlayerOlympicData {
   rank:number,
-  socialPrizes:Array<Raffle>
+  socialPrizes:Array<Raffle>,
+  searched:boolean,
+  user?:User // indicates if the exhibited summary is from the current user or not
 }
 
 const prizesMap = {
@@ -23,9 +25,13 @@ const prizesMap = {
   global: [1000, 500, 300, 50, 15]
 }
 
-function OlympicsSummary({player, contests, searchedUser}:
-{player:PlayerSummary, contests:Array<{contest_id:string, name:string}>, searchedUser?:{address:string, user?:User}}) {
-  const [modalOpen, setModalOpen] = useState(true);
+function formatAddress(address:string) {
+  return `${address.substring(0, 6)}...${address.substring(address.length-6)}`
+}
+
+function OlympicsSummary({player, contests, openOnLoad}:
+{player:PlayerSummary, contests:Array<{contest_id:string, name:string}>, openOnLoad:boolean}) {
+  const [modalOpen, setModalOpen] = useState(openOnLoad);
   const {ready, user, linkTwitter} = usePrivy();
   
   const [contestPrizes, setContestPrizes] = useState(0);
@@ -55,17 +61,25 @@ function OlympicsSummary({player, contests, searchedUser}:
     setContestPrizes(prizeCounter);
 
     if (typeof window !== "undefined") {
-      if (searchedUser) {
-        setSummaryURL(`${window.location.origin}/olympics?user=${searchedUser.address}`);
-      } else {
-        setSummaryURL(`${window.location.origin}/olympics?user=${player.profile_address}`);
-      }
+      setSummaryURL(`${window.location.origin}/olympics?user=${player.profile_address}`);
     }
   }, [])
 
   if (userAchievements == undefined) return <></>;
 
   return (
+    <>
+      <button 
+      className={`p-2 pixelated-font text-black ${player.searched? "bg-yellow-400":"bg-green-400"} hover:scale-105`} 
+      onClick={() => setModalOpen(true)}>
+        {
+          !player.searched?
+            "My Summary"
+          :
+            `${player.user? player.user.username: formatAddress(player.profile_address)} Summary`
+        }
+      </button>
+
     <Transition appear show={modalOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10 text-black" onClose={() => setModalOpen(false)}>
           <Transition.Child
@@ -95,18 +109,19 @@ function OlympicsSummary({player, contests, searchedUser}:
                           <Dialog.Title as="h1" className="grid gap-2 place-content-center justify-items-center">
                             <Image src={olympicsLogo} width={128} alt="" />
                             {
-                              !searchedUser?
+                              !player.searched?
                                 <span className='pixelated-font text-2xl'>Your Olympics Summary</span>
                               :
                                 <div className='flex gap-3'>
                                   {
-                                    searchedUser.user? 
-                                      <Link href={`/profile/${searchedUser.address}`} className='pixelated-font text-2xl text-rives-purple hover:underline'>
-                                        {searchedUser.user.name}
+                                    player.user? 
+                                      <Link href={`/profile/${player.profile_address}`}
+                                      className='pixelated-font text-2xl text-rives-purple hover:underline'>
+                                        {player.user.name}
                                       </Link>
                                     : 
-                                      <Link href={`/profile/${searchedUser.address}`} className='pixelated-font text-2xl text-rives-purple hover:underline'>
-                                        {`${searchedUser.address.substring(0, 6)}...${searchedUser.address.substring(searchedUser.address.length-6)}`}
+                                      <Link href={`/profile/${player.profile_address}`} className='pixelated-font text-2xl text-rives-purple hover:underline'>
+                                        {`${player.profile_address.substring(0, 6)}...${player.profile_address.substring(player.profile_address.length-6)}`}
                                       </Link>
                                   }
                                   <span className='pixelated-font text-2xl'>Olympics Summary</span>
@@ -142,7 +157,7 @@ function OlympicsSummary({player, contests, searchedUser}:
 
                           <div className='p-2 bg-black text-white grid gap-2 justify-items-center relative'>
                             {
-                              !searchedUser && ready && !user?.twitter?
+                              !player.searched && ready && !user?.twitter?
                                 <button onClick={linkTwitter}
                                 className='absolute top-0 start-0 bg-black bg-opacity-60 h-full w-full z-10 flex justify-center items-center text-xl hover:text-2xl'>
                                   <span className='pixelated-font'>Link Twitter to receive the prizes</span>
@@ -218,8 +233,8 @@ function OlympicsSummary({player, contests, searchedUser}:
                             <TwitterShareButton
                               url={summaryUrl}
                               title={
-                                searchedUser?
-                                  `Check out ${searchedUser.user? searchedUser.user.name:searchedUser.address} result on @rives_io DOOM Olympics`
+                                player.searched?
+                                  `Check out ${player.user? player.user.name:player.profile_address} result on @rives_io DOOM Olympics`
                                 :
                                   "Check out my result on @rives_io DOOM Olympics"
                               }
@@ -238,6 +253,7 @@ function OlympicsSummary({player, contests, searchedUser}:
           </div>
       </Dialog>
   </Transition>
+  </>
   )
 }
 
