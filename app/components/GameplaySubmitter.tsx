@@ -5,7 +5,7 @@
 
 import { useContext, useEffect, useState, Fragment } from "react";
 import { gameplayContext } from "../play/GameplayContextProvider";
-import { calculateTapeId, extractTxError, formatRuleIdToBytes, getChain, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash, verifyChain } from "../utils/util";
+import { calculateTapeId, extractTxError, formatCartridgeIdToBytes, formatRuleIdToBytes, getChain, insertTapeGif, insertTapeImage, insertTapeName, ruleIdFromBytes, truncateTapeHash, verifyChain } from "../utils/util";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 import { CartridgeInfo, VerifyPayloadProxy } from "../backend-libs/core/ifaces";
 import { envClient } from "../utils/clientEnv";
@@ -20,10 +20,11 @@ import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
-import { buyCartridge, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
+import { buyCartridge, checkAndSetupErc20Allowance, checkContract, getCartridgeOwner, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
 import CartridgeCard from "./CartridgeCard";
 import { createWalletClient, custom, toFunctionSelector } from "viem";
-
+//import { sendEvent } from "../utils/googleAnalytics";
+import { sendGAEvent } from '@next/third-parties/google'
 
 enum MODAL_STATE {
     NOT_PREPARED,
@@ -116,6 +117,7 @@ function GameplaySubmitter() {
     function onTapeTitleChange(e: React.FormEvent<HTMLInputElement>) {
         setTapeTitle(e.currentTarget.value);
     }
+
 
     useEffect(() => {
         // show warning message if user is not connected
@@ -300,16 +302,20 @@ function GameplaySubmitter() {
             });
         
             let value:bigint = BigInt(0);
-            if (price?.gt(0))
+            if (submitModel == TAPE_SUBMIT_MODEL.FEE && price?.gt(0)) {
                 if (!currency.token) {
                     value = price.toBigInt();
                 } else {
-                    // const allowance: BigNumber = await erc20Contract.allowance(signerAddress,cartridgeContract.address);
-                    // if (allowance.lt(slippage)) {
-                    //     const approveTx = await erc20Contract.approve(cartridgeContract.address,slippage.sub(allowance));
-                    //     const approveTxReceipt = await approveTx.wait(1);
-                    // }
+                    const owner = await getCartridgeOwner(formatCartridgeIdToBytes(gameplay.cartridge_id).slice(2));
+                    if (wallet.address.toLowerCase() != (owner?.toLowerCase())) {
+                        if (! await checkContract(`0x${currency.token.slice(2)}`)) {
+                            alert("No token contract.");
+                            return;
+                        }
+                        await checkAndSetupErc20Allowance(`0x${currency.token.slice(2)}`,wallet,`0x${envClient.TAPE_FEE_SUBMISSION_MODEL.slice(2)}`, price.toBigInt());
+                    }
                 }
+            }
         
             const { request } = await publicClient.simulateContract({
                 account: wallet.address as `0x${string}`,
@@ -324,6 +330,9 @@ function GameplaySubmitter() {
             await publicClient.waitForTransactionReceipt( 
                 { hash: txHash }
             )
+
+            sendGAEvent('event', 'Gameplay', { event_category: "Transaction", event_label: tapeId });
+
         } catch (error) {
             console.log(error)
             setModalState({...modalState, state: MODAL_STATE.SUBMIT});

@@ -71,4 +71,9 @@ export const envClient = envsafe({
     input: process.env.NEXT_PUBLIC_TAPE_FEE_SUBMISSION_MODEL,
     desc: "Fee tape submission model address."
   }),
+  GOOGLE_ANALYTICS_MEASUREMENT_ID: str({
+    input: process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID,
+    desc: "Google analytics id.",
+    default: "G-0QV24G07N2"
+  }),
 })

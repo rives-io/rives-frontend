@@ -1,5 +1,5 @@
 import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
-import { cartridgeInfo, getOutputs, rules, VerifyPayloadProxy } from '@/app/backend-libs/core/lib';
+import { cartridgeInfo, getOutputs, rules, VerificationOutput, VerifyPayloadProxy } from '@/app/backend-libs/core/lib';
 import ContestCard from '@/app/components/ContestCard';
 import RivemuPlayer from '@/app/components/RivemuPlayer';
 import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
@@ -36,6 +36,17 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
     }
 }
 
+// const getScore = async (tapeId:string):Promise<string> => {
+//     const out:Array<VerificationOutput> = (await getOutputs(
+//         {
+//             tags: ["score",tapeId],
+//             type: 'notice'
+//         },
+//         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+//     )).data;
+//     if (out.length === 0) return "";
+//     return out[0].score.toString();
+// }
 export default async function Tape({ params }: { params: { tape_id: string } }) {
     let res = (await getOutputs(
         {
@@ -55,6 +66,16 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     }
     
     const tape:VerifyPayloadProxy = res.data[0];
+
+    let score:string|undefined = undefined;
+    const out:Array<VerificationOutput> = (await getOutputs(
+        {
+            tags: ["score",params.tape_id],
+            type: 'notice'
+        },
+        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    )).data;
+    if (out.length != 0) score = ethers.utils.formatUnits(out[0].score.toString(), 0);
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
@@ -118,8 +139,10 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                             <span className="text-gray-400">Rule</span>
                             {contest.name}
 
-                            <span className="text-gray-400">Score</span>
-                            {ethers.utils.formatUnits(tape.claimed_score, 0)}
+                            { score ? <>
+                                <span className="text-gray-400">Score</span>
+                                {score}
+                            </> : <></> }
                         </div>
                     </div>
 

@@ -12,6 +12,7 @@ import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
 import OlympicsBanner from "./components/OlympicsBanner";
 
+
 export const revalidate = 0 // revalidate data always
 
 let total_cartridges:number;
@@ -75,7 +76,7 @@ export default async function Home() {
   let tapes:Array<VerifyPayloadProxy>;
   let contests:Array<RuleInfo>;
   let userAddresses:Set<string> = new Set();
-  
+
   [cartridges, tapes, contests, total_collected_cartridges, total_collected_tapes] = await Promise.all(promises)
 
   let contestCartridges:Record<string, CartridgeInfo> = {};

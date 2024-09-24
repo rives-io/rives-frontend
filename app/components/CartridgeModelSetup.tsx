@@ -281,7 +281,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
             const payload = encodeFunctionData({
                 abi: cartridgeAbi.abi,
                 functionName: 'setCartridgeParamsCustom',
-                args:[`0x${cartridgeIdB32}`, 0, [10000,'0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0,0], true,wallet.address]
+                args:[`0x${cartridgeIdB32}`, 0, [10000,'0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0,0], true,wallet.address,ZERO_ADDRESS]
             });
 
             const encodedConfig = encodeAbiParameters(
@@ -302,7 +302,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
                 const payload = encodeFunctionData({
                     abi: cartridgeAbi.abi,
                     functionName: 'setCartridgeParamsCustom',
-                    args: [`0x${cartridgeIdB32}`, formattedValue, ['0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0], false, ZERO_ADDRESS]
+                    args: [`0x${cartridgeIdB32}`, formattedValue, ['0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], [0], false,ZERO_ADDRESS, currencyToken]
                 });
 
                 const encodedConfig = encodeAbiParameters(
