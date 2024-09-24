@@ -224,46 +224,49 @@ function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedU
         if (!searchedUser) exit_counter = exit_counter -1;
         if (!user?.wallet?.address) exit_counter = exit_counter -1;
 
-        for (let i = 0; i < data.leaderboard.length; i++) {
-            if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
-                let prizes:Array<Raffle>|undefined;
-                if (socialPrizesData) {
-                    prizes = socialPrizesData[userAddress];
-                }
-
-                setCurrUser({...data.leaderboard[i], 
-                    rank: i+1, 
-                    socialPrizes: prizes? prizes: [], 
-                    searched: false
-                });
-
-                exit_counter = exit_counter -1;
+        if (exit_counter) {
+            for (let i = 0; i < data.leaderboard.length; i++) {
                 if (exit_counter == 0) return;
-            }
 
-            if (searchedUser && data.leaderboard[i].profile_address.toLowerCase() == searchedUser.address) {
-                let prizes:Array<Raffle>|undefined;
-                if (socialPrizesData) {
-                    prizes = socialPrizesData[searchedUser.address];
+                if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
+                    let prizes:Array<Raffle>|undefined;
+                    if (socialPrizesData) {
+                        prizes = socialPrizesData[userAddress];
+                    }
+    
+                    setCurrUser({...data.leaderboard[i], 
+                        rank: i+1, 
+                        socialPrizes: prizes? prizes: [], 
+                        searched: false
+                    });
+    
+                    exit_counter = exit_counter -1;
                 }
-
-                setSearchedUserSummary({...data.leaderboard[i], 
-                    rank: i+1, 
-                    socialPrizes: prizes? prizes: [], 
-                    searched: true, 
-                    user: searchedUser.user
-                });
-
-                exit_counter = exit_counter -1;
-                if (exit_counter == 0) return;
+    
+                if (searchedUser && data.leaderboard[i].profile_address.toLowerCase() == searchedUser.address) {
+                    let prizes:Array<Raffle>|undefined;
+                    if (socialPrizesData) {
+                        prizes = socialPrizesData[searchedUser.address];
+                    }
+    
+                    setSearchedUserSummary({...data.leaderboard[i], 
+                        rank: i+1, 
+                        socialPrizes: prizes? prizes: [], 
+                        searched: true, 
+                        user: searchedUser.user
+                    });
+    
+                    exit_counter = exit_counter -1;
+                }
             }
         }
 
         setCurrUser(null);
+        setSearchedUserSummary(null);
     
     }, [ready, authenticated, user]);
 
-    if (!ready || currUser === undefined) {
+    if (!ready || (currUser === undefined && searchedUserSummary == undefined)) {
         return (
             <Loading msg=''/>
         )
