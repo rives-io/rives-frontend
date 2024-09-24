@@ -1,7 +1,7 @@
 "use client"
 
 
-import { OlympicData, PlayerOlympicData } from '../utils/common';
+import { OlympicData, PlayerOlympicData, Raffle, RaffleData } from '../utils/common';
 import Link from 'next/link';
 import Image from 'next/image';
 import { User } from '../utils/privyApi';
@@ -9,16 +9,16 @@ import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
 import Loading from './Loading';
 import { useEffect, useState } from 'react';
-import OlympicsSummary, { PlayerDataWithRank } from './OlympicsSummary';
+import OlympicsSummary, { PlayerSummary } from './OlympicsSummary';
 
 
 const OLYMPICS_END = 1726842600000; // Sep/20/2024, 14:30:00 UTC
 
 
-function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:
-{data:OlympicData, addressUsersMap:Record<string, User>, searchedUser?:{address:string, user?:User}}) {
+function OlympicsLeaderboard({data, socialPrizesData, addressUsersMap, searchedUser}:
+{data:OlympicData, socialPrizesData:RaffleData|null, addressUsersMap:Record<string, User>, searchedUser?:{address:string, user?:User}}) {
     const {ready, authenticated, user} = usePrivy();
-    const [currUser, setCurrUser] = useState<PlayerDataWithRank | null | undefined>();
+    const [currUser, setCurrUser] = useState<PlayerSummary | null | undefined>();
 
 
     function tableRowDesktopScreen(player:PlayerOlympicData, rank:number, currUserRow=false) {
@@ -189,7 +189,12 @@ function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:
         const userAddress = searchedUser? searchedUser.address: user?.wallet?.address.toLowerCase();
         for (let i = 0; i < data.leaderboard.length; i++) {
             if (data.leaderboard[i].profile_address.toLowerCase() == userAddress) {
-                setCurrUser({...data.leaderboard[i], rank: i+1});
+                let prizes:Array<Raffle>|undefined;
+                if (socialPrizesData) {
+                    prizes = socialPrizesData[userAddress];
+                }
+
+                setCurrUser({...data.leaderboard[i], rank: i+1, socialPrizes: prizes? prizes: []});
                 return;
             }
         }
@@ -245,7 +250,7 @@ function OlympicsLeaderboard({data, addressUsersMap, searchedUser}:
 
                     <tbody className='text-xs'>
                         {
-                            !currUser || currUser.rank < 10?
+                            searchedUser || !currUser || currUser.rank < 10?
                                 <></>
                             :
                                 tableRowDesktopScreen(currUser as PlayerOlympicData, currUser.rank, true)

@@ -3,18 +3,19 @@
 
 
 import { Dialog, Transition } from '@headlessui/react';
-import { PlayerOlympicData, ProfileAchievementAggregated, SOCIAL_MEDIA_HASHTAGS } from '../utils/common'
+import { PlayerOlympicData, ProfileAchievementAggregated, Raffle, SOCIAL_MEDIA_HASHTAGS } from '../utils/common'
 import { Fragment, useEffect, useState } from 'react';
 import Image from 'next/image';
 import olympicsLogo from "@/public/doom-olympics-logo.png";
-import { getProfileAchievementsSummary } from '../utils/util';
+import { getProfileAchievementsSummary, getSocialPrizes } from '../utils/util';
 import { User } from '../utils/privyApi';
 import Link from 'next/link';
 import { TwitterIcon, TwitterShareButton } from 'next-share';
 import { usePrivy } from '@privy-io/react-auth';
 
-export interface PlayerDataWithRank extends PlayerOlympicData {
-  rank:number
+export interface PlayerSummary extends PlayerOlympicData {
+  rank:number,
+  socialPrizes:Array<Raffle>
 }
 
 const prizesMap = {
@@ -23,11 +24,11 @@ const prizesMap = {
 }
 
 function OlympicsSummary({player, contests, searchedUser}:
-{player:PlayerDataWithRank, contests:Array<{contest_id:string, name:string}>, searchedUser?:{address:string, user?:User}}) {
+{player:PlayerSummary, contests:Array<{contest_id:string, name:string}>, searchedUser?:{address:string, user?:User}}) {
   const [modalOpen, setModalOpen] = useState(true);
   const {ready, user, linkTwitter} = usePrivy();
   
-  const [totalPrizes, setTotalPrizes] = useState(0);
+  const [contestPrizes, setContestPrizes] = useState(0);
   const [userAchievements, setUserAchievements] = useState<Array<ProfileAchievementAggregated>|null|undefined>(undefined);
   const [summaryUrl, setSummaryURL] = useState("");
 
@@ -43,15 +44,15 @@ function OlympicsSummary({player, contests, searchedUser}:
       prizeCounter = prizeCounter + prizesMap.contest[contest.rank-1];
     }
 
-    if (player.rank > 10) {
-      prizeCounter = prizeCounter + prizesMap.global[4];
-    } else if (player.rank > 3) {
-      prizeCounter = prizeCounter + prizesMap.global[3];
-    } else {
+    if (player.rank <= 3) {
       prizeCounter = prizeCounter + prizesMap.global[player.rank-1];
+    } else if (player.rank <= 10) {
+      prizeCounter = prizeCounter + prizesMap.global[3];
+    } else if (player.rank <= 100) {
+      prizeCounter = prizeCounter + prizesMap.global[4];
     }
 
-    setTotalPrizes(prizeCounter);
+    setContestPrizes(prizeCounter);
 
     if (typeof window !== "undefined") {
       if (searchedUser) {
@@ -176,9 +177,35 @@ function OlympicsSummary({player, contests, searchedUser}:
                             </div>
 
                             <div className='flex flex-wrap gap-2 items-end justify-center'>
-                              <span className='pixelated-font text-3xl'>${totalPrizes}</span>
-                              <span className='text-gray-400 text-sm'>Paid in CTSI on Ethereum Mainnet</span>
+                              {
+                                contestPrizes == 0?
+                                  <></>
+                                :
+                                <div className='grid'>
+                                  <span className='pixelated-font text-3xl'>${contestPrizes}</span>
+                                  <span className='text-xs'>(Contest Prizes)</span>
+                                </div>
+                              }
+
+                              {
+                                  player.socialPrizes.map((prize, index) => {
+                                    return (
+                                      <div className='grid' key={`${prize.name}-${index}`}>
+                                        <span className='pixelated-font text-3xl'>
+                                          {
+                                            index == 0 && contestPrizes == 0?
+                                              `$${prize.prize}`
+                                            :
+                                              `+$${prize.prize}`
+                                          }
+                                        </span>
+                                        <span className='text-xs'>(${prize.name})</span>
+                                      </div>
+                                    )
+                                  })
+                              }
                             </div>
+                            <span className='text-gray-400 text-sm'>Paid in CTSI on Ethereum Mainnet</span>
                           </div>
 
                           <div className='flex gap-4 justify-center'>

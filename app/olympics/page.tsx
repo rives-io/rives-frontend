@@ -1,5 +1,5 @@
 import React from 'react'
-import { getOlympicsData } from '../utils/util'
+import { getOlympicsData, getSocialPrizes } from '../utils/util'
 import Link from 'next/link';
 import Image from 'next/image';
 import { getUsersByAddress, User } from '../utils/privyApi';
@@ -73,6 +73,7 @@ async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: stri
 
 
     const data = await getOlympicsData("");
+    const socialPrizes = await getSocialPrizes();
     const accordionItems = [
         {
             title: "Prizes",
@@ -220,7 +221,7 @@ async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: stri
                     !data?
                         <></>
                     :
-                        <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap}
+                        <OlympicsLeaderboard data={data} socialPrizesData={socialPrizes} addressUsersMap={addressUsersMap}
                         searchedUser={searchedUserAddress? {address: searchedUserAddress, user: addressUsersMap[searchedUserAddress]}: undefined} />
                 }
             </section>
