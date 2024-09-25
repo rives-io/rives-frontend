@@ -80,17 +80,17 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
     }
 
     return (
-        <>    
-            {/* <div className="grid grid-cols-3 justify-items-center"> */}
+        <>
+        {cartridge.unlocked == undefined ?
             <div className='justify-center md:justify-end flex-1 flex-wrap self-center text-black flex gap-2'>
                 
-                { signer && cartridge.unlocked == undefined && envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
+                 <Link title={"Test"} 
+                        className='bg-rives-purple assets-btn zoom-btn' 
+                        href={`https://emulator.rives.io/#cartridge=${buildUrl(envClient.CARTRIDGES_URL, cartridge.id)}`}>
+                    Test on Emulator
+                </Link>
+                { signer && envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress?.toLowerCase() ? 
                     <>
-                    <Link title={"Test"} 
-                            className='bg-rives-purple assets-btn zoom-btn' 
-                            href={`https://emulator.rives.io/#cartridge=${buildUrl(envClient.CARTRIDGES_URL, cartridge.id)}`}>
-                        Test on Emulator
-                    </Link>
                     <button title={"Reject"} 
                             className='bg-[#e04ec3] assets-btn zoom-btn' 
                             onClick={() => unlockCartridge(false)}>
@@ -105,7 +105,8 @@ function CartridgeUnlocker({cartridge}:{cartridge:CartridgeInfo}) {
                 : 
                     <></>
                 }
-            </div>
+            </div> 
+        : <></> } 
         </>
     )
 }
