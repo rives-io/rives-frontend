@@ -150,7 +150,7 @@ function RivemuUploader() {
     const getTitleMessage = function () {
         // !cartridgeData || !infoCartridge?.name || !ready || !user
         if (!cartridgeData) return "Please, upload Cartridge first";
-        if (!infoCartridge?.name) return "Please, play cartridge to get info";
+        if (!infoCartridge?.name) return "No cartridge info (you should add a info.json to the cartridge)";
         if (!authorsHaveLinks) return "All authors in info.json should have link";
         if (!wallet) return "Please, connect your wallet";
         return "Send Cartridge to RIVES";
@@ -182,8 +182,9 @@ function RivemuUploader() {
             if (data) {
                 setCartridgeData(new Uint8Array(data as ArrayBuffer));
                 setTape(testRivlog);
-                setTesting(true);
+                setHasScore(undefined);
                 setSettingUpModel(false);
+                setTesting(true);
             }
         };
         reader.readAsArrayBuffer(f)
@@ -266,7 +267,6 @@ function RivemuUploader() {
             }
         }
         
-        setHasScore(undefined);
         setCurrScore(undefined);
         setOutcard(undefined);
         setCurrScore(undefined);
@@ -387,9 +387,6 @@ function RivemuUploader() {
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
                 inputBoxAddress: envClient.WORLD_ADDRESS
             });
-            setInfoCartridge(undefined);
-            setHasScore(undefined);
-            setAuthorsHaveLinks(false);
             setSubmittingTx(false);
             setCartridgeInserted(true);
         } catch (error) {
@@ -523,7 +520,7 @@ function RivemuUploader() {
                     </div>
 
                     { hasScore != undefined && hasScore == false ? 
-                    <span title='Cartridge should have an outcard with score from the first input, otherwise rules with scores can not be created'>
+                    <span title="Cartridges should have a json outcard with the 'score' key even before the first input, otherwise the default play mode wont have a score based leaderboard">
                         <WarningIcon className='text-yellow-400' />
                         Cartridge has no scoring
                         <WarningIcon className='text-yellow-400' />
@@ -551,7 +548,7 @@ function RivemuUploader() {
                 <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
 
                     <div className='flex justify-end'>
-                        <Link className={`dialog-btn bg-emerald-400 text-black text-xs`} href={"https://rives.io/docs/category/riv"}>{'-->'} Read the Docs</Link>
+                        <Link className={`dialog-btn bg-emerald-400 text-black text-xs`} href={"https://rives.io/docs/rives/uploading-cartridges"}>{'-->'} Read the Docs</Link>
                     </div>
                     <div className='grid grid-cols-1 gap-4 border border-stone-500 p-4'>
                         <TextField className="" label="Name" disabled value={infoCartridge?.name || ""} variant="standard"
