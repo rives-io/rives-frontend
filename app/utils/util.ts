@@ -8,7 +8,7 @@ import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, RuleInfo, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
-import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated } from "./common";
+import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated, RaffleData } from "./common";
 import { ConnectedWallet } from "@privy-io/react-auth";
 
 const FRONTEND_ERROR_PREFIX = "RIVES Frontend ERROR:";
@@ -665,4 +665,31 @@ export async function getRuleInfo(rule_id:string):Promise<RuleInfo|null> {
     if (rulesFound.length == 0) return null;
   
     return rulesFound[0];
-  }
+}
+
+
+export async function getSocialPrizes() {
+    let res:Response;
+    let data:RaffleData|null;
+
+    try {
+        res = await fetch("https://storage.googleapis.com/rives-mainnet-v5-public/tournament/doom-olympics/raffle.json",
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )            
+        data = await res.json();
+    } catch (error) {
+        console.log(`Failed to social prizes\nError: ${(error as Error).message}`);
+        data = null;
+    }
+
+
+    return data;
+}

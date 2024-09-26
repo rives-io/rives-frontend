@@ -1,5 +1,5 @@
 import React from 'react'
-import { getOlympicsData } from '../utils/util'
+import { getOlympicsData, getSocialPrizes } from '../utils/util'
 import Link from 'next/link';
 import Image from 'next/image';
 import { getUsersByAddress, User } from '../utils/privyApi';
@@ -9,12 +9,71 @@ import olympicsLogo from "@/public/doom-olympics-logo.png";
 import OlumpicsPageMsg from '../components/OlumpicsPageMsg';
 import OlympicsLeaderboard from '../components/OlympicsLeaderboard';
 import CartesiLockup from "@/public/cartesi_lockup_white.png";
+import { Metadata, ResolvingMetadata } from "next";
 
 export const revalidate = 0 // revalidate data always
 
+type Props = {
+    params: { id: string }
+    searchParams: { [key: string]: string | string[] | undefined }
+}
+export async function generateMetadata(
+    { params, searchParams }: Props,
+    parent: ResolvingMetadata
+  ): Promise<Metadata> {
 
-async function OlympicsPage() {
+    const searchedAddress = searchParams? searchParams["user"]:null;
+    let searchedUserAddress:string|null = null;
+
+	if (searchedAddress && typeof searchedAddress == "string") {
+        if (searchedAddress.startsWith("0x") && searchedAddress.length == 42) {
+            searchedUserAddress = searchedAddress.toLowerCase();
+        }
+    }
+
+    const title = "Olympics";
+    const desc = "RIVES Olympics";
+    if (!searchedUserAddress) {
+        return {
+            title: title,
+            description: desc,
+        }
+    }
+    
+    const shareTitle = `Olympics - ${searchedUserAddress} | RIVES`;
+    const olympicsResultBanner = `/olympics-result/${searchedUserAddress}`;
+    
+    return {
+        title: title,
+        openGraph: {
+            images: [olympicsResultBanner], 
+            siteName: 'rives.io',
+            title: shareTitle,
+            description: desc
+        },
+        twitter: {
+            images: [olympicsResultBanner],
+            title: shareTitle,
+            card: 'summary',
+            creator: '@rives_io',
+            description: desc
+        },
+    }
+}
+
+async function OlympicsPage({searchParams}:{searchParams?: { [key: string]: string | string[] | undefined }}) {
+    const searchedAddress = searchParams? searchParams["user"]:null;
+    let searchedUserAddress:string|null = null;
+
+	if (searchedAddress && typeof searchedAddress == "string") {
+        if (searchedAddress.startsWith("0x") && searchedAddress.length == 42) {
+            searchedUserAddress = searchedAddress.toLowerCase();
+        }
+    }
+
+
     const data = await getOlympicsData("");
+    const socialPrizes = await getSocialPrizes();
     const accordionItems = [
         {
             title: "Prizes",
@@ -98,14 +157,6 @@ async function OlympicsPage() {
         }
     ];
 
-    // if (!data) {
-    //     return (
-    //         <main className="flex items-center justify-center h-lvh">
-    //             <span className={`text-4xl text-white pixelated-font` }>No Olympics data!</span>
-    //         </main>
-    //     );
-    // }
-
     let addresses:Array<string> = [];
     if (data) {
         for (let i = 0; i < data.leaderboard.length; i++) {
@@ -170,7 +221,8 @@ async function OlympicsPage() {
                     !data?
                         <></>
                     :
-                        <OlympicsLeaderboard data={data} addressUsersMap={addressUsersMap} />
+                        <OlympicsLeaderboard data={data} socialPrizesData={socialPrizes} addressUsersMap={addressUsersMap}
+                        searchedUser={searchedUserAddress? {address: searchedUserAddress, user: addressUsersMap[searchedUserAddress]}: undefined} />
                 }
             </section>
         </main>
