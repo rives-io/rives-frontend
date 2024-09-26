@@ -67,16 +67,6 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     
     const tape:VerifyPayloadProxy = res.data[0];
 
-    let score:string|undefined = undefined;
-    const out:Array<VerificationOutput> = (await getOutputs(
-        {
-            tags: ["score",params.tape_id],
-            type: 'notice'
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    )).data;
-    if (out.length != 0) score = ethers.utils.formatUnits(out[0].score.toString(), 0);
-
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
     res = await rules({id: ruleIdFromBytes(tape.rule_id), enable_deactivated: true}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
@@ -84,7 +74,19 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
     const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const tapeNamePromise = getTapeName(params.tape_id);
-    
+
+    let score:string|undefined = undefined;
+    if (contest.score_function) {
+        const out:Array<VerificationOutput> = (await getOutputs(
+            {
+                tags: ["score",params.tape_id],
+                type: 'notice'
+            },
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        )).data;
+        if (out.length != 0) score = ethers.utils.formatUnits(out[0].score.toString(), 0);
+    }
+
     let tapeCartridge:CartridgeInfo;
     let tapeName:string|null;
     [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);

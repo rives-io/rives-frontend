@@ -526,6 +526,7 @@ function CartridgeModelSetup({cartridgeId, reloadFn, cancelFn}:{cartridgeId:stri
                     {/* <span className="place-self-start">Cartridge Price</span>
                     <Input className="text-black" aria-label="Price" placeholder="value" type="number" value={priceValue} onChange={(e) => changePrice(e.target.value)} /> */}
                 </div> : <></>}
+                <span className='text-red-900 text-sm'>Warning: The BC model can't be changed</span>
                 <FormControlLabel control={
                     <Switch checked={automaticTapeSales} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAutoTape()}/>
                         } label="Automatic Tape Sales" />
