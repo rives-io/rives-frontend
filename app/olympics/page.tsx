@@ -41,7 +41,11 @@ export async function generateMetadata(
     }
     
     const shareTitle = `Olympics - ${searchedUserAddress} | RIVES`;
-    const olympicsResultBanner = `/olympics-result/${searchedUserAddress}`;
+    const olympicsResultBanner = {
+        url: `/olympics-result/${searchedUserAddress}`,
+        width: 1280,
+        height: 720
+    };
     
     return {
         title: title,
@@ -54,7 +58,7 @@ export async function generateMetadata(
         twitter: {
             images: [olympicsResultBanner],
             title: shareTitle,
-            card: 'summary',
+            card: 'summary_large_image',
             creator: '@rives_io',
             description: desc
         },
