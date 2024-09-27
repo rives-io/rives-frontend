@@ -214,7 +214,7 @@ function OlympicsSummary({player, contests, openOnLoad}:
                                               `+$${prize.prize}`
                                           }
                                         </span>
-                                        <span className='text-xs'>(${prize.name})</span>
+                                        <span className='text-xs'>({prize.name})</span>
                                       </div>
                                     )
                                   })
