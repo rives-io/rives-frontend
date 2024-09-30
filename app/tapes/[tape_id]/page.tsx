@@ -6,7 +6,7 @@ import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
 import TapeTitle from '@/app/components/TapeTitle';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
-import { getTapeName, ruleIdFromBytes, timeToDateUTCString } from '@/app/utils/util';
+import { getTapeName, ruleIdFromBytes, tapeIdFromBytes, timeToDateUTCString } from '@/app/utils/util';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -66,6 +66,17 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
     }
     
     const tape:VerifyPayloadProxy = res.data[0];
+    let inputTapesIdArray:Array<string> = Array.from(tape.tapes, tapeIdFromBytes);
+    const getInputTapesNames = async (ids:Array<string>) => {
+        let promises:Array<Promise<string|null>> = [];
+
+        for (let i = 0; i < ids.length; i++) {
+            promises.push(getTapeName(ids[i]));
+        }
+
+        const inputTapesNames = await Promise.all(promises);
+        return inputTapesNames;
+    }
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
@@ -74,7 +85,8 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
     const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const tapeNamePromise = getTapeName(params.tape_id);
-
+    const inputTapeNamesPromise = getInputTapesNames(inputTapesIdArray);
+    
     let score:string|undefined = undefined;
     if (contest.score_function) {
         const out:Array<VerificationOutput> = (await getOutputs(
@@ -89,7 +101,8 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
 
     let tapeCartridge:CartridgeInfo;
     let tapeName:string|null;
-    [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
+    let inputTapesNames:Array<string|null>;
+    [tapeCartridge, tapeName, inputTapesNames] = await Promise.all([cartridgePromise, tapeNamePromise, inputTapeNamesPromise]);
 
     if (!tapeCartridge.primary && tapeCartridge.primary_id) {
         tapeCartridge = await cartridgeInfo(
@@ -141,10 +154,38 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                             <span className="text-gray-400">Rule</span>
                             {contest.name}
 
-                            { score ? <>
-                                <span className="text-gray-400">Score</span>
-                                {score}
-                            </> : <></> }
+                            { 
+                                score?
+                                    <>
+                                        <span className="text-gray-400">Score</span>
+                                        {score}
+                                    </>
+                                :
+                                    <></>
+                            }
+
+                            {
+                                inputTapesIdArray.length == 0?
+                                    <></>
+                                :
+                                    <>
+                                        <span className="text-gray-400">Input Tapes</span>
+                                        <span className='flex gap-2'>
+                                            {
+                                                inputTapesIdArray.map((id, index) => {
+                                                    return (
+                                                        <Link key={id} href={`/tapes/${id}`}
+                                                        className='text-rives-purple hover:underline'>
+                                                            {
+                                                                inputTapesNames[index]? inputTapesNames[index]: `${id.substring(0, 20)}...`
+                                                            }
+                                                        </Link>
+                                                    )
+                                                })
+                                            }
+                                        </span>
+                                    </>
+                            }
                         </div>
                     </div>
 
