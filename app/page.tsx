@@ -125,7 +125,6 @@ export default async function Home() {
   return (
     <main className="gap-8">
       <section className="flex flex-col items-center">
-        <OlympicsBanner/>
         
         <div className="homepageContainer">
           <h1 className={`text-4xl pixelated-font mb-4`}>Latest Cartridges</h1>
