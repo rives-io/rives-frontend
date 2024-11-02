@@ -2,13 +2,13 @@
 
 
 import { useEffect, useState } from "react";
-import { getCartridges, getUsersFromCartridges } from "../utils/util";
+import { cartridgeIdFromBytes, getCartridges, getUsersFromCartridges} from "../utils/util";
 import { CartridgeInfo } from "../backend-libs/core/ifaces";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import CartridgeCard from "./CartridgeCard";
 import Loading from "./Loading";
-import { getUserCartridges } from "../utils/assets";
+import { checkCartridgeContract, getUserCartridges } from "../utils/assets";
 import { CartridgesOutput } from "../backend-libs/core/ifaces";
 import { User } from "../utils/privyApi";
 
@@ -29,7 +29,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     const [cartridgesCreatedLoading, setCartridgesCreatedLoading] = useState(true);
     const [cartridgesCollectedLoading, setCartridgesCollectedLoading] = useState(true);
     
-    const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>([]);
+    const [cartridgesCollectedList, setCartridgesCollectedList] = useState<Array<string>>();
 
     const disablePrevCartridgesCreatedPage = cartridgesCreatedPage == 1;
     const disablePrevCartridgesCollectedPage = cartridgesCollectedPage == 1;
@@ -79,14 +79,19 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
     }
 
     const CartridgesCollectedByProfile = async () => {
+        const page_size = 6;
+
+        if (!cartridgesCollectedList) return;
+
         if (cartridgesCollectedList.length == 0 || cartridgesCollect[cartridgesCollectedPageToLoad-1]) {
             setCartridgesCollectedLoading(false);
+            setCartridgesCollectedPage(cartridgesCollectedPageToLoad);
+            setTotalCartridgesCollectedPages(Math.ceil(cartridgesCollectedList.length/page_size));
             return;
         }
 
         setCartridgesCollectedLoading(true);
 
-        const page_size = 6;
 
         const res:CartridgesOutput = await getCartridges(
             {
@@ -121,7 +126,17 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
 
     useEffect(() => {
         CartridgesCreatedByProfile();
-        getUserCartridges(address).then(out => setCartridgesCollectedList(out.map((t,i) => t.slice(2))));
+        
+        checkCartridgeContract().then(exists => {
+            if (exists) {
+                setCartridgesCollectedList([]);
+                getUserCartridges(address).then(out => {
+                    if (out) {
+                        setCartridgesCollectedList(out.map((t,i) => cartridgeIdFromBytes(t)))}
+                    }
+                );
+            }
+        });
     }, [])
 
     useEffect(() => {
@@ -164,7 +179,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
 
                             {
                                 cartridgesCreated.length == 0 || cartridgesCreated[0].length == 0?
-                                    totalCartridgesCollectedPages != -1?
+                                    totalCartridgesCreatedPages != -1?
                                         <div className="text-center pixelated-font">No Cartridges Created</div>
                                     :
                                         <></>
@@ -186,7 +201,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                 }
             </div>
 
-            <div className="flex flex-col gap-4">
+            {cartridgesCollectedList ? <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Cartridges Collected</h1>
                 </div>
@@ -228,7 +243,7 @@ export default function UserCartridges({address, twitterInfo}:{address:string, t
                                 </div>
                         }
                     </>}
-            </div>
+            </div> : <></>}
         </div>
     )
 }

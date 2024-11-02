@@ -1,20 +1,67 @@
 import { RuleInfo } from "../backend-libs/core/ifaces";
 
-export const SOCIAL_MEDIA_HASHTAGS = [];
+export const SOCIAL_MEDIA_HASHTAGS = ["rives"];
 
+export interface RaffleData {
+  [profile_address: string]: Array<Raffle>
+}
 
-export interface Contest {
-  // rule_id:string,
-  // start:number,
-  // end:number,
+export interface Raffle {
+  name:string,
+  prize:number
+}
+
+export interface OlympicData {
+  contests:Array<{contest_id:string, name:string}>,
+  leaderboard:Array<PlayerOlympicData>
+}
+
+export interface PlayerOlympicData {
+  profile_address:string,
+  total_points:number,
+  total_score:number,
+  contests:{[contest_id: string]: {score:number, rank:number, points:number, tape_id:string}}
+}
+
+export interface ContestDetails {
+  id:string,
+  name:string,
+  description:string,
+  created_at:string,
+  start:string,
+  end:string,
+  cartridge_id:string,
+  sponsor_name:string,
+  sponsor_image_data:string,
+  sponsor_image_type:string,
   prize:string,
-  winner?:string
+  achievements: Array<Achievement>
+}
+
+export interface Achievement {
+  slug:string,
+  name:string,
+  description:string,
+  points:number,
+  image_data:string,
+  image_type:string
+}
+
+export interface ProfileAchievementAggregated {
+  ca_slug:string,
+  latest:string, //"2024-08-08T16:20:11.787Z"
+  total_points:number,
+  count:number,
+  name:string,
+  description:string,
+  image_data:string,
+  image_type:string
 }
 
 export enum ContestStatus {
   IN_PROGRESS,
   NOT_INITIATED,
-  VALIDATED,
+  // VALIDATED,
   FINISHED,
   INVALID,
 }
@@ -24,7 +71,7 @@ export const getContestStatus = (rule: RuleInfo): ContestStatus => {
   const currentTs = Math.floor((new Date()).valueOf()/1000);
   if (currentTs < rule.start) return ContestStatus.NOT_INITIATED;
   if (currentTs < rule.end) return ContestStatus.IN_PROGRESS;
-  if (rule.n_tapes == rule.n_verified) return ContestStatus.VALIDATED;
+  // if (rule.n_tapes == rule.n_verified) return ContestStatus.VALIDATED;
   return ContestStatus.FINISHED
 }
 
@@ -35,7 +82,7 @@ export const getContestStatusMessage = (status: ContestStatus): string => {
     case ContestStatus.NOT_INITIATED:
       return "Upcomming";
     case ContestStatus.FINISHED:
-    case ContestStatus.VALIDATED:
+    // case ContestStatus.VALIDATED:
       return "Finished";
   
     default:

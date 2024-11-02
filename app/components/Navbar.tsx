@@ -6,33 +6,32 @@ import React, { useEffect, useState } from 'react'
 import rivesLogo from '@/public/logo.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Menu } from '@headlessui/react'
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import Image from 'next/image';
+import { verifyChain } from '../utils/util';
 
 function Navbar() {
     const pathname = usePathname();
-    const [connectButtonTxt, setConnectButtonTxt] = useState<React.JSX.Element>(<span className={`text-4xl pixelated-font`}>Connect</span>);
     const {ready, authenticated, login, user} = usePrivy();
+    const {wallets} = useWallets();
     // Disable login when Privy is not ready or the user is already authenticated
-    const disableLogin = !ready || (ready && authenticated);
-
-    const onMyProfile = (ready && authenticated) && pathname.startsWith("/profile") && user?.wallet?.address.toLowerCase() == pathname.split("/")[2]?.toLowerCase();
-
+    const logged = ready && authenticated;
+    const disableLogin = !ready || logged;
+    const onMyProfile = logged && pathname.startsWith("/profile") && user?.wallet?.address.toLowerCase() == pathname.split("/")[2]?.toLowerCase();
 
     useEffect(() => {
-        if (!user) {
-            setConnectButtonTxt(<span className={`text-sm md:text-xl pixelated-font`}>Connect</span>);
+        if (!ready || !user || (ready && !wallets)) {
             return;
         }
 
-        const userAddress = user.wallet?.address;
+        const currWallet = wallets.find((wallet) => wallet.address === user!.wallet!.address);
+        if (!currWallet) return;
 
-        if (!userAddress) return;
-
-        setConnectButtonTxt(
-            <Link href={`/profile/${userAddress}`} className={`text-sm md:text-xl pixelated-font`}>Profile</Link>
-        );
-    }, [user])
+        verifyChain(currWallet)
+        .catch((error) => {
+            console.log((error as Error).message);
+        })
+    }, [wallets])
 
     return (
         <header className='header'>
@@ -59,15 +58,29 @@ function Navbar() {
             </Link>
 
             <div className='hidden md:flex flex-1 justify-end h-full'>
-                <button className={`navbar-item ${onMyProfile? "md:link-active" : "" }`}
-                    disabled={!ready}
-                    onClick={!disableLogin?login:undefined}
-                    title={user?.wallet?.address}
-                >
-                    <div className='flex flex-col justify-center h-full'>
-                        {connectButtonTxt}
-                    </div>
-                </button>
+                {
+                    logged?
+                        <Link href={`/profile/${user?.wallet?.address}`} 
+                        title={user?.wallet?.address}
+                        className={`grid grid-cols-1 h-full items-center place-content-center justify-items-center navbar-item 
+                        ${onMyProfile? "md:link-active" : "" }`}
+                        >
+                            <span className='text-sm md:text-xl pixelated-font'>Profile</span>
+                            <span className='text-xs pixelated-font'>
+                                {user?.wallet?.address.substring(0, 6)}...{user?.wallet?.address.substring(user.wallet.address.length-4)}
+                            </span>
+                        </Link>
+                    :
+                        <button className={`navbar-item ${onMyProfile? "md:link-active" : "" }`}
+                            disabled={!ready}
+                            onClick={!disableLogin?login:undefined}
+                            title={user?.wallet?.address}
+                        >
+                            <div className='flex flex-col justify-center h-full'>
+                                <span className={`text-sm md:text-xl pixelated-font`}>Connect</span>
+                            </div>
+                        </button>
+                }
             </div>
 
             <Menu as="div" className="md:hidden navbar-item ms-auto">
@@ -115,19 +128,27 @@ function Navbar() {
                     <div className="px-1 py-1">
                         <Menu.Item>
                             {({ active }) => (
-                                <div className='flex-1 flex justify-end h-full'>
+                                    
+                                logged?
+                                    <Link 
+                                    href={`/profile/${user?.wallet?.address}`} 
+                                    className={`${onMyProfile || active ? 'bg-rives-purple text-white' : 'text-black'
+                                    } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}
+                                    >
+                                        Profile
+                                    </Link>
+                                :
                                     <button 
-                                    className={`${active ? 'bg-rives-purple text-white' : 'text-black'
-                                    } group flex w-full items-center rounded-md px-2 py-2 text-sm`} 
+                                    className={`${onMyProfile || active ? 'bg-rives-purple text-white' : 'text-black'
+                                    } group flex w-full items-center rounded-md px-2 py-2 text-sm pixelated-font`}
                                     disabled={!ready}
                                     onClick={!disableLogin?login:undefined}
                                     title={user?.wallet?.address}
                                     >
                                         <div className='flex flex-col justify-center h-full'>
-                                            {connectButtonTxt}
+                                            <span className={`text-sm pixelated-font`}>Connect</span>
                                         </div>
-                                    </button>
-                                </div>
+                                    </button>                                    
                             )}
                         </Menu.Item>
                     </div>

@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { sha256 } from "js-sha256";
 import { ethers } from "ethers";
 import rivesLogo from '@/public/logo_cutted.png';
-import { getTapeGif, getTapeImage, getTapeName } from "../utils/util";
+import { calculateTapeId, getTapeGif, getTapeImage, getTapeName } from "../utils/util";
 import { useEffect, useState } from "react";
 import rivesCheck from "@/public/default_tape.png";
 import { Twitter } from "@privy-io/react-auth";
@@ -22,8 +22,8 @@ interface TapePreview {
     twitterInfo?:Twitter
 }
 
-export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPayload|TapePreview, creator?:User|null}) {
-    let tape:VerifyPayload|TapePreview;
+export default function TapeCard({tapeInput, creator, deactivateLink=false}:{tapeInput:string|VerifyPayloadProxy|TapePreview, creator?:User|null, deactivateLink?:boolean}) {
+    let tape:VerifyPayloadProxy|TapePreview;
 
     if (typeof tapeInput == "string") {
         tape = JSON.parse(tapeInput);
@@ -51,13 +51,13 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
             userName = tape.twitterInfo.name;
         }
     } else {
-        userAddress = (tape as VerifyPayload)._msgSender.toLowerCase();
-        tapeId = sha256(ethers.utils.arrayify(((tape as VerifyPayload).tape)));
+        userAddress = (tape as VerifyPayloadProxy)._msgSender.toLowerCase();
+        tapeId = calculateTapeId((tape as VerifyPayloadProxy).rule_id,(tape as VerifyPayloadProxy).tape);
     }
 
     const player = `${userAddress.slice(0, 6)}...${userAddress.substring(userAddress.length-4,userAddress.length)}`;
     const [playerName, setPlayerName] = useState<string|null>(userName);
-    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? tapeId:tapeTitle);
+    const [title, setTitle] = useState<string|null>(tapeTitle === null || tapeTitle.length == 0? `...${tapeId.substring(56, 64)}`:tapeTitle);
     const [gifImage, setGifImage] = useState<string|null>(initialGifImageValue);
     const [gif, setGif] = useState<string|null>(initialGifValue);
     const [currentPrice,setCurrentPrice] = useState<string>();
@@ -102,8 +102,18 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
 
         if (tapeId) {
             getTapeBondInfo(tapeId,true).then((bond: BondInfo|null) => {
-                if (bond && bond.buyPrice)
-                    setCurrentPrice(`${parseFloat(ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals)).toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`);
+                if (bond)
+                    if (bond.currentSupply.eq(bond.steps[bond.steps.length - 1].rangeMax)) {
+                        setCurrentPrice(`Sold out`);
+                    } else if (bond.buyPrice)
+                        if (bond.buyPrice.eq(0)) {
+                            setCurrentPrice(`- ${bond.currencySymbol}`);
+                        } else {
+                            setCurrentPrice(`${parseFloat(
+                                ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals))
+                                .toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`
+                            );
+                        }
             });
         }
     
@@ -120,7 +130,9 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
         onMouseLeave={onMouseLeave}
         >
             <Link href={`/tapes/${tapeId}`}
-            className="tapeBorder flex flex-col items-center w-44 h-60 hover:scale-110">
+            aria-disabled={deactivateLink} 
+            tabIndex={deactivateLink ? -1 : undefined}
+            className={`tapeBorder flex flex-col items-center w-44 h-60 ${deactivateLink ? 'pointer-events-none' : 'hover:scale-110'}`}>
                 <div className="w-44 flex items-stretch px-[10px] ms-2">
                     <div className='w-fit h-8'>
                         <div className="w-16 h-4 relative">
@@ -172,9 +184,13 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
                 <div className="w-44 px-[10px] ms-2">
                     <div className="flex flex-col items-start">
                         <span className="pixelated-font text-sm truncate max-w-full">{title}</span>
-                        <span className="pixelated-font text-xs truncate">
-                            By <button onClick={handleClick}
-                                className="pixelated-font text-rives-purple hover:underline">
+                        <div className="text-xs max-w-full h-4 flex gap-1">
+                            <span className="pixelated-font">
+                                By
+                            </span>
+                            
+                            <button onClick={handleClick}
+                                className="pixelated-font text-rives-purple hover:underline truncate">
                                     {
                                         playerName?
                                             playerName
@@ -182,7 +198,7 @@ export default function TapeCard({tapeInput, creator}:{tapeInput:string|VerifyPa
                                             player
                                     }
                             </button>
-                        </span>
+                        </div>
                     </div>
 
                 </div>

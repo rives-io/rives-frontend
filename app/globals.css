@@ -90,13 +90,13 @@ body {
   background-color: var(--background);
 }
 
-.rainbow-background {
-  background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,154,0,1) 10%, rgba(208,222,33,1) 20%, rgba(79,220,74,1) 30%, rgba(63,218,216,1) 40%, rgba(47,201,226,1) 50%, rgba(28,127,238,1) 60%, rgba(95,21,242,1) 70%, rgba(186,12,248,1) 80%, rgba(251,7,217,1) 90%);
+.linkTableData {
+    overflow: hidden;
 }
-
-.crop-logo {
-  height: 100%;
-  clip-path: polygon(50% 100%, 100% 100%, 100% 100%);
+.linkTableData a {
+    display: block;
+    margin: -10em;
+    padding: 10em;
 }
 
 .cartridgeBorder { 
@@ -272,11 +272,11 @@ body {
   }
 
   .tab-navigation-item {
-    @apply p-4 bg-black text-white hover:tab-navigation-item-selected;
+    @apply p-4 bg-black text-white hover:bg-[rgb(var(--background-start-rgb))];
   }
 
   .tab-navigation-item-selected {
-    @apply bg-[rgb(var(--background-start-rgb))];
+    @apply p-4 bg-[rgb(var(--background-start-rgb))];
   }
 }
 
@@ -285,13 +285,13 @@ body {
   height: 768px;
 }
 
-.screen-controls {
-  width: 768px;
+.gameplay-screen-sm {
+  width: 512px;
+  height: 512px;
 }
 
-.youtube-frame {
-  width: 640px;
-  height: 360px;
+.screen-controls {
+  width: 768px;
 }
 
 .cartridgePageCover {
@@ -299,11 +299,19 @@ body {
   height: 512px;
 }
 
+.homepageContainer {
+  width: 352px;
+}
+
 /* consider height to see Score max-height 768 +64  */
 @media screen and (max-height: 832px)  {
   .gameplay-screen {
     max-width: 512px;
     max-height: 512px;
+  }
+  .gameplay-screen-sm {
+    width: 512px;
+    height: 512px;
   }
   .screen-controls {
     width: 512px;
@@ -316,6 +324,10 @@ body {
 
 @media screen and (max-width: 768px)  {
   .gameplay-screen {
+    max-width: 512px;
+    max-height: 512px;
+  }
+  .gameplay-screen-sm {
     max-width: 512px;
     max-height: 512px;
   }
@@ -334,6 +346,10 @@ body {
     max-width: 256px;
     max-height: 256px;
   }
+  .gameplay-screen-sm {
+    max-width: 256px;
+    max-height: 256px;
+  }
   .screen-controls {
     width: 256px;
   }
@@ -348,6 +364,11 @@ body {
     max-width: 256px;
     max-height: 256px;
   }
+  
+  .gameplay-screen-sm {
+    max-width: 256px;
+    max-height: 256px;
+  }
   .screen-controls {
     width: 256px;
   }
@@ -357,16 +378,22 @@ body {
   }
 }
 
-@media screen and (max-width: 640px)  {
-  .youtube-frame {
-    width: 320px;
-    height: 180px;
+@media screen and (min-width: 380px) and (max-width: 768px) {
+  .homepageContainer {
+    width: 368px;
   }
 }
 
-@media screen and (max-height: 360px)  {
-  .youtube-frame {
-    width: 320px;
-    height: 180px;
+@media screen and (min-width: 768px)  {
+  .homepageContainer {
+    width: 752px;
   }
+}
+
+.MuiOutlinedInput-input.Mui-focused {
+  color: black;
+}
+
+.MuiOutlinedInput-root.Mui-focused {
+  color: black;
 }

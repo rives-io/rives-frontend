@@ -6,12 +6,8 @@ import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridgeInfo, getOutputs, rules } from "../backend-libs/core/lib";
 import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
-import { Contest } from "../utils/common";
 import ContestCard from "./ContestCard";
 import { CartridgeInfo, RuleInfo } from "../backend-libs/core/ifaces";
-
-const knowContests = envClient.CONTESTS as Record<string,Contest>;
-const contestsIds = Object.keys(knowContests);
 
 
 export default function UserContests({address}:{address:string}) {    
@@ -24,7 +20,7 @@ export default function UserContests({address}:{address:string}) {
         setContestsLoading(true);
 
         const contests = (await rules(
-            {ids: contestsIds},
+            {has_start: true, has_end: true},
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
         ).data;
 
@@ -52,15 +48,26 @@ export default function UserContests({address}:{address:string}) {
             
             // user played this contest
             if (res.data.length > 0) {
-                participatedContests.push({...contest, ...knowContests[contest.id]});
+                participatedContests.push(contest);
 
                 if (!participatedContestsCartridges[contest.cartridge_id]) {
-                    const cartridge:CartridgeInfo = await cartridgeInfo(
-                        {id:contests[i].cartridge_id},
+                    let cartridge:CartridgeInfo = await cartridgeInfo(
+                        {id:contest.cartridge_id},
                         {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
                     );
+
+                    if (!cartridge.primary && cartridge.primary_id) {
+                        const primaryId = cartridge.primary_id;
+                        
+                        if (!cartridge) {
+                          cartridge = await cartridgeInfo(
+                            {id: primaryId},
+                            {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+                          );  
+                        }
+                    }
                 
-                    participatedContestsCartridges[cartridge.id] = cartridge;
+                    participatedContestsCartridges[contest.cartridge_id] = cartridge;
                 }
             }
         }
@@ -78,7 +85,7 @@ export default function UserContests({address}:{address:string}) {
     return (
         <div className="flex flex-col gap-4">
             <div className='w-full lg:w-[80%]'>
-                    <h1 className={`text-2xl pixelated-font`}>Contests</h1>
+                    <h1 className={`text-2xl pixelated-font`}>Contests Participated</h1>
             </div>
 
             {
@@ -91,7 +98,7 @@ export default function UserContests({address}:{address:string}) {
                         <div className="text-center pixelated-font">No Contests</div>
                     :
                         <div className="flex justify-center">
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="flex flex-wrap justify-center gap-4">
                                 {
                                     userContests.map((contest, index) => {
                                         return (

@@ -1,17 +1,17 @@
 import { CartridgeInfo, RuleInfo } from '@/app/backend-libs/core/ifaces';
-import { cartridgeInfo, getOutputs, rules, VerifyPayload } from '@/app/backend-libs/core/lib';
+import { cartridgeInfo, getOutputs, rules, VerificationOutput, VerifyPayloadProxy } from '@/app/backend-libs/core/lib';
 import ContestCard from '@/app/components/ContestCard';
 import RivemuPlayer from '@/app/components/RivemuPlayer';
 import TapeAssetsAndStats from '@/app/components/TapeAssetsAndStats';
+import TapeTitle from '@/app/components/TapeTitle';
 import { envClient } from '@/app/utils/clientEnv';
 import { User, getUsersByAddress } from '@/app/utils/privyApi';
-import { getTapeName, timeToDateUTCString } from '@/app/utils/util';
+import { getTapeName, ruleIdFromBytes, tapeIdFromBytes, timeToDateUTCString } from '@/app/utils/util';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import WarningIcon from '@mui/icons-material/Warning';
 
-// Make Next.JS revalidate the page every 30 seconds
-export const revalidate = 30;
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: { tape_id: string } }) {
     const imageUrl = `${envClient.GIF_SERVER_URL}/images/${params.tape_id}`;
@@ -36,6 +36,17 @@ export async function generateMetadata({ params }: { params: { tape_id: string }
     }
 }
 
+// const getScore = async (tapeId:string):Promise<string> => {
+//     const out:Array<VerificationOutput> = (await getOutputs(
+//         {
+//             tags: ["score",tapeId],
+//             type: 'notice'
+//         },
+//         {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+//     )).data;
+//     if (out.length === 0) return "";
+//     return out[0].score.toString();
+// }
 export default async function Tape({ params }: { params: { tape_id: string } }) {
     let res = (await getOutputs(
         {
@@ -54,19 +65,51 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
         );
     }
     
-    const tape:VerifyPayload = res.data[0];
+    const tape:VerifyPayloadProxy = res.data[0];
+    let inputTapesIdArray:Array<string> = Array.from(tape.tapes, tapeIdFromBytes);
+    const getInputTapesNames = async (ids:Array<string>) => {
+        let promises:Array<Promise<string|null>> = [];
+
+        for (let i = 0; i < ids.length; i++) {
+            promises.push(getTapeName(ids[i]));
+        }
+
+        const inputTapesNames = await Promise.all(promises);
+        return inputTapesNames;
+    }
 
     const userMap:Record<string,User> = JSON.parse(await getUsersByAddress([tape._msgSender]));
     const user = userMap[tape._msgSender.toLowerCase()];
-    res = await rules({id: tape.rule_id.substring(2)}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
+    res = await rules({id: ruleIdFromBytes(tape.rule_id), enable_deactivated: true}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const contest:RuleInfo = res.data[0];
 
     const cartridgePromise = cartridgeInfo({id: contest.cartridge_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true});
     const tapeNamePromise = getTapeName(params.tape_id);
+    const inputTapeNamesPromise = getInputTapesNames(inputTapesIdArray);
     
+    let score:string|undefined = undefined;
+    if (contest.score_function) {
+        const out:Array<VerificationOutput> = (await getOutputs(
+            {
+                tags: ["score",params.tape_id],
+                type: 'notice'
+            },
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        )).data;
+        if (out.length != 0) score = ethers.utils.formatUnits(out[0].score.toString(), 0);
+    }
+
     let tapeCartridge:CartridgeInfo;
     let tapeName:string|null;
-    [tapeCartridge, tapeName] = await Promise.all([cartridgePromise, tapeNamePromise]);
+    let inputTapesNames:Array<string|null>;
+    [tapeCartridge, tapeName, inputTapesNames] = await Promise.all([cartridgePromise, tapeNamePromise, inputTapeNamesPromise]);
+
+    if (!tapeCartridge.primary && tapeCartridge.primary_id) {
+        tapeCartridge = await cartridgeInfo(
+            {id: tapeCartridge.primary_id}, 
+            {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true}
+        );
+    }
 
     return (
         <main>
@@ -76,14 +119,7 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                 <div className='w-full flex flex-col gap-4'>
                     <div className='flex flex-wrap gap-4'>
                         <div className='flex flex-col w-fit'>
-                            <h1 className={`pixelated-font text-2xl md:text-5xl truncate`} title={params.tape_id}>
-                                {
-                                    tapeName?
-                                        tapeName
-                                    :
-                                        params.tape_id.substring(0, 20)
-                                }
-                            </h1>
+                            <TapeTitle tapeId={params.tape_id} tapeName={tapeName} />
                             <span className='text-sm md:text-base truncate'>
                             {
                                 !user?
@@ -118,8 +154,38 @@ export default async function Tape({ params }: { params: { tape_id: string } }) 
                             <span className="text-gray-400">Rule</span>
                             {contest.name}
 
-                            <span className="text-gray-400">Score</span>
-                            {ethers.utils.formatUnits(tape.claimed_score, 0)}
+                            { 
+                                score?
+                                    <>
+                                        <span className="text-gray-400">Score</span>
+                                        {score}
+                                    </>
+                                :
+                                    <></>
+                            }
+
+                            {
+                                inputTapesIdArray.length == 0?
+                                    <></>
+                                :
+                                    <>
+                                        <span className="text-gray-400">Input Tapes</span>
+                                        <span className='flex gap-2'>
+                                            {
+                                                inputTapesIdArray.map((id, index) => {
+                                                    return (
+                                                        <Link key={id} href={`/tapes/${id}`}
+                                                        className='text-rives-purple hover:underline'>
+                                                            {
+                                                                inputTapesNames[index]? inputTapesNames[index]: `${id.substring(0, 20)}...`
+                                                            }
+                                                        </Link>
+                                                    )
+                                                })
+                                            }
+                                        </span>
+                                    </>
+                            }
                         </div>
                     </div>
 

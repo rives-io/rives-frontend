@@ -4,6 +4,7 @@ import ProfileOptions from "@/app/components/ProfileOptions";
 import ProfileSummary from "@/app/components/ProfileSummary";
 import TapeFeesManager from "@/app/components/TapeFeeManager";
 import CartridgeFeesManager from "@/app/components/CartridgeFeeManager";
+import UserAchievements from "@/app/components/UserAchievements";
 
 
 export async function generateMetadata({ params }: { params: { address: string } }) {
@@ -49,8 +50,17 @@ export default async function ProfilePage({ params }: { params: { address: strin
                     <ProfileSummary address={params.address} />
                 </div>
                 
-                <div className="w-full flex flex-col gap-2">
-                    <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
+                <div className="w-full flex flex-wrap gap-8">
+                    <div className="
+                    flex-1">
+                        <div className="w-full flex flex-col gap-2">
+                            <ProfileNavigation address={params.address} twitterInfo={twitterInfo} />
+                        </div>
+                    </div>
+
+                    <div className="w-full md:w-fit h-fit flex justify-center">
+                        <UserAchievements address={params.address}/>
+                    </div>
                 </div>
             </section>
         </main>

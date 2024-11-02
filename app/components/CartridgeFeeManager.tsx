@@ -61,7 +61,7 @@ function CartridgeFeesManager({address}:{address:string}) {
 
             const curContract = new ethers.Contract(envClient.CARTRIDGE_CONTRACT_ADDR,cartridgeAbi.abi,curSigner);
             curContract.provider.getCode(curContract.address).then((code) => {
-                if (code == '0x') {
+                if (!code || code == '0x') {
                     console.log("Couldn't get cartridge contract")
                     return;
                 }

@@ -3,21 +3,21 @@
 
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { getTapes, getUsersFromTapes } from "../utils/util";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { getTapes, tapeIdFromBytes, getUsersFromTapes} from "../utils/util";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
 import Loading from "./Loading";
-import { getUserTapes } from "../utils/assets";
+import { checkTapeContract, getUserTapes } from "../utils/assets";
 import { User } from "../utils/privyApi";
 
 
 export default function UserTapes({address, twitterInfo}:{address:string, twitterInfo:User}) {
-    const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapesCreated, setTapesCreated] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCreatedPage, setTapesCreatedPage] = useState(0);
     
-    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapesCollect, setTapesCollect] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesCollectedPage, setTapesCollectedPage] = useState(0);
     
     const [tapesCreatedPageToLoad, setTapesCreatedPageToLoad] = useState(1);
@@ -29,7 +29,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
     const [tapesCreatedLoading, setTapesCreatedLoading] = useState(true);
     const [tapesCollectedLoading, setTapesCollectedLoading] = useState(true);
     
-    const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>([]);
+    const [tapesCollectedList, setTapesCollectedList] = useState<Array<string>>();
 
     const disablePrevTapesCreatedPage = tapesCreatedPage == 1;
     const disablePrevTapesCollectedPage = tapesCollectedPage == 1;
@@ -77,18 +77,19 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
     }
 
     const TapesCollectedByProfile = async () => {
+        const page_size = 6;
+        if (!tapesCollectedList) return;
         if (tapesCollectedList.length == 0 || tapesCollect[tapesCollectedPageToLoad-1]) {
             setTapesCollectedPage(tapesCollectedPageToLoad);
-            setTotalTapesCollectedPages(0);
+            setTotalTapesCollectedPages(Math.ceil(tapesCollectedList.length / page_size));
             setTapesCollectedLoading(false);
             return;
         }
 
         setTapesCollectedLoading(true);
 
-        const page_size = 6;
 
-        let tapes:VerifyPayload[] = [];
+        let tapes:VerifyPayloadProxy[] = [];
         const begin = page_size*(tapesCollectedPageToLoad-1)
         for (let i = begin; i < tapesCollectedList.length; i++) {
             const tapeId = tapesCollectedList[i];
@@ -140,7 +141,15 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
 
     useEffect(() => {
         TapesCreatedByProfile();
-        getUserTapes(address).then(out => setTapesCollectedList(out.map((t,i) => t.slice(2))));
+        checkTapeContract().then(exists => {
+            if (exists) {
+                getUserTapes(address).then(out => {
+                    if (out) {
+                        setTapesCollectedList(out.map((t,i) => tapeIdFromBytes(t)))
+                    }
+                });
+            }
+        });
     }, [])
 
     useEffect(() => {
@@ -205,7 +214,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
                 }
             </div>
 
-            <div className="flex flex-col gap-4">
+            {tapesCollectedList ? <div className="flex flex-col gap-4">
                 <div className='w-full lg:w-[80%]'>
                     <h1 className={`text-2xl pixelated-font`}>Tapes Collected</h1>
                 </div>
@@ -246,7 +255,7 @@ export default function UserTapes({address, twitterInfo}:{address:string, twitte
                         } 
                     </>
                 }
-            </div>
+            </div> : <></>}
         </div>
     )
 }

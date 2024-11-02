@@ -5,12 +5,8 @@ import { useEffect, useState } from "react";
 import { rules } from "../backend-libs/core/lib";
 import Loading from "./Loading";
 import { envClient } from "../utils/clientEnv";
-import { Contest } from "../utils/common";
 import ContestCard, { CartridgeWithUser } from "./ContestCard";
 import { RuleInfo } from "../backend-libs/core/ifaces";
-
-const knowContests = envClient.CONTESTS as Record<string,Contest>;
-const contestsIds = Object.keys(knowContests);
 
 
 export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:string, cartridge:CartridgeWithUser}) {    
@@ -22,7 +18,7 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
         setContestsLoading(true);
 
         const contests = (await rules(
-            {ids: contestsIds, cartridge_id: cartridgeId},
+            {cartridge_id: cartridge.last_version || cartridgeId, has_start: true, has_end: true},
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})
         ).data;
 
@@ -46,7 +42,7 @@ export default function CartridgeContests({cartridgeId, cartridge}:{cartridgeId:
                     cartridgeContests?.length == 0?
                         <div className="text-center pixelated-font">No Contests</div>
                     :
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap justify-center gap-4">
                             {
                                 cartridgeContests?.map((contest, index) => {
                                     return (

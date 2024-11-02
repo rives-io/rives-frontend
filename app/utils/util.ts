@@ -1,17 +1,36 @@
 import { envClient } from "./clientEnv";
-import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain } from 'viem/chains';
-import { isHex, fromHex } from 'viem'
+import { ethers } from "ethers";
+import { anvil, base, mainnet, sepolia, polygon, polygonMumbai, Chain, baseSepolia } from 'viem/chains';
+import { isHex, fromHex, defineChain } from 'viem'
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
-import { cartridges, getOutputs, VerifyPayload } from "../backend-libs/core/lib";
+import { cartridgeInfo, cartridges, getOutputs, rules, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
-import { CartridgeInfo, CartridgesOutput, CartridgesPayload, VerificationOutput } from "../backend-libs/core/ifaces";
+import { CartridgeInfo, CartridgesOutput, CartridgesPayload, RuleInfo, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
+import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated, RaffleData } from "./common";
+import { ConnectedWallet } from "@privy-io/react-auth";
+
+const FRONTEND_ERROR_PREFIX = "RIVES Frontend ERROR:";
 
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+export function buildUrl(baseUrl:string, path:string) {
+    let formatedBaseUrl = baseUrl;
+    let formatedPath = path;
+    
+    if (baseUrl[baseUrl.length-1] == "/") {
+        formatedBaseUrl = baseUrl.slice(0, baseUrl.length-1);
+    }
+
+    if (path.length > 0 && path[0] == "/") {
+        formatedPath = path.slice(1);
+    }
+
+    return `${formatedBaseUrl}/${formatedPath}`;
+}
 
 export async function getContestWinner(cartridge_id:string, rule:string):Promise<string|undefined> {
     const tags = ["score",cartridge_id,rule];
@@ -54,8 +73,8 @@ export function formatTime(time:number):string {
         val = Math.round(time / 60);
         return val == 1? `${val} minute`:`${val} minutes`;
     }
-  
-    return `${time} seconds`
+
+    return `${Math.round(time)} seconds`
 }
 
 // time in seconds
@@ -88,7 +107,7 @@ export function formatDate(date:Date) {
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/gifs`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "gifs"),
             {
                 method: "POST",
                 headers: {
@@ -113,7 +132,7 @@ export async function getTapesGifs(tapes:Array<string>):Promise<Array<string>> {
     if (tapes.length == 0) return [];
     
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/gifs`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "gifs"),
             {
                 method: "POST",
                 headers: {
@@ -136,8 +155,7 @@ export async function getTapesGifs(tapes:Array<string>):Promise<Array<string>> {
 export async function insertTapeGif(gameplay_id:string, gifImage:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "gif": gifImage});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-gif`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-gif"),
             {
                 method: "POST",
                 headers: {
@@ -153,7 +171,7 @@ export async function insertTapeGif(gameplay_id:string, gifImage:string) {
 
 export async function getTapeImage(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/images`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "images"),
             {
                 method: "POST",
                 headers: {
@@ -178,7 +196,7 @@ export async function getTapesImages(tapes:Array<string>):Promise<Array<string>>
     if (tapes.length == 0) return [];
     
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/images`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "images"),
             {
                 method: "POST",
                 headers: {
@@ -201,8 +219,7 @@ export async function getTapesImages(tapes:Array<string>):Promise<Array<string>>
 export async function insertTapeImage(gameplay_id:string, gifImage:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "image": gifImage});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-image`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-image"),
             {
                 method: "POST",
                 headers: {
@@ -219,7 +236,7 @@ export async function insertTapeImage(gameplay_id:string, gifImage:string) {
 
 export async function getTapeName(tape_id:string):Promise<string|null> {
     try {
-        const response = await fetch(`${envClient.GIF_SERVER_URL}/names`,
+        const response = await fetch(buildUrl(envClient.GIF_SERVER_URL, "names"),
             {
                 method: "POST",
                 headers: {
@@ -244,8 +261,7 @@ export async function getTapeName(tape_id:string):Promise<string|null> {
 export async function insertTapeName(gameplay_id:string, name:string) {
     const payload = await encrypt({"gameplay_id": gameplay_id, "name": name});
     try {
-        await fetch(
-            `${envClient.GIF_SERVER_URL}/insert-name`,
+        await fetch(buildUrl(envClient.GIF_SERVER_URL, "insert-name"),
             {
                 method: "POST",
                 headers: {
@@ -259,13 +275,37 @@ export async function insertTapeName(gameplay_id:string, name:string) {
     }
 }
 
+const customChain = defineChain({
+    id: 42069,
+    name: 'Rives Devnet',
+    nativeCurrency: {
+      decimals: 18,
+      name: 'Rives Ether',
+      symbol: 'RETH',
+    },
+    rpcUrls: {
+      default: {
+        http: ['https://anvil.dev.rives.io'],
+        webSocket: ['wss://anvil.dev.rives.io'],
+      },
+    },
+});
+
+let customSepolia = Object.assign({},sepolia); //.rpcUrls.default.http = ["https://base-sepolia-rpc.publicnode.com"];
+customSepolia = Object.assign(customSepolia, {rpcUrls: {default: {http: ["https://ethereum-sepolia-rpc.publicnode.com"]}}});
+
+let customBaseSepolia = Object.assign({},baseSepolia); //.rpcUrls.default.http = ["https://base-sepolia-rpc.publicnode.com"];
+customBaseSepolia = Object.assign(customBaseSepolia, {rpcUrls: {default: {http: ["https://base-sepolia-rpc.publicnode.com"]}}});
+
 let chains:Record<number, Chain> = {};
 chains[base.id] = base;
 chains[mainnet.id] = mainnet;
-chains[sepolia.id] = sepolia;
+chains[sepolia.id] = customSepolia;
 chains[polygon.id] = polygon;
 chains[polygonMumbai.id] = polygon;
 chains[anvil.id] = anvil;
+chains[customChain.id] = customChain;
+chains[baseSepolia.id] = customBaseSepolia;
 
 export function getChain(chainId:number):Chain;
 export function getChain(chainId:string):Chain;
@@ -374,11 +414,55 @@ export async function getCartridges(options:CartridgesRequest): Promise<Cartridg
 }
 
 export function extractTxError(msg:string):string {
+    if (msg.substring(0, FRONTEND_ERROR_PREFIX.length) == FRONTEND_ERROR_PREFIX) {
+        return msg.substring(FRONTEND_ERROR_PREFIX.length);
+    }
+
     const m = msg.match(/(.*)\s\[/);
     if (m?.length && m.length >= 2) return m[1] as string;
     return "Error in transaction";
 }
 
+const CARTRIDGE_ID_BYTES = 6;
+const RULE_ID_BYTES = 20;
+const TAPE_ID_BYTES = 32;
+const TRUNCATED_TAPE_ID_BYTES = 12;
+
+export function cartridgeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*CARTRIDGE_ID_BYTES) : id.slice(0,2*CARTRIDGE_ID_BYTES);
+}
+
+export function ruleIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*RULE_ID_BYTES) : id.slice(0,2*RULE_ID_BYTES);
+}
+
+export function tapeIdFromBytes(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TAPE_ID_BYTES) : id.slice(0,2*TAPE_ID_BYTES);
+}
+
+export function truncateTapeHash(id: string): string {
+    return id.startsWith('0x') ? id.slice(2,2+2*TRUNCATED_TAPE_ID_BYTES) : id.slice(0,2*TRUNCATED_TAPE_ID_BYTES);
+}
+
+export function formatCartridgeIdToBytes(id: string): string {
+    return `0x${cartridgeIdFromBytes(id)}${'0'.repeat(2*(32-CARTRIDGE_ID_BYTES))}`;
+}
+
+export function formatRuleIdToBytes(id: string): string {
+    return `0x${ruleIdFromBytes(id)}${'0'.repeat(2*(32-RULE_ID_BYTES))}`;
+}
+
+export function formatTapeIdToBytes(id: string): string {
+    return `0x${tapeIdFromBytes(id)}${'0'.repeat(2*(32-TAPE_ID_BYTES))}`;
+}
+
+export function calculateTapeId(ruleId:string, log: Uint8Array): string {
+    return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
+}
+
+export function calculateCartridgeId(log: Uint8Array): string {
+    return cartridgeIdFromBytes(truncateTapeHash(ethers.utils.keccak256(log)));
+}
 
 export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
@@ -397,7 +481,7 @@ export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, cu
     return newUserMap;
 }
 
-export async function getUsersFromTapes(tapes:Array<VerifyPayload>, currUserMap:Record<string, User>) {
+export async function getUsersFromTapes(tapes:Array<VerifyPayloadProxy>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
     for (let tape of tapes) {
         const userAddress = tape._msgSender.toLowerCase();
@@ -412,4 +496,200 @@ export async function getUsersFromTapes(tapes:Array<VerifyPayload>, currUserMap:
     }
 
     return newUserMap;
+}
+
+
+export async function getAchievement(slug:string) {
+    let res:Response;
+
+    try {
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `console_achievement/${slug}`),
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement: ${slug}\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    if (!res_json.slug) return null;
+
+    return res_json as Achievement;
+}
+
+export async function getAchievements() {
+    let res:Response;
+
+    try {
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `console_achievement`),
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json.items as Array<Achievement>;
+}
+
+
+export async function getContestDetails(rule_id:string) {
+    let res:Response;
+
+    try {
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `rule/${rule_id}`),
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json as ContestDetails;
+}
+
+export async function getProfileAchievementsSummary(address:string) {
+    let res:Response;
+
+    try {
+        res = await fetch(buildUrl(envClient.AGGREGATOR, `profile/${address}/console_achievements_summary`),
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 300 // revalidate cache 300 seconds
+                }
+            }
+        )            
+    } catch (error) {
+        console.log(`Failed to fetch achievement list\nError: ${(error as Error).message}`);
+        return null;
+    }
+
+    const res_json = await res.json();
+
+    return res_json.items as Array<ProfileAchievementAggregated>;
+}
+
+
+export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
+    let res:Response;
+    let data:OlympicData|null;
+    
+    try {
+        res = await fetch(envClient.OLYMPICS_DATA_URL,
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )
+        
+        data = await res.json();
+    } catch (error) {
+        console.log(`Failed to fetch Olympics data\nError: ${(error as Error).message}`);
+        data = null;
+    }
+
+    return data;
+}
+
+
+export async function verifyChain(wallet:ConnectedWallet) {
+    if (wallet.chainId.toLowerCase() != envClient.NETWORK_CHAIN_ID.toLowerCase()) {
+        try {
+            await wallet.switchChain(envClient.NETWORK_CHAIN_ID as `0x${string}`);
+        } catch (error) {
+            console.log((error as Error).message);
+            throw new Error(`${FRONTEND_ERROR_PREFIX} Failed to change to the correct network (${envClient.NETWORK_CHAIN_ID})`);
+        }
+    }
+}
+
+
+export async function getCartridgeInfo(cartridge_id:string) {
+    let cartridgeWithInfo:CartridgeInfo = await cartridgeInfo(
+        {id:cartridge_id},
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+    );
+
+    if (!cartridgeWithInfo.primary && cartridgeWithInfo.primary_id) {
+        cartridgeWithInfo = await cartridgeInfo(
+        {id: cartridgeWithInfo.primary_id},
+        {decode:true, cartesiNodeUrl: envClient.CARTESI_NODE_URL}
+        );
+    }
+
+    return cartridgeWithInfo;
+}
+
+
+export async function getRuleInfo(rule_id:string):Promise<RuleInfo|null> {
+    const rulesFound:Array<RuleInfo> = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
+  
+    if (rulesFound.length == 0) return null;
+  
+    return rulesFound[0];
+}
+
+
+export async function getSocialPrizes() {
+    let res:Response;
+    let data:RaffleData|null;
+
+    try {
+        res = await fetch("https://storage.googleapis.com/rives-mainnet-v5-public/tournament/doom-olympics/raffle.json",
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )            
+        data = await res.json();
+    } catch (error) {
+        console.log(`Failed to social prizes\nError: ${(error as Error).message}`);
+        data = null;
+    }
+
+
+    return data;
 }

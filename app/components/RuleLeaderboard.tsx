@@ -1,6 +1,6 @@
 "use client"
 
-import { getOutputs, VerificationOutput, VerifyPayloadInput } from '../backend-libs/core/lib';
+import { getOutputs, VerificationOutput, VerifyPayloadProxyInput } from '../backend-libs/core/lib';
 import {  ethers } from "ethers";
 import { envClient } from '../utils/clientEnv';
 import React, { useEffect, useState } from 'react';
@@ -12,17 +12,18 @@ import { getUsersByAddress, User } from '../utils/privyApi';
 import Image from 'next/image';
 import rivesCheck from "@/public/default_profile.png";
 import { usePrivy } from '@privy-io/react-auth';
-import { timeToDateUTCString } from '../utils/util';
+import { tapeIdFromBytes,timeToDateUTCString} from '../utils/util';
+import Link from 'next/link';
 
 const DEFAULT_PAGE_SIZE = 10;
 let total_pages = 1;
 
 const getGeneralVerificationPayloads = async (
-cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
+cartridge_id:string, rule:string, page:number//, getVerificationOutputs: boolean
 ):Promise<DecodedIndexerOutput> => {
     let res:DecodedIndexerOutput;
     
-    if (getVerificationOutputs) {
+    // if (getVerificationOutputs) {
         const tags = ["score", cartridge_id, rule];
         res = await getOutputs(
             {
@@ -34,19 +35,19 @@ cartridge_id:string, rule:string, page:number, getVerificationOutputs: boolean
                 order_dir: "desc"
             },
             {cartesiNodeUrl: envClient.CARTESI_NODE_URL});
-    } else {
-        const tags = ["tape", cartridge_id, rule];
-        res = await getOutputs(
-            {
-                tags,
-                type: 'input',
-                page,
-                page_size: DEFAULT_PAGE_SIZE,
-                order_by: "timestamp",
-                order_dir: "desc"
-            },
-            {cartesiNodeUrl: envClient.CARTESI_NODE_URL});    
-    }
+    // } else {
+        // const tags = ["tape", cartridge_id, rule];
+        // res = await getOutputs(
+        //     {
+        //         tags,
+        //         type: 'input',
+        //         page,
+        //         page_size: DEFAULT_PAGE_SIZE,
+        //         order_by: "timestamp",
+        //         order_dir: "desc"
+        //     },
+        //     {cartesiNodeUrl: envClient.CARTESI_NODE_URL});    
+    // }
 
     total_pages = Math.ceil(res.total / DEFAULT_PAGE_SIZE);
     return res;
@@ -110,9 +111,9 @@ function tapesBoardFallback() {
 
 
 
-function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:{
-    cartridge_id:string, rule: string | undefined, get_verification_outputs: boolean}) {
-    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadInput[]|VerificationOutput[]|null>(null);
+function RuleLeaderboard({cartridge_id, rule}:{
+    cartridge_id:string, rule: string | undefined}) {
+    const [tapePayloads, setTapePayloads] = useState<VerifyPayloadProxyInput[]|VerificationOutput[]|null>(null);
     const [addressUserMap, setAddressUserMap] = useState<Record<string, User>>({});
 
     // pagenation state
@@ -128,7 +129,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
 
     const reloadScores = async (page: number) => {
         if (!rule) return null;
-        return (await getGeneralVerificationPayloads(cartridge_id, rule, page, get_verification_outputs))
+        return (await getGeneralVerificationPayloads(cartridge_id, rule, page))//, get_verification_outputs))
     }
 
     const previousPage = () => {
@@ -174,7 +175,7 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
             setCurrPage(page);
             setPageToLoad(page);
         });
-    }, [pageToLoad, rule, get_verification_outputs])
+    }, [pageToLoad, rule])
 
     useEffect(() => {
         setTapePayloads(null);
@@ -229,37 +230,54 @@ function RuleLeaderboard({cartridge_id, rule, get_verification_outputs = false}:
                             const verification_outputs = tape instanceof VerificationOutput;
                             const tapets = verification_outputs ? tape.timestamp : tape._timestamp;
                             const sender = verification_outputs ? tape.user_address : tape._msgSender;
-                            const tapeId = verification_outputs ? tape.tape_hash.slice(2) : getTapeId(tape.tape);
+                            const tapeId = verification_outputs ? tapeIdFromBytes(tape.tape_id) : getTapeId(tape.tape);
                             const score = verification_outputs ? tape.score.toString() : "-";
                             const userTape = userAddress == sender?.toLocaleLowerCase();
 
                             const user = addressUserMap[sender.toLowerCase()];
 
                             return (
-                                <tr key={index} onClick={() => window.open(`/tapes/${tapeId}`, "_self")}
+                                <tr key={index}
                                 className={`p-4 hover:bg-rives-purple hover:text-black ${userTape? "bg-rives-gray":""}`}
-                                style={{cursor: "pointer"}}
                                 >
-                                    <td className=''>
-                                        {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
+                                    <td className='linkTableData'>
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {(index+1) + ((currPage-1)*DEFAULT_PAGE_SIZE)}
+                                        </Link>
                                     </td>
                                     {
                                         !user?
-                                            <td className='flex items-center gap-2'>
-                                                <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
-                                                <span className='break-all' title={sender}>{sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}</span>
+                                            <td className='linkTableData'>
+                                                <Link href={`/tapes/${tapeId}`}>
+                                                    <div className='flex items-center gap-2'>
+                                                        <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
+                                                        <span className='break-all' title={sender}>
+                                                            {sender?.substring(0,6)+"..."+sender?.substring(sender?.length-4,sender?.length)}
+                                                        </span>
+                                                    </div>
+                                                </Link>
                                             </td>
                                         :
-                                            <td className='flex items-center gap-2'>
-                                                <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
-                                                <span title={sender}>{user.name}</span>
+                                            <td className='linkTableData'>
+                                                <Link href={`/tapes/${tapeId}`}>
+                                                    <div className='flex items-center gap-2'>
+                                                        <img width={48} height={48} src={user? user.picture_url:""} className='rounded-full pixelated-img' alt='' />
+                                                        <span title={sender}>{user.name}</span>
+                                                    </div>
+                                                </Link>
                                             </td>
                                     }
 
-                                    <td>
-                                        {timeToDateUTCString(Number(tapets))}
+                                    <td className='linkTableData'>
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {timeToDateUTCString(Number(tapets))}
+                                        </Link>
                                     </td>
-                                    <td className=''>{score}</td>
+                                    <td className='linkTableData'>
+                                        <Link href={`/tapes/${tapeId}`}>
+                                            {score}
+                                        </Link>
+                                    </td>
                                 </tr>
                             );
                         })

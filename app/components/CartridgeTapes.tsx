@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { getTapes, getUsersFromTapes } from "../utils/util";
-import { VerifyPayload } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy } from "../backend-libs/core/lib";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import TapeCard from "./TapeCard";
@@ -13,7 +13,7 @@ import { User } from "../utils/privyApi";
 
 
 export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string, ruleId?:string}) {
-    const [tapes, setTapes] = useState<Array<Array<VerifyPayload>>>([]);
+    const [tapes, setTapes] = useState<Array<Array<VerifyPayloadProxy>>>([]);
     const [tapesPage, setTapesPage] = useState(0);
         
     const [tapesPageToLoad, setTapesPageToLoad] = useState(1);
@@ -51,7 +51,7 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
         const new_total_pages = Math.ceil(res.total / page_size);
         if (totalTapesPages != new_total_pages) setTotalTapesPages(new_total_pages);
 
-        const newTapes:Array<VerifyPayload> = res.data;
+        const newTapes:Array<VerifyPayloadProxy> = res.data;
         const newUserMap:Record<string, User> = await getUsersFromTapes(newTapes, userMap);
         if (Object.keys(newUserMap).length > 0) setUserMap({...userMap, ...newUserMap});
 
@@ -73,7 +73,6 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
     }, [])
 
     useEffect(() => {
-        console.log("rule changed");
         setTapes([]);
         setTapesPage(0);
         setTotalTapesPages(-1);
@@ -84,7 +83,6 @@ export default function CartridgeTapes({cartridgeId, ruleId}:{cartridgeId:string
     }, [ruleId])
 
     useEffect(() => {
-        console.log("running tapesByCartridge")
         tapesByCartridge();
     }, [tapesPageToLoad, reload])
 

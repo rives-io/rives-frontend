@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server'
 import { ethers } from "ethers";
 
 import { envClient } from "../../utils/clientEnv";
-import { VerifyPayload, cartridge, getOutputs, rules } from "../../backend-libs/core/lib";
+import { VerifyPayloadProxy, cartridge, getOutputs, rules } from "../../backend-libs/core/lib";
 import { RuleInfo } from '@/app/backend-libs/core/ifaces';
 import { generateEntropy } from '@/app/components/RivemuPlayer';
 
@@ -14,7 +14,8 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
   const formatedRuleId = ruleId;
   const data = await rules(
       {
-          id:formatedRuleId
+          id:formatedRuleId,
+          enable_deactivated: true
       },
       {
           decode:true,
@@ -28,8 +29,8 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
   return data.data[0];
 }
 
-const getTapePayload = async (tapeId:string):Promise<VerifyPayload> => {
-  const replayLogs:Array<VerifyPayload> = (await getOutputs(
+const getTapePayload = async (tapeId:string):Promise<VerifyPayloadProxy> => {
+  const replayLogs:Array<VerifyPayloadProxy> = (await getOutputs(
       {
           tags: ["tape",tapeId],
           type: 'input'

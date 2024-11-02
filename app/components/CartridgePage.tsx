@@ -11,10 +11,13 @@ import { ContestStatus, getContestStatus } from '../utils/common';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
-import CartridgeAssetManager from './CartridgeAssetManager';
+//import CartridgeAssetManager from './CartridgeAssetManager';
 import CartridgeStats from './CartridgeStats';
 import { timeToDateUTCString } from '../utils/util';
 import { getUsersByAddress, User } from '../utils/privyApi';
+import CartridgeUnlocker from './CartridgeUnlocker';
+import CartridgeAssetManager from './CartridgeAssetManager';
+import PlayMode from './PlayMode';
 
 export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridge, rulesInfo:RuleInfo[]}) {
     const [selectedRule, setSelectedRule] = useState<RuleInfo|null>(rulesInfo.length > 0? rulesInfo[0]:null);
@@ -36,8 +39,18 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
     return (
         <main>
             <section className='flex flex-col items-center gap-8'>
-                <div className='cartridgePageCover flex justify-center relative'>
-                    <Image className='pixelated-img' style={{objectFit: "contain"}} fill quality={100} src={"data:image/png;base64,"+cartridge.cover} alt={"Not found"} />
+                <div className='flex flex-col gap-4'>
+                    <div className='cartridgePageCover flex justify-center relative'>
+                        <Image 
+                        className='pixelated-img' 
+                        style={{objectFit: "contain"}} 
+                        fill 
+                        quality={100} 
+                        src={"data:image/png;base64,"+cartridge.cover} 
+                        alt={"Not found"} />
+                    </div>
+
+                    <PlayMode rulesInfo={rulesInfo}/>
                 </div>
 
                 <div className='w-full flex flex-col gap-2'>
@@ -60,25 +73,28 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                                                 <span title={cartridge.user_address}>{creator.name}</span>
                                     </Link>
                             }
-                            <div className='flex'>
+                            { cartridge.created_at > 0 ? <div className='flex'>
                                 <span className='pixelated-font me-2'>On:</span>
                                 <div>{timeToDateUTCString(cartridge.created_at)}</div>
-                            </div>
+                            </div> : <></> }
                         </div>
 
-                        <CartridgeAssetManager cartridge_id={cartridge.id} onChange={() => setReload(reload+1)}/>
+                        <CartridgeAssetManager cartridge={cartridge} reloadStats={() => setReload(reload+1)} />
                     </div>
                     <CartridgeStats cartridge_id={cartridge.id} reload={reload}/>
                 </div>
 
                 <div className='w-full flex flex-col'>
+                    <div>
+                        <CartridgeUnlocker cartridge={cartridge} />
+                    </div>
                     <h2 className={`pixelated-font text-3xl`}>Summary</h2>
                     <pre style={{whiteSpace: "pre-wrap", fontFamily: 'Iosevka Web',marginBottom: "4px"}}>
                         {cartridge.info?.summary}
                     </pre>
                     <div className='flex flex-warp gap-2 items-center'>
                         {
-                            cartridge.info?.tags.map((tag, index) => {
+                            cartridge.info?.tags?.map((tag, index) => {
                                 return <span key={`${tag}-${index}`} className='pixelated-font py-1 px-2 rounded-full bg-rives-gray text-center text-sm'>{tag}</span>
                             }) 
                         }
@@ -99,7 +115,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             <Menu.Button className="flex justify-center hover:text-rives-purple pixelated-font">
                                 {selectedRule?.name} <ArrowDropDownIcon/>
                             </Menu.Button>
-                            <Menu.Items className="absolute z-10 h-48 mt-2 divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+                            <Menu.Items className="absolute z-10 h-48 overflow-auto mt-2 divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                                 
                                 {
                                     rulesInfo?.map((ruleInfo, index) => {
@@ -121,11 +137,11 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                             </Menu.Items>
                         </Menu>
 
-                        <Link aria-disabled={!selectedRule || !contestIsOpen} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
-                        href={`/play/rule/${selectedRule?.id}`} 
-                        className={`${!selectedRule || !contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
+                        {/* <Link aria-disabled={!selectedRule || !contestIsOpen || selectedRule.deactivated} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
+                        href={`/play/${selectedRule?.id}`} 
+                        className={`${!selectedRule || !contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
                             Play
-                        </Link>
+                        </Link> */}
                         
                     </div>
 
@@ -147,9 +163,7 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
 
                             <Tab.Panels className="mt-2 overflow-visible">
                                 <Tab.Panel className="">
-                                    <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id}
-                                    get_verification_outputs={selectedRule != undefined && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(selectedRule)) > -1}
-                                    />
+                                    <RuleLeaderboard cartridge_id={cartridge.id} rule={selectedRule?.id} />
                                 </Tab.Panel>
 
                                 <Tab.Panel className="">

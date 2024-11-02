@@ -2,6 +2,7 @@
 
 import Script from "next/script"
 import { useState, useImperativeHandle, forwardRef } from "react";
+import { InfoCartridge } from "../backend-libs/core/ifaces";
 
 export type RivemuRef = {
 	stop: () => void;
@@ -16,9 +17,10 @@ interface RivemuProps {
     in_card?:Uint8Array, 
     entropy?:string,
     tape?:Uint8Array,
+    smallSize?: boolean,
     rivemu_on_frame(outcard: ArrayBuffer,frame: number,cycles: number,fps: number,
         cpu_cost: number,cpu_speed: number,cpu_usage: number,cpu_quota: number): void,
-    rivemu_on_begin(width: number, height: number, target_fps: number, total_frames: number): void,
+    rivemu_on_begin(width: number, height: number, target_fps: number, total_frames: number, info_data: Uint8Array): void,
     rivemu_on_finish(rivlog: ArrayBuffer,outcard: ArrayBuffer,outhash: string): void
 };
 
@@ -115,6 +117,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     }
 
     async function rivemuHalt() {
+        await rivemuInitialize();
         // @ts-ignore:next-line
         if (Module.ccall('rivemu_stop')) {
             await waitEvent('rivemu_on_shutdown');
@@ -167,7 +170,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
                     <div className="text-white">No Cartridge...</div>
                 </div>
             :<canvas
-                className='gameplay-screen border border-[#131415] bg-black'
+                className={`border border-[#131415] bg-black ${props.smallSize ? "gameplay-screen-sm" : "gameplay-screen"}`}
                 id="canvas"
                 onContextMenu={(e) => e.preventDefault()}
                 tabIndex={-1}
