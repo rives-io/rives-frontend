@@ -13,12 +13,13 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import React, { Fragment, useEffect, useState } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
-import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buyCartridge, checkCartridgeContract, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge, ZERO_ADDRESS } from "../utils/assets";
+import { activateCartridge, activateCartridgeSalesFree, activateFixedCartridgeSales, buildBuyCardridgeUserOp, buildSellCardridgeUserOp, buyCartridge, checkCartridgeContract, getSubmitPrice, getTapeSubmissionModel, getTapeSubmissionModelFromAddress, sellCartridge, TAPE_SUBMIT_MODEL, validateCartridge, ZERO_ADDRESS } from "../utils/assets";
 import { Dialog, Transition } from "@headlessui/react";
 import { Input } from '@mui/base/Input';
 import CartridgeCard from "./CartridgeCard";
 import Link from "next/link";
 import CartridgeModelSetup from "./CartridgeModelSetup";
+import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 
 const cartridgeAbi = cartridgeAbiFile;
 const chain = getChain(envClient.NETWORK_CHAIN_ID);
@@ -63,6 +64,7 @@ const getCartridgeOutput = async (cartridgeId:string):Promise<CartridgeEvent|und
 function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, reloadStats():void}) {
     const {user, ready, authenticated, connectWallet, login} = usePrivy();
     const {wallets} = useWallets();
+    const {client} = useSmartWallets();
 
     const [cartridgeOwner, setCartridgeOwner] = useState<String>();
     const [cartridgeOutput, setCartridgeOutput] = useState<CartridgeEvent>();
@@ -114,7 +116,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
             return;
         }
 
-        const userAddress = user.wallet?.address;
+        const userAddress = user.smartWallet?.address;
         if (!userAddress) {
             setAmountOwned(undefined);
             return;
@@ -301,9 +303,9 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
                     </div>
     
-                    <div className="flex pb-2 mt-4">
+                    <div className="flex pb-2 mt-4 gap-2">
                         <button
-                        className={`dialog-btn bg-red-400 text-black`}
+                        className={`dialog-btn zoom-btn bg-red-400 text-black`}
                         type="button"
                         onClick={closeModal}
                         >
@@ -341,7 +343,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
                     </div>
     
-                    <div className="flex pb-2 mt-4">
+                    <div className="flex pb-2 mt-4 gap-2">
                         <button
                         className={`dialog-btn zoom-btn bg-red-400 text-black`}
                         type="button"
@@ -385,7 +387,7 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                         <CartridgeCard cartridge={cartridge} deactivateLink={true} showPriceTag={false} />
                     </div>
 
-                    <div className="flex pb-2 mt-4">
+                    <div className="flex pb-2 mt-4 gap-2">
                         <button className="dialog-btn bg-red-400 text-black zoom-btn"
                         onClick={closeModal}
                         >
@@ -476,21 +478,23 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     }
 
     async function buy(val?: number) {
-        const wallet = userReady();
-        if (!wallet) return;
         if (!cartridgeContractReading) return;
+        
+        if (ready && !user) return;
+        if (!client) return;
+
 
         try {
-            let amount: bigint;
+            let amount: number;
             let slippage: bigint | undefined;
             if (val) {
                 setModalState({isOpen:true, state: MODAL_STATE.SUBMITTING});
-                amount = BigInt(val);
+                amount = val;
                 const res = (await cartridgeContractReading.read.getCurrentBuyPrice([`0x${cartridgeIdB32}`, amount])) as Array<bigint>;
                 slippage = res[0];
             } else {
                 setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
-                amount = BigInt(modalValue || 1);
+                amount = modalValue || 1;
                 slippage = modalPreviewPrice != undefined? modalPreviewPrice * BigInt(100+modalSlippage) / BigInt(100):undefined;
             }
             if (slippage == undefined) {
@@ -498,7 +502,26 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                 return;
             }
 
-            await buyCartridge(cartridge.id, wallet, amount, erc20Contract?.address);
+            //await buyCartridge(cartridge.id, wallet, amount, erc20Contract?.address);
+            let userOps = await buildBuyCardridgeUserOp(
+                cartridge.id, 
+                user!.smartWallet!.address, 
+                slippage, 
+                {amount: amount, erc20_address: erc20Contract?.address}
+            );
+
+            const txHash = await client.sendTransaction({
+                account: client.account,
+                // maxPriorityFeePerGas: BigInt(100000000),
+                // maxFeePerGas: BigInt(100000000),
+                // verificationGasLimit: BigInt(6000000),
+                calls: userOps               
+            });
+
+            await publicClient.waitForTransactionReceipt( 
+                { hash: txHash }
+            );
+
             
             setReload(reload+1);
             reloadStats();
@@ -515,12 +538,12 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
     }
 
     async function sell() {
-        const wallet = userReady();
-        if (!wallet) return;
+        if (ready && !user) return;
+        if (!client) return;
 
         setModalState({...modalState, state: MODAL_STATE.SUBMITTING});
         try{
-            const amount = BigInt(modalValue || 0);
+            const amount = modalValue || 0;
             const slippage = modalPreviewPrice != undefined? modalPreviewPrice * BigInt(100-modalSlippage) / BigInt(100):undefined;
             if (slippage == undefined) {
                 setErrorFeedback({
@@ -532,7 +555,25 @@ function CartridgeAssetManager({cartridge, reloadStats}:{cartridge:Cartridge, re
                 return;
             }
             
-            await sellCartridge(cartridge.id, wallet, amount, slippage);
+            //await sellCartridge(cartridge.id, wallet, amount, slippage);
+            let userOps = await buildSellCardridgeUserOp(
+                cartridge.id, 
+                user!.smartWallet!.address, 
+                slippage, 
+                {amount: amount, erc20_address: erc20Contract?.address}
+            );
+
+            const txHash = await client.sendTransaction({
+                account: client.account,
+                // maxPriorityFeePerGas: BigInt(100000000),
+                // maxFeePerGas: BigInt(100000000),
+                // verificationGasLimit: BigInt(6000000),
+                calls: userOps               
+            });
+
+            await publicClient.waitForTransactionReceipt( 
+                { hash: txHash }
+            );
 
             setReload(reload+1);
             reloadStats();

@@ -136,8 +136,8 @@ export default function CartridgeCard(
 
             <div className={`flex ${cartridgeTextAreaSize} w-fill ${cartridgeMarginX} ${cartridgeTextAreaMarginTop}`}>
                 <div className="flex flex-col px-[2px] pb-[2px] h-full w-full">
-                    <span className={`pixelated-font ${cartridgeTitleSize} truncate`}>{cartridge.name}</span>
-                    <span className={`pixelated-font ${cartridgeCreatorSize} truncate`}>
+                    <span className={`pixelated-font ${cartridgeTitleSize} truncate text-white`}>{cartridge.name}</span>
+                    <span className={`pixelated-font ${cartridgeCreatorSize} truncate text-white`}>
                         By <button onClick={handleClick}
                             className="pixelated-font text-rives-purple hover:underline">
                                 {

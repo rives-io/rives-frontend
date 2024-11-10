@@ -1,5 +1,5 @@
 import { envClient } from "./clientEnv";
-import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain, createWalletClient, custom, parseAbi, erc20Abi, decodeAbiParameters, parseAbiParameters } from 'viem'
+import { createPublicClient, http, getAbiItem, AbiEvent, getContract, GetLogsReturnType, defineChain, createWalletClient, custom, parseAbi, erc20Abi, decodeAbiParameters, parseAbiParameters, encodeFunctionData } from 'viem'
 import { BigNumber } from "ethers";
 
 import { cartridgeIdFromBytes, formatCartridgeIdToBytes, formatTapeIdToBytes, getChain, tapeIdFromBytes, verifyChain } from "./util";
@@ -7,6 +7,7 @@ import cartridgeAbiFile from "@/app/contracts/Cartridge.json"
 import tapeAbiFile from "@/app/contracts/Tape.json"
 import { ConnectedWallet } from "@privy-io/react-auth";
 import { Proof } from "cartesi-client";
+import { UserOperationCall } from "viem/account-abstraction";
  
 export const cartridgeAbi: any = cartridgeAbiFile;
 export const tapeAbi: any = tapeAbiFile;
@@ -67,6 +68,11 @@ export interface BondInfo {
     amountOwned?: BigNumber;
     currencyToken?: string;
     steps: BondStep[];
+}
+
+export interface marketplaceOptions {
+    amount:number,
+    erc20_address:string|undefined 
 }
 
 // export const customChain = defineChain({
@@ -474,7 +480,72 @@ export function prettyNumberFormatter(num: number, digits: number): string {
     const item = lookup.findLast(item => num >= item.value);
     return item ? (num / item.value).toFixed(digits).replace(regexp, "").concat(item.symbol) : "0";
 }
-  
+
+export async function buildBuyCardridgeUserOp(cartridge_id:string, smart_wallet_addr:string, slippage:bigint, options:marketplaceOptions={amount: 1, erc20_address: undefined}) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+    let userOps:Array<UserOperationCall> = [];
+    let value:bigint|undefined;
+
+    if (!options.erc20_address) {
+        // buy using native Token
+        value = slippage;
+    } else {
+        // TO DO: buy using ERC-20 Token
+        const owner = await getCartridgeOwner(formatCartridgeIdToBytes(cartridge_id).slice(2));
+        if (smart_wallet_addr.toLowerCase() != (owner?.toLowerCase())) {
+            if (! await checkContract(`0x${options.erc20_address.slice(2)}`)) {
+                alert("No token contract.");
+                return userOps;
+            }
+            //await checkAndSetupErc20Allowance(`0x${currency.token.slice(2)}`,wallet,`0x${envClient.TAPE_FEE_SUBMISSION_MODEL.slice(2)}`, price.toBigInt());
+        }
+    }
+
+    userOps.push({
+        to: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        data: encodeFunctionData({
+        abi: cartridgeAbi.abi,
+        functionName: 'buyCartridges',
+        args: [cartridgeIdB32, options.amount, slippage],
+        }),
+        value: value
+    });
+
+    return userOps;
+}
+
+export async function buildSellCardridgeUserOp(cartridge_id:string, smart_wallet_addr:string, slippage:bigint, options:marketplaceOptions={amount: 1, erc20_address: undefined}) {
+    const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
+    let userOps:Array<UserOperationCall> = [];
+    let value:bigint|undefined;
+
+    if (!options.erc20_address) {
+        // buy using native Token
+        value = slippage;
+    } else {
+        // TO DO: buy using ERC-20 Token
+        const owner = await getCartridgeOwner(formatCartridgeIdToBytes(cartridge_id).slice(2));
+        if (smart_wallet_addr.toLowerCase() != (owner?.toLowerCase())) {
+            if (! await checkContract(`0x${options.erc20_address.slice(2)}`)) {
+                alert("No token contract.");
+                return userOps;
+            }
+            //await checkAndSetupErc20Allowance(`0x${currency.token.slice(2)}`,wallet,`0x${envClient.TAPE_FEE_SUBMISSION_MODEL.slice(2)}`, price.toBigInt());
+        }
+    }
+
+    userOps.push({
+        to: envClient.CARTRIDGE_CONTRACT_ADDR as `0x${string}`,
+        data: encodeFunctionData({
+        abi: cartridgeAbi.abi,
+        functionName: 'sellCartridges',
+        args: [cartridgeIdB32, options.amount, slippage],
+        })
+    });
+
+    return userOps;
+}
+
 export async function buyCartridge(cartridge_id:string, wallet:ConnectedWallet, amount:number|bigint, erc20TokenAddr?:string) {
     const cartridgeIdB32 = formatCartridgeIdToBytes(cartridge_id);
 

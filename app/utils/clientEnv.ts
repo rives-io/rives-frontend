@@ -76,4 +76,8 @@ export const envClient = envsafe({
     desc: "Google analytics id.",
     default: "G-0QV24G07N2"
   }),
+  PRIVY_APP_ID: str({
+    input: process.env.NEXT_PUBLIC_PRIVY_APP_ID,
+    desc: "Privy app ID."
+  }),
 })

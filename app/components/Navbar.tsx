@@ -2,36 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from 'react'
 import rivesLogo from '@/public/logo.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Menu } from '@headlessui/react'
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import Image from 'next/image';
-import { verifyChain } from '../utils/util';
 
 function Navbar() {
     const pathname = usePathname();
     const {ready, authenticated, login, user} = usePrivy();
-    const {wallets} = useWallets();
     // Disable login when Privy is not ready or the user is already authenticated
     const logged = ready && authenticated;
     const disableLogin = !ready || logged;
     const onMyProfile = logged && pathname.startsWith("/profile") && user?.wallet?.address.toLowerCase() == pathname.split("/")[2]?.toLowerCase();
 
-    useEffect(() => {
-        if (!ready || !user || (ready && !wallets)) {
-            return;
-        }
-
-        const currWallet = wallets.find((wallet) => wallet.address === user!.wallet!.address);
-        if (!currWallet) return;
-
-        verifyChain(currWallet)
-        .catch((error) => {
-            console.log((error as Error).message);
-        })
-    }, [wallets])
 
     return (
         <header className='header'>
@@ -67,7 +51,8 @@ function Navbar() {
                         >
                             <span className='text-sm md:text-xl pixelated-font'>Profile</span>
                             <span className='text-xs pixelated-font'>
-                                {user?.wallet?.address.substring(0, 6)}...{user?.wallet?.address.substring(user.wallet.address.length-4)}
+                                {user?.twitter?.username}
+                                {/* {user?.smartWallet?.address.substring(0, 6)}...{user?.smartWallet?.address.substring(user.smartWallet.address.length-4)} */}
                             </span>
                         </Link>
                     :

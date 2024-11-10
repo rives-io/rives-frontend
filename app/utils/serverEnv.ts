@@ -9,7 +9,6 @@ export const envServer = {
   ...envClient,
   ...envsafe({
       INVITE_CODE_KEY: str({desc: "Key used to encrypt session data."}),
-      PRIVY_APP_ID: str({desc: "Privy app ID."}),
       PRIVY_APP_SECRET: str({desc: "Privy app secret."})
     }, {
     strict: true

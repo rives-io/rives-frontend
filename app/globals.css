@@ -260,7 +260,7 @@ body {
   }
 
   .dialog-btn {
-    @apply font-bold uppercase text-sm px-6 py-2 ml-1;
+    @apply font-bold uppercase text-sm px-6 py-2;
   }
 
   .gameplay-section {
