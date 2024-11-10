@@ -19,7 +19,7 @@ import GIFEncoder from "gif-encoder-2";
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import TapeCard from "./TapeCard";
-import { buildBuyCardridgeUserOp, checkContract, getCartridgeOwner, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, SmartWallet, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
+import { buildBuyCardridgeUserOp, checkContract, getCartridgeOwner, getSubmitPrice, getTapeSubmissionModelFromCartridge, getUserCartridgeBondInfo, publicClient, TAPE_SUBMIT_MODEL, worldAbi } from "../utils/assets";
 import { toFunctionSelector } from "viem";
 //import { sendEvent } from "../utils/googleAnalytics";
 import { sendGAEvent } from '@next/third-parties/google'
