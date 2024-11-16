@@ -10,7 +10,7 @@ import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
-import OlympicsBanner from "./components/OlympicsBanner";
+import SeasonBanner from "./components/SeasonBanner";
 
 
 export const revalidate = 0 // revalidate data always
@@ -124,6 +124,10 @@ export default async function Home() {
 
   return (
     <main className="gap-8">
+      <section className="flex flex-col items-center">
+        <SeasonBanner/>
+      </section>
+      
       <section className="flex flex-col items-center">
         
         <div className="homepageContainer">
