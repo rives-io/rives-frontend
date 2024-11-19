@@ -13,8 +13,8 @@ function SeasonBanner() {
     <Link href={"https://itch.io/jam/rives-jam-3"}
     className='homepageContainer flex items-center justify-center p-8 
     bg-gradient-to-r from-[#8b5cf6] to-stone-200 relative hover:scale-110'>
-        <Image alt='' src={seasonBkgImg} height={192} className='absolute left-0 opacity-60' />
-        <div className='grid gap-2'>
+        <Image alt='' src={seasonBkgImg} height={192} className='absolute left-0 opacity-60 z-0' />
+        <div className='grid gap-2 z-10'>
             <h1 className='text-black pixelated-font text-2xl justify-self-center'>Creator Season 1</h1>
             
             <div className='grid grid-cols-2 gap-2'>
