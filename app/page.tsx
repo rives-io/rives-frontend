@@ -125,7 +125,9 @@ export default async function Home() {
   return (
     <main className="gap-8">
       <section className="flex flex-col items-center">
-        <SeasonBanner/>
+        <div className="homepageContainer">
+          <SeasonBanner season_id="0"/>
+        </div>
       </section>
       
       <section className="flex flex-col items-center">
