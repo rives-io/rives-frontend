@@ -15,7 +15,7 @@ async function SeasonBanner({season_id, details}:{season_id:string, details?:sea
     if (!details) {
         return (
             // <Link href={`/season/${season_id}`} className=''>
-            <Link href={`https://lu.ma/rives_creator_season`} className=''>
+            <Link href={`/season/cs1`} className=''>
                 <div className='relative w-full flex items-center justify-center p-8 
                 bg-gradient-to-r from-[#8b5cf6] to-stone-200 hover:scale-110'>
                     <Image alt='' src={seasonBkgImg} height={192} className={`absolute left-0 opacity-40`} />
