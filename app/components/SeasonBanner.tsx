@@ -95,12 +95,13 @@ async function SeasonBanner({season_id, details}:{season_id:string, details?:sea
                 </div>
             </div>
 
-            <div className='flex flex-wrap justify-center sm:justify-normal sm:grid sm:justify-items-end gap-1'>
+            <div className='flex flex-wrap justify-center md:justify-normal md:grid md:justify-items-end gap-1'>
                 {details.contests.map((contest, index) => {
                     return (
                         <Link href={`/contests/${contest.contest_id}`} key={`banner-${contest.contest_id}-${index}`} 
-                        className='w-fit py-1 px-1 sm:px-16 bg-rives-purple hover:text-rives-purple hover:bg-white pixelated-font text-center'>
-                            Play Contest {index+1}
+                        className='w-60 lg:w-80 py-1 px-1 sm:px-16 bg-rives-purple hover:text-rives-purple hover:bg-white pixelated-font text-center'>
+                            {/* Play Contest {index+1} */}
+                            Play {contest.name}
                         </Link>
                     )
                 })}

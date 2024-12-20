@@ -5,8 +5,15 @@ import { Tab } from "@headlessui/react";
 import SeasonLeaderboard from './SeasonLeaderboard';
 import { OlympicData } from '../utils/common';
 import { User } from '../utils/privyApi';
+import WarningIcon from '@mui/icons-material/Warning';
+import { usePrivy } from '@privy-io/react-auth';
+import Link from 'next/link';
+import { profile } from 'console';
 
 function SeasonTabs({data, addressUsersMap}:{data:OlympicData, addressUsersMap:Record<string, User>}) {
+    const {ready, authenticated, login, user} = usePrivy();
+
+    
   return (
     <Tab.Group>
         <Tab.List className="grid grid-cols-2 lg:flex lg:flex-wrap gap-4">
@@ -135,6 +142,30 @@ function SeasonTabs({data, addressUsersMap}:{data:OlympicData, addressUsersMap:R
                             </tr>
                         </tbody>
                     </table>
+
+                    <div className='grid gap-1'>
+                        <span className='flex items-center gap-1'>
+                            <WarningIcon className='text-yellow-500'/>
+                            <span>Prizes will be distributed by Jan 3rd.</span>
+                        </span>
+
+                        <span className='flex gap-1'>
+                            <WarningIcon className='text-yellow-500'/>
+                            <span>
+                                To be eligible for Prize payout, please link your twitter account on your
+
+                                {
+                                    ready && user && user.wallet?
+                                        <Link className='ms-2 text-rives-purple hover:underline' href={`/profile/${user.wallet.address}`}>
+                                            profile
+                                        </Link>
+                                    :
+                                        "profile"
+                                }
+                                .
+                            </span>
+                        </span>
+                    </div>
                 </div>
             </Tab.Panel>
         </Tab.Panels>

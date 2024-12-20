@@ -108,7 +108,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                 <thead>
                   <tr>
                     <th></th>
-                    <th className='pixelated-font px-2'>Name</th>
+                    {/* <th className='pixelated-font px-2'>Name</th> */}
                     <th className='pixelated-font px-2 text-start'>Rank</th>
                     <th className='pixelated-font px-2 text-start'>Points</th>
                     <th className='pixelated-font px-2 text-start'>Score</th>
@@ -125,7 +125,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                         if (!player_contest) {
                           return (
                             <tr key={`details-${contest.contest_id}`}>
-                              <td className='pixelated-font px-2'>Contest {index+1}</td>
+                              {/* <td className='pixelated-font px-2'>Contest {index+1}</td> */}
                               <td className='pixelated-font px-2'>{contest.name}</td>
                               <td className='pixelated-font px-2'>-</td>
                               <td className='pixelated-font px-2'>-</td>
@@ -138,7 +138,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                         
                         return (
                           <tr key={`details-${contest.contest_id}`}>
-                              <td className='pixelated-font px-2'>Contest {index+1}</td>
+                              {/* <td className='pixelated-font px-2'>Contest {index+1}</td> */}
                               <td className='pixelated-font px-2'>{contest.name}</td>
                               <td className='pixelated-font px-2'>{player_contest.rank}</td>
                               <td className='pixelated-font px-2'>{player_contest.points}</td>
@@ -206,8 +206,8 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
           <table className='text-xs'>
             <thead>
               <tr>
-                {/* <th></th> */}
-                <th className='pixelated-font px-2'>Name</th>
+                <th></th>
+                {/* <th className='pixelated-font px-2'>Name</th> */}
                 <th className='pixelated-font px-2 text-start'>Rank</th>
                 <th className='pixelated-font px-2 text-start'>Date</th>
                 <th className='pixelated-font px-2 text-start'>Watch</th>
@@ -222,8 +222,8 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                     if (!player_contest) {
                       return (
                         <tr key={`details-${contest.contest_id}`}>
-                          <td className='pixelated-font px-2'>Contest {index+1}</td>
-                          {/* <td className='pixelated-font px-2'>{contest.name}</td> */}
+                          {/* <td className='pixelated-font px-2'>Contest {index+1}</td> */}
+                          <td className='pixelated-font px-2'>{contest.name}</td>
                           <td className='pixelated-font px-2'>-</td>
                           <td className='pixelated-font px-2'>-</td>
 
@@ -235,8 +235,8 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                     
                     return (
                       <tr key={`details-${contest.contest_id}`}>
-                          <td className='pixelated-font px-2'>Contest {index+1}</td>
-                          {/* <td className='pixelated-font px-2'>{contest.name}</td> */}
+                          {/* <td className='pixelated-font px-2'>Contest {index+1}</td> */}
+                          <td className='pixelated-font px-2'>{contest.name}</td>
                           <td className='pixelated-font px-2'>{player_contest.rank}</td>
                           <td className='pixelated-font px-2'>-</td>
                           <td>
@@ -274,8 +274,8 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                                 <th key={contest.contest_id} scope="col" className='px-2'>
                                     <Link href={`/contests/${contest.contest_id}`} 
                                     className='block pixelated-font text-center hover:text-rives-purple'>
-                                        {/* {contest.name} */}
-                                        Contest {index + 1}
+                                        {contest.name}
+                                        {/* Contest {index + 1} */}
                                     </Link>
                                 </th>
                             )
