@@ -24,7 +24,7 @@ async function SeasonBanner({season_id, details}:{season_id:string, details?:sea
                         
                         <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
                             <div className='pixelated-font text-center bg-rives-purple p-2 col-span-2 md:col-span-1'>
-                                Nov 15 - Dec 23
+                                Nov 15 - Dec 27
                             </div>
 
                             <div className='flex flex-wrap justify-center items-center gap-2 text-black text-center bg-[#00F7FF] p-2'>
