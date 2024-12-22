@@ -84,7 +84,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
           
           <td className='p-2 ' colSpan={cols-1}>
             <div className='flex justify-center items-center gap-4'>
-              <div className='grid items justify-items-center gap-2 h-fit'>
+              <Link href={`/profile/${player.profile_address}`} className='grid items justify-items-center gap-2 h-fit hover:underline text-rives-purple'>
                 {
                   !user?
                       <>
@@ -101,7 +101,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                           </span>
                       </>
                 }
-              </div>
+              </Link>
 
 
               <table>
@@ -188,16 +188,20 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
               {
                 !user?
                     <>
-                        <span className='pixelated-font text-xs text-center' title={player.profile_address}>
+                        <Link href={`/profile/${player.profile_address}`} 
+                        className='pixelated-font text-xs text-center text-rives-purple hover:underline' 
+                        title={player.profile_address}>
                             {player.profile_address.substring(0,6)+"..."+player.profile_address.substring(player.profile_address.length-4,player.profile_address.length)}
-                        </span>
+                        </Link>
                         <Image width={48} height={48} src={rivesCheck} className='rounded-full pixelated-img' alt='' />
                     </>
                 :
                     <>
-                        <span className='pixelated-font text-xs text-center line-clamp-2' title={player.profile_address}>
+                        <Link href={`/profile/${player.profile_address}`} 
+                        className='pixelated-font text-xs text-center text-rives-purple hover:underline line-clamp-2' 
+                        title={player.profile_address}>
                             {user.name}
-                        </span>
+                        </Link>
                         <img width={48} height={48} src={user.picture_url} className='rounded-full pixelated-img' alt='' />
                     </>
               }
