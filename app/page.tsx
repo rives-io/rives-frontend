@@ -40,17 +40,24 @@ async function getLatestsCartridges() {
 }
 
 async function getLatestsTapes() {
-  const res = (await getTapes(
-    {
-      currentPage: 1,
-      pageSize: 4,
-      orderBy: "timestamp",
-      orderDir: "desc"
-    }
-  ));
+  let tapes:Array<VerifyPayloadProxy> = [];
 
-  const tapes = res.data;
-  total_tapes = res.total;
+  try {
+    const res = (await getTapes(
+      {
+        currentPage: 1,
+        pageSize: 4,
+        orderBy: "timestamp",
+        orderDir: "desc"
+      }
+    ));
+    tapes = res.data;
+    total_tapes = res.total;
+        
+  } catch (error) {
+    console.log((error as Error).message)
+  }
+
 
   return tapes;
 }
