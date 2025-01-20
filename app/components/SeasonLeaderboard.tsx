@@ -1,7 +1,7 @@
 "use client"
 
 
-import { useState } from 'react'
+import { SyntheticEvent, useState } from 'react'
 import { OlympicData, PlayerOlympicData } from '../utils/common';
 import { User } from '../utils/privyApi';
 import Link from 'next/link';
@@ -22,6 +22,10 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
     } else {
       setExpandedRow(player_addr)
     }
+  }
+
+  function defaultImage(e:SyntheticEvent<HTMLImageElement, Event>) {
+    e.currentTarget.src = rivesCheck.src;
   }
 
   function tableRowDesktopScreen(player:PlayerOlympicData, rank:number) {
@@ -48,7 +52,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                   </>
               :
                   <>
-                      <img width={24} height={24} src={user.picture_url.replace("normal", "mini")} className='rounded-full pixelated-img' alt='' />
+                      <img width={24} height={24} src={user.picture_url.replace("normal", "mini")} className='rounded-full pixelated-img' onError={defaultImage} alt='' />
                       <span className=' pixelated-font' title={player.profile_address}>
                           {user.name}
                       </span>
@@ -95,7 +99,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                       </>
                   :
                       <>
-                          <img width={73} height={73} src={user.picture_url.replace("normal", "bigger")} className='rounded-full pixelated-img' alt='' />
+                          <img width={73} height={73} src={user.picture_url.replace("normal", "bigger")} className='rounded-full pixelated-img' onError={defaultImage} alt='' />
                           <span className='pixelated-font' title={player.profile_address}>
                               {user.name}
                           </span>
@@ -202,7 +206,7 @@ function SeasonLeaderboard({data, addressUsersMap}:{data:OlympicData, addressUse
                         title={player.profile_address}>
                             {user.name}
                         </Link>
-                        <img width={48} height={48} src={user.picture_url} className='rounded-full pixelated-img' alt='' />
+                        <img width={48} height={48} src={user.picture_url} className='rounded-full pixelated-img' alt='' onError={defaultImage} />
                     </>
               }
           </div>
