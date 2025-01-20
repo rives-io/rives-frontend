@@ -1,9 +1,10 @@
 "use server"
 import {envServer} from "@/app/utils/serverEnv";
 import { envClient } from "./clientEnv";
-
+import {PrivyClient} from '@privy-io/server-auth';
 
 const privy_url = "https://auth.privy.io/api/v1/users/search";
+let privy_client = new PrivyClient(envClient.PRIVY_APP_ID, envServer.PRIVY_APP_SECRET);
 
 export interface User {
     username:string,
@@ -13,22 +14,39 @@ export interface User {
 
 
 export async function getUsersByAddress(addressList:Array<string>) {
-    const res = await fetch(privy_url, {
-        method: 'POST',
-        headers: {
-            'privy-app-id': envClient.PRIVY_APP_ID,
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(`${envClient.PRIVY_APP_ID}:${envServer.PRIVY_APP_SECRET}`)
-        },
-        body: JSON.stringify({
-            'walletAddresses': addressList
-        }),
-        next: {revalidate: 300}
-    });
-    
-    const users = await res.json();
+    // const res = await fetch(privy_url, {
+    //     method: 'POST',
+    //     headers: {
+    //         'privy-app-id': envClient.PRIVY_APP_ID,
+    //         'Content-Type': 'application/json',
+    //         'Authorization': 'Basic ' + btoa(`${envClient.PRIVY_APP_ID}:${envServer.PRIVY_APP_SECRET}`)
+    //     },
+    //     body: JSON.stringify({
+    //         'walletAddresses': addressList
+    //     }),
+    //     next: {revalidate: 300}
+    // });
 
-    const userMap = buildUserAddressMap(users.data);
+    // const users = await res.json();
+
+    // const userMap = buildUserAddressMap(users.data);
+    // return JSON.stringify(userMap);
+
+    let userMap:Record<string, User> = {};
+    for (let i = 0; i < addressList.length; i++) {
+        const res = await privy_client.getUserBySmartWalletAddress(addressList[i]);
+        
+        if (res && res.twitter) {
+            const user_summary:User = {
+                username: res.twitter.username || "",
+                name: res.twitter.name || "",
+                picture_url: res.twitter.profilePictureUrl || ""
+            }
+
+            userMap[addressList[i].toLowerCase()] = user_summary;
+        }
+    }
+
     return JSON.stringify(userMap);
 }
 
