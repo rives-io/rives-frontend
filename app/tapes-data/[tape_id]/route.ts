@@ -2,45 +2,9 @@ import { type NextRequest } from 'next/server'
 import { ethers } from "ethers";
 
 import { envClient } from "../../utils/clientEnv";
-import { VerifyPayloadProxy, cartridge, formatInCard, getOutputs, rules } from "../../backend-libs/core/lib";
-import { FormatInCardPayload, RuleInfo } from '@/app/backend-libs/core/ifaces';
-import internal from 'stream';
-import { ruleIdFromBytes, generateEntropy } from '@/app/utils/util';
-
-type ResponseData = {
-  message: string
-}
-
-const getRule = async (ruleId:string):Promise<RuleInfo> => {
-  const formatedRuleId = ruleId;
-  const data = await rules(
-      {
-          id:formatedRuleId,
-          enable_deactivated: true
-      },
-      {
-          decode:true,
-          decodeModel:"RulesOutput",
-          cartesiNodeUrl: envClient.CARTESI_NODE_URL
-      }
-  );
-
-  if (data.total === 0 || data.data.length === 0) throw new Error(`Rule ${ruleId} not found!`);
-
-  return data.data[0];
-}
-
-const getTapePayload = async (tapeId:string):Promise<VerifyPayloadProxy> => {
-  const replayLogs:Array<VerifyPayloadProxy> = (await getOutputs(
-      {
-          tags: ["tape",tapeId],
-          type: 'input'
-      },
-      {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-  )).data;
-  if (replayLogs.length === 0) throw new Error(`Tape ${tapeId} not found!`);
-  return replayLogs[0];
-}
+import { formatInCard } from "../../backend-libs/core/lib";
+import { FormatInCardPayload } from '@/app/backend-libs/core/ifaces';
+import { ruleIdFromBytes, generateEntropy, getRuleInfo, getTapes } from '@/app/utils/util';
 
 interface FullTapePayload {
   tape?: string,
@@ -51,12 +15,13 @@ interface FullTapePayload {
 
 export async function GET(request: NextRequest, { params }: { params: { tape_id: string }}) {
     const tapeId = params.tape_id;
-    // let data: Uint8Array = new Uint8Array();
     let data: FullTapePayload = {};
     try {
-      const tape = await getTapePayload(tapeId);
-      const rule = await getRule(ruleIdFromBytes(tape.rule_id));
-      // const entropy = `0x${generateEntropy(tape._msgSender,rule.id)}`;
+      const tapes = await getTapes({tapeIds:[tapeId],currentPage:1,pageSize:1});
+      if (tapes.total == 0) throw new Error(`Tape ${tapeId} not found!`);
+      const tape = tapes.data[0];
+      const rule = await getRuleInfo(ruleIdFromBytes(tape.rule_id));
+      if (!rule) throw new Error(`Rule ${tape.rule_id} not found!`);
       const entropy = generateEntropy(tape._msgSender,rule.id);
 
       const inputData: FormatInCardPayload = {rule_id:rule.id};
@@ -72,14 +37,11 @@ export async function GET(request: NextRequest, { params }: { params: { tape_id:
       data = {
         entropy: entropy,
         tape: btoa(new Uint8Array(ethers.utils.arrayify(tape.tape)).reduce((data, byte) => data + String.fromCharCode(byte), '')),
-        incard: btoa(new Uint8Array(ethers.utils.arrayify(incard)).reduce((data, byte) => data + String.fromCharCode(byte), '')),
         args: rule.args
       };
-      // const abi = ethers.utils.defaultAbiCoder;
-      // data = ethers.utils.arrayify(abi.encode(
-      //   ["bytes","string","bytes","bytes32"],
-      //   [tape.tape,rule.args,rule.in_card,entropy]
-      // ));
+      if (incard) {
+        data.incard = btoa(new Uint8Array(ethers.utils.arrayify(incard)).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      }
     }
     catch (error) {
       console.log(error)
