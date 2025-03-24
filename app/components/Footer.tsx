@@ -15,6 +15,7 @@ function Footer() {
           <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/docs/category/riv/"}>Documentation</Link>
           <Link className='pixelated-font hover:text-rives-purple' href={"/upload-cartridge"}>Upload Cartridge</Link>
           <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/"}>rives.io</Link>
+          <Link className='pixelated-font hover:text-rives-purple' href={"https://rives.io/terms_of_service"}>Terms of Service</Link>
         </div>
 
         <div className='flex flex-col items-center gap-2'>

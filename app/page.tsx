@@ -10,7 +10,7 @@ import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
-import OlympicsBanner from "./components/OlympicsBanner";
+import SeasonBanner from "./components/SeasonBanner";
 
 
 export const revalidate = 0 // revalidate data always
@@ -40,17 +40,24 @@ async function getLatestsCartridges() {
 }
 
 async function getLatestsTapes() {
-  const res = (await getTapes(
-    {
-      currentPage: 1,
-      pageSize: 4,
-      orderBy: "timestamp",
-      orderDir: "desc"
-    }
-  ));
+  let tapes:Array<VerifyPayloadProxy> = [];
 
-  const tapes = res.data;
-  total_tapes = res.total;
+  try {
+    const res = (await getTapes(
+      {
+        currentPage: 1,
+        pageSize: 4,
+        orderBy: "timestamp",
+        orderDir: "desc"
+      }
+    ));
+    tapes = res.data;
+    total_tapes = res.total;
+        
+  } catch (error) {
+    console.log((error as Error).message)
+  }
+
 
   return tapes;
 }
@@ -124,6 +131,12 @@ export default async function Home() {
 
   return (
     <main className="gap-8">
+      <section className="flex flex-col items-center">
+        <div className="homepageContainer">
+          <SeasonBanner season_id="0"/>
+        </div>
+      </section>
+      
       <section className="flex flex-col items-center">
         
         <div className="homepageContainer">

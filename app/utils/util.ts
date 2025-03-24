@@ -6,6 +6,7 @@ import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridgeInfo, cartridges, getOutputs, rules, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
+import { sha256 } from "js-sha256";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, RuleInfo, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
 import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated, RaffleData } from "./common";
@@ -103,6 +104,22 @@ export function formatDate(date:Date) {
     year = year.substring(1);
 
     return `${month}/${day}/${year}, ${time}`;
+}
+
+export function generateEntropy(userAddress?:String, ruleId?:String): string {
+
+    const hexRuleId = `0x${ruleId}`;
+    if (!userAddress || userAddress.length != 42 || !ethers.utils.isHexString(userAddress) || !ethers.utils.isHexString(hexRuleId)) {
+        return "";
+    }
+
+    const userBytes = ethers.utils.arrayify(`${userAddress}`);
+    const ruleIdBytes = ethers.utils.arrayify(hexRuleId);
+
+    var fullEntropyBytes = new Uint8Array(userBytes.length + ruleIdBytes.length);
+    fullEntropyBytes.set(userBytes);
+    fullEntropyBytes.set(ruleIdBytes, userBytes.length);
+    return sha256(fullEntropyBytes);
 }
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {
