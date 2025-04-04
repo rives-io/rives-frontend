@@ -520,7 +520,7 @@ function RivemuUploader() {
                     </div>
 
                     { hasScore != undefined && hasScore == false ? 
-                    <span title="Cartridges should have a json outcard with the 'score' key even before the first input, otherwise the default play mode wont have a score based leaderboard">
+                    <span title="Cartridges should have a json outcard with the 'score' key even before the first input, otherwise the default play mode won't have a score-based leaderboard">
                         <WarningIcon className='text-yellow-400' />
                         Cartridge has no scoring
                         <WarningIcon className='text-yellow-400' />

@@ -67,10 +67,12 @@ export enum ContestStatus {
 }
 
 export const getContestStatus = (rule: RuleInfo): ContestStatus => {
-  if (rule.start == undefined || rule.end == undefined) return ContestStatus.INVALID;
+  // if (rule.start == undefined || rule.end == undefined) return ContestStatus.INVALID;
   const currentTs = Math.floor((new Date()).valueOf()/1000);
-  if (currentTs < rule.start) return ContestStatus.NOT_INITIATED;
-  if (currentTs < rule.end) return ContestStatus.IN_PROGRESS;
+  const start = rule.start ? rule.start : 0;
+  const end = rule.end ? rule.end : 32502815999;
+  if (currentTs < start) return ContestStatus.NOT_INITIATED;
+  if (currentTs < end) return ContestStatus.IN_PROGRESS;
   // if (rule.n_tapes == rule.n_verified) return ContestStatus.VALIDATED;
   return ContestStatus.FINISHED
 }
