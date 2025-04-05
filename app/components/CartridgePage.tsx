@@ -9,6 +9,9 @@ import Link from 'next/link';
 import RuleLeaderboard from './RuleLeaderboard';
 import { ContestStatus, getContestStatus } from '../utils/common';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+// import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
 import CartridgeContests from './CartridgeContests';
 import CartridgeTapes from './CartridgeTapes';
 //import CartridgeAssetManager from './CartridgeAssetManager';
@@ -109,7 +112,11 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                 </div>
 
                 <div className='w-full flex flex-col gap-2'>
-                    <h2 className={`pixelated-font text-3xl`}>Play Mode</h2>
+                    <h2 className={`pixelated-font text-3xl`}>
+                        Play Mode {' '}
+                        <Link href={`/cartridges/${cartridge.id}/play_modes`} title='List Play Modes'><FormatListBulletedIcon></FormatListBulletedIcon></Link> {' '}
+                        <Link href={`/cartridges/${cartridge.id}/play_modes/new`} title='Create Play Mode'><AddIcon></AddIcon></Link>
+                    </h2>
                     <div className='flex gap-4 justify-center md:justify-start'>
                         <Menu as="div" className="p-3 bg-rives-gray">
                             <Menu.Button className="flex justify-center hover:text-rives-purple pixelated-font">
@@ -142,6 +149,11 @@ export default function CartridgePage({cartridge, rulesInfo}:{cartridge:Cartridg
                         className={`${!selectedRule || !contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : "bg-rives-purple"} p-3 hover:scale-110 pixelated-font`}>
                             Play
                         </Link> */}
+
+                        {/* <Link href={`/cartridges/${cartridge.id}/play_modes/${selectedRule?.id}`} 
+                            aria-disabled={!selectedRule || !contestIsOpen || selectedRule.deactivated} tabIndex={!selectedRule || !contestIsOpen? -1:undefined} 
+                            className={`${!selectedRule || !contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : ""} p-3 hover:scale-110 pixelated-font`}
+                        ><EditIcon></EditIcon></Link> */}
                         
                     </div>
 

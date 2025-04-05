@@ -13,27 +13,31 @@ import Image from "next/image";
 
 
 function contestStatusMessage(contest:RuleInfo) {
-    if (!(contest.start && contest.end)) return <></>;
+    // if (!(contest.start && contest.end)) return <span>-</span>;
   
     const currDate = new Date().getTime() / 1000;
+    const start = contest.start ? contest.start : 0;
+    const end = contest.end ? contest.end : 32502815999;
   
-    if (currDate > contest.end) {
-        return <span className="text-red-500">CLOSED: ended {formatTime(currDate - contest.end)} ago </span>;
-    } else if (currDate < contest.start) {
-        return <span className="text-yellow-500">UPCOMING: starts in {formatTime(contest.start - currDate)} and lasts {formatTime(contest.end - contest.start)}</span>;
+    if (currDate > end) {
+        return <span className="text-red-500">CLOSED: ended {formatTime(currDate - end)} ago </span>;
+    } else if (currDate < start) {
+        const lasts = !contest.end ? '' : ` and lasts ${formatTime(end - start)}`;
+        return <span className="text-yellow-500">UPCOMING: starts in {formatTime(start - currDate)}{lasts}</span>;
     } else {
-        return <span className="text-green-500">OPEN: ends in {formatTime(contest.end - currDate)}</span>;
+        const endsIn = !contest.end ? '' : `: ends in ${formatTime(end - currDate)}`;
+        return <span className="text-green-500">OPEN{endsIn}</span>;
     }
   }
-
+  
 export interface CartridgeWithUser extends CartridgeInfo {
     user?:User|null
 }
 
-export default function ContestCard({contest, cartridge}:{contest:RuleInfo, cartridge:CartridgeWithUser}) {
+export default function ContestCard({contest, cartridge, activateNonContest}:{contest:RuleInfo, cartridge:CartridgeWithUser, activateNonContest?: boolean}) {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [winnerUser, setWinnerUser] = useState<User|null>(null);
-    const isContest = contest.start && contest.end;
+    const isContest = activateNonContest || (contest.start && contest.end);
     const cartridgeCard = <CartridgeCard cartridge={cartridge} small={true} creator={cartridge.user} />;
     const [nTapes, setNTapes] = useState<number>();
     const [contestDetails, setContestDetails] = useState<ContestDetails|null>(null);

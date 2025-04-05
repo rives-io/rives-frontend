@@ -33,7 +33,9 @@
     "react-qr-code": "^2.0.12",
     "react-use-downloader": "^1.2.4",
     "sharp": "^0.33.4",
-    "viem": "^2.16.2"
+    "viem": "^2.16.2",
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "@types/gif-encoder": "^0.7.4",
