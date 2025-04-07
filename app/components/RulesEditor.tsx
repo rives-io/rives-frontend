@@ -455,6 +455,7 @@ function RulesEditor({cartridge_id, rule_id}:{
             const value = detailedArgs[key] as string;
             if (value === '' || value === undefined) continue;
             const fields = argsFields.get(key) as Record<string,string>;
+            if (fields['format'].indexOf(":value:") == -1 && !value) continue;
             const argStr = fields['format'].replace(":value:",value);
             argsList.push(argStr);
         };
@@ -462,14 +463,17 @@ function RulesEditor({cartridge_id, rule_id}:{
     }
 
     function onChangeDetailedRuleArgs(key:string, value:unknown) {
+        if (typeof detailedRuleArgs[key] == 'boolean' && detailedRuleArgs[key] === false) value = '';
         detailedRuleArgs[key] = value;
         setDetailedRuleArgs(detailedRuleArgs);
         if (ruleArgsSchema && ruleArgsFields) {
             const ruleArgsToValidate: Record<string,unknown> = {};
             for (const key in detailedRuleArgs) {
-                if (detailedRuleArgs[key] != '' && detailedRuleArgs[key] != undefined) {
-                    ruleArgsToValidate[key] = detailedRuleArgs[key];
+                if (detailedRuleArgs[key] === '' || detailedRuleArgs[key] === undefined) {
+                    delete ruleArgsToValidate[key];
+                    continue;
                 }
+                ruleArgsToValidate[key] = detailedRuleArgs[key];
             }
             const validator = ajv.compile(ruleArgsSchema);
             const detailValid = validator(ruleArgsToValidate);
