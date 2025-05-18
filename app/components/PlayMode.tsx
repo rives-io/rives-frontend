@@ -87,7 +87,8 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
 
     return (
         <>
-            <Transition appear show={modalOpen} as={Fragment}>
+            { selectedRule ?
+                <Transition appear show={modalOpen} as={Fragment}>
                     <Dialog as="div" className="relative z-10" onClose={() => setModalOpen(false)}>
                         <Transition.Child
                             as={Fragment}
@@ -127,7 +128,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                             const isContest = rule.start && rule.end;
                                                             const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
-                                                            if (!contestIsOpen) return <></>;
+                                                            if (!contestIsOpen || selectedRule.deactivated) return <></>;
                                                             
                                                             return (
                                                                 <Tab
@@ -149,7 +150,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                             const isContest = rule.start && rule.end;
                                                             const contestIsOpen = !isContest || (status == ContestStatus.IN_PROGRESS || status == ContestStatus.INVALID);
 
-                                                            if (!contestIsOpen) return <></>;
+                                                            if (!contestIsOpen || selectedRule.deactivated) return <></>;
 
                                                             const contestCreatorAddr = rule.created_by.toLowerCase();
                                                             const formatedContestCreator = `${contestCreatorAddr.slice(0, 6)}...${contestCreatorAddr.substring(contestCreatorAddr.length-4,contestCreatorAddr.length)}`;
@@ -184,7 +185,7 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                                         }
 
                                                                                         <span className="text-gray-400">Start</span>
-                                                                                        {timeToDateUTCString(rule.created_at)}
+                                                                                        {rule.start? timeToDateUTCString(rule.start):"-"}
 
                                                                                         <span className="text-gray-400">End</span>
                                                                                         {rule.end? timeToDateUTCString(rule.end):"-"}
@@ -251,9 +252,9 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                                                                     }
 
                                                                     <div className='bg-gray-500 h-fit flex justify-center'>
-                                                                        <Link aria-disabled={!contestIsOpen} tabIndex={!contestIsOpen? -1:undefined} 
+                                                                        <Link aria-disabled={!contestIsOpen || selectedRule.deactivated} tabIndex={!contestIsOpen || selectedRule.deactivated? -1:undefined} 
                                                                         href={`/play/${rule.id}`}
-                                                                        className={`${!contestIsOpen? "pointer-events-none bg-slate-600" : "bg-rives-purple"} mt-2 p-3 hover:scale-110 pixelated-font`}>
+                                                                        className={`${!contestIsOpen || selectedRule.deactivated? "pointer-events-none bg-slate-600" : "bg-rives-purple"} mt-2 p-3 hover:scale-110 pixelated-font`}>
                                                                             Select
                                                                         </Link>
                                                                     </div>
@@ -271,9 +272,10 @@ function PlayMode({rulesInfo}:{rulesInfo:RuleInfo[]}) {
                         </div>
                     </Dialog>
                 </Transition>
-            
-            <button  onClick={handle_play_click}
-            className={`bg-rives-purple p-3 hover:scale-110 pixelated-font`}>
+            : <></> }
+            <button onClick={handle_play_click}
+            disabled={!selectedRule}
+            className={`p-3 pixelated-font ${!selectedRule? "pointer-events-none bg-slate-600" : "hover:scale-110 bg-rives-purple"}`}>
                 Play
             </button>
         </>

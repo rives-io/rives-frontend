@@ -117,6 +117,7 @@ const Rivemu = forwardRef<RivemuRef,RivemuProps> ((props,ref) => {
     }
 
     async function rivemuHalt() {
+        await rivemuInitialize();
         // @ts-ignore:next-line
         if (Module.ccall('rivemu_stop')) {
             await waitEvent('rivemu_on_shutdown');

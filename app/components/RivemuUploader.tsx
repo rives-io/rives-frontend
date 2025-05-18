@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { ConnectedWallet, usePrivy, useWallets } from "@privy-io/react-auth";
 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import WarningIcon from '@mui/icons-material/Warning';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -30,6 +31,9 @@ import { CartridgeInfo, InfoCartridge, InsertCartridgePayloadProxy } from "../ba
 
 import ErrorModal, { ERROR_FEEDBACK } from "./ErrorModal";
 import Link from 'next/link';
+import CartridgeModelSetup from './CartridgeModelSetup';
+import { calculateCartridgeId, cartridgeIdFromBytes, formatCartridgeIdToBytes } from '../utils/util';
+import { getCartridgeOwner } from '../utils/assets';
 
 let canvasPlaying = false;
 
@@ -39,6 +43,7 @@ const darkTheme = createTheme({
     },
 });
 
+const testRivlog: Uint8Array = new Uint8Array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0]);
 
 function generateEntropy(userAddress?:String, ruleId?:String): string {
 
@@ -73,6 +78,9 @@ function RivemuUploader() {
     const cartridgeFileRef = useRef<HTMLInputElement | null>(null);
 
     const [infoCartridge, setInfoCartridge] = useState<InfoCartridge>();
+    const [authorsHaveLinks, setAuthorsHaveLinks] = useState<boolean>(false);
+    const [hasScore, setHasScore] = useState<boolean>();
+    const [testing, setTesting] = useState<boolean>(false);
 
     const [hideCartridgeParams, setHideCartridgeParams] = useState(true);
     const [inCardHash, setIncardHash] = useState<string>();
@@ -84,6 +92,11 @@ function RivemuUploader() {
     const [wallet, setWallet] = useState<ConnectedWallet>();
     
     const [errorFeedback, setErrorFeedback] = useState<ERROR_FEEDBACK>();
+
+    const [cartridgeInserted, setCartridgeInserted] = useState<boolean>();
+    const [submittingTx, setSubmittingTx] = useState<boolean>();
+    const [settingUpModel, setSettingUpModel] = useState<boolean>(false);
+    const [checkingOwner, setCheckingOwner] = useState<boolean>(false);
 
     // signer
     const {user, ready, connectWallet} = usePrivy();
@@ -123,6 +136,12 @@ function RivemuUploader() {
         }
     }, [playing.isPlaying,playing.isReplay,tape]);
 
+    useEffect(() => {
+        if (testing) {
+            replay();
+        }
+    }, [testing]);
+
     async function uploadCartridge() {
         // replay({car});
         cartridgeFileRef.current?.click();
@@ -131,9 +150,23 @@ function RivemuUploader() {
     const getTitleMessage = function () {
         // !cartridgeData || !infoCartridge?.name || !ready || !user
         if (!cartridgeData) return "Please, upload Cartridge first";
-        if (!infoCartridge?.name) return "Please, play cartridge to get info";
+        if (!infoCartridge?.name) return "No cartridge info (you should add a info.json to the cartridge)";
+        if (!authorsHaveLinks) return "All authors in info.json should have link";
         if (!wallet) return "Please, connect your wallet";
         return "Send Cartridge to RIVES";
+    }
+
+    function clean() {
+        setTape(new Uint8Array([]));
+        setOutcard(undefined);
+        setCartridgeData(undefined);
+        setSelectedCartridge(undefined);
+        setInfoCartridge(undefined);
+        setAuthorsHaveLinks(false);
+        setHasScore(undefined);
+        setCartridgeInserted(false);
+        setSubmittingTx(false);
+        setSettingUpModel(false);
     }
 
     function handleOnChangeCartridgeUpload(e: any) {
@@ -144,14 +177,14 @@ function RivemuUploader() {
         const reader = new FileReader();
         reader.onload = async (readerEvent) => {
             rivemuRef.current?.stop();
-            setTape(new Uint8Array([]));
-            setOutcard(undefined);
-            setCartridgeData(undefined);
-            setSelectedCartridge(undefined);
-            setInfoCartridge(undefined);
+            clean();
             const data = readerEvent.target?.result;
             if (data) {
                 setCartridgeData(new Uint8Array(data as ArrayBuffer));
+                setTape(testRivlog);
+                setHasScore(undefined);
+                setSettingUpModel(false);
+                setTesting(true);
             }
         };
         reader.readAsArrayBuffer(f)
@@ -202,6 +235,11 @@ function RivemuUploader() {
             const outcard_str = decoder.decode(outcard);
             const outcard_json = JSON.parse(outcard_str.substring(4));
             setCurrScore(outcard_json.score);
+            if (testing) {
+                if (outcard_json.score != undefined) {
+                    setHasScore(true);
+                }
+            }
         }
     };
 
@@ -218,7 +256,17 @@ function RivemuUploader() {
                 console.warn("Failed to parse cartridge info.json:", e);
             }
         }
-        setInfoCartridge(info);
+        if (testing) {
+           setInfoCartridge(info);
+            if (info?.authors?.length) {
+                let authorsWithLinks = 0;
+                for (const author of info.authors) {
+                    if (author.name && author.link) authorsWithLinks++;
+                }
+                setAuthorsHaveLinks(info.authors.length == authorsWithLinks);
+            }
+        }
+        
         setCurrScore(undefined);
         setOutcard(undefined);
         setCurrScore(undefined);
@@ -238,6 +286,10 @@ function RivemuUploader() {
             setPlaying({...playing, playCounter: playing.playCounter+1});
         else
             setPlaying({isPlaying: false, isReplay:false , playCounter: playing.playCounter+1});
+        if (testing) {
+            setTesting(false);
+            if (hasScore == undefined) setHasScore(false);
+        }
         setTape(new Uint8Array(rivlog))
     };
 
@@ -329,20 +381,43 @@ function RivemuUploader() {
             data: ethers.utils.hexlify(cartridgeData)
         }
         try {
+            setSubmittingTx(true);
             await insertCartridge(signer, envClient.DAPP_ADDR, inputData, {
                 sync:false, 
                 cartesiNodeUrl: envClient.CARTESI_NODE_URL, 
                 inputBoxAddress: envClient.WORLD_ADDRESS
             });
-            setInfoCartridge(undefined);
+            setSubmittingTx(false);
+            setCartridgeInserted(true);
         } catch (error) {
             console.log(error)
             let errorMsg = (error as Error).message;
             if (errorMsg.toLowerCase().indexOf("user rejected") > -1) errorMsg = "User rejected tx";
             setErrorFeedback({message:errorMsg, severity: "error", dismissible: true, dissmissFunction: () => setErrorFeedback(undefined)});
-            return;
+            setCartridgeInserted(undefined);
         }
+        setSubmittingTx(false);
     }
+
+    async function checkCartridgeOwner() {
+        if (!cartridgeData) return;
+
+        const wallet = wallets.find((wallet) => wallet.address === user!.wallet!.address)
+        if (!wallet) return;
+
+        setCheckingOwner(true);
+
+        const cartridgeId = calculateCartridgeId(cartridgeData);
+        const formattedCartridgeId = formatCartridgeIdToBytes(calculateCartridgeId(cartridgeData));
+
+        const addr = await getCartridgeOwner(formattedCartridgeId.slice(2));
+
+        if (addr?.toLowerCase() == wallet.address.toLowerCase())
+            setSettingUpModel(true);
+
+        setCheckingOwner(false);
+    }
+
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -444,6 +519,13 @@ function RivemuUploader() {
                         </div>
                     </div>
 
+                    { hasScore != undefined && hasScore == false ? 
+                    <span title="Cartridges should have a json outcard with the 'score' key even before the first input, otherwise the default play mode won't have a score-based leaderboard">
+                        <WarningIcon className='text-yellow-400' />
+                        Cartridge has no scoring
+                        <WarningIcon className='text-yellow-400' />
+                    </span>: <></>}
+
                     <FormControlLabel control={
                         <Switch checked={hideCartridgeParams} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHideCartridgeParams(!hideCartridgeParams)}/>
                         } label="Hide Cartridge Params" />
@@ -462,10 +544,11 @@ function RivemuUploader() {
                     <input type="file" ref={incardFileRef} onChange={(e) => handleOnChangeIncardUpload(e)} style={{ display: 'none' }}/>
 
                 </div>
+                { !cartridgeInserted ?
                 <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
 
                     <div className='flex justify-end'>
-                        <Link className={`dialog-btn bg-emerald-400 text-black text-xs`} href={"https://rives.io/docs/category/riv"}>{'-->'} Read the Docs</Link>
+                        <Link className={`dialog-btn bg-emerald-400 text-black text-xs`} href={"https://rives.io/docs/rives/uploading-cartridges"}>{'-->'} Read the Docs</Link>
                     </div>
                     <div className='grid grid-cols-1 gap-4 border border-stone-500 p-4'>
                         <TextField className="" label="Name" disabled value={infoCartridge?.name || ""} variant="standard"
@@ -482,14 +565,36 @@ function RivemuUploader() {
                                 InputLabelProps={{ shrink: true }} />
                     </div>
 
-                    <div className='grid grid-cols-1'>
-                        <button disabled={!cartridgeData || !infoCartridge?.name || !wallet} className="btn mt-2 text-sm" onClick={sendCartridge}
+                    <div className='grid grid-cols-1 justify-center'>
+                        <button disabled={!cartridgeData || !infoCartridge?.name || !authorsHaveLinks || !wallet || cartridgeInserted || submittingTx} className="btn mt-2 text-sm flex justify-center" onClick={sendCartridge}
                             title={getTitleMessage()}>
-                            Upload Cartridge
+                            { !submittingTx ? "Upload Cartridge" : <div className='w-6 h-6 border-2 rounded-full border-current border-r-transparent animate-spin'></div>}
                         </button>
 
                     </div>
                 </div>
+                : <>
+                {cartridgeData ? 
+                    settingUpModel ?
+                    <div className="grid grid-cols-1 gap-4 place-items-left text-white xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4">
+                        <div className='grid grid-cols-1 gap-4 border border-stone-500 p-4 text-white'>
+                            Setup Tape Submisstion Model 
+                            
+                            <CartridgeModelSetup cartridgeId={calculateCartridgeId(cartridgeData)} 
+                                reloadFn={() => {}} cancelFn={clean} 
+                            /> 
+                        </div>
+                    </div> : 
+                    <div className='grid grid-cols-1 gap-2 justify-center xs:w-3/4 md:w-3/4 lg:w-1/3 xl:w-1/4 2xl:w-1/4'>
+                        <span className='text-xs text-center'>(You don't need to set up again for cartridge updates)</span>
+                        <button disabled={!cartridgeData || !wallet || !cartridgeInserted || submittingTx || checkingOwner} className="btn mt-2 text-sm flex justify-center" onClick={checkCartridgeOwner}
+                            >
+                            { !checkingOwner ? "Setup Model" : <div className='w-6 h-6 border-2 rounded-full border-current border-r-transparent animate-spin'></div>}
+                        </button>
+                    </div>
+                : <></>}  
+                </>
+                }
 
             {errorFeedback ? <ErrorModal error={errorFeedback} /> : <></>}
             </div>

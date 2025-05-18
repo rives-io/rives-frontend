@@ -9,7 +9,7 @@ import Link from "next/link";
 import { User, getUsersByAddress } from "../utils/privyApi";
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { BondInfo, getCartridgeBondInfo } from "../utils/assets";
+import { BondInfo, getCartridgeBondInfo, getSubmitPrice, getTapeSubmissionModelFromCartridge, TAPE_SUBMIT_MODEL } from "../utils/assets";
 
 
 export default function CartridgeCard(
@@ -32,6 +32,7 @@ export default function CartridgeCard(
 
     const [twitterInfo, setTwitterInfo] = useState<User|null>(null);
     const [currentPrice,setCurrentPrice] = useState<string>();
+    const [priceBg,setPriceBg] = useState<string>();
 
     useEffect(() => {
         if (creator) {
@@ -48,16 +49,42 @@ export default function CartridgeCard(
         }
 
         if (cartridge.id && showPriceTag) {
-            getCartridgeBondInfo(cartridge.id,true).then((bond: BondInfo|null) => {
-                if (bond && bond.buyPrice)
-                    if (bond.buyPrice.eq(0)) {
-                        setCurrentPrice("Free")
-                    } else {
-                        setCurrentPrice(`${parseFloat(
-                            ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals))
-                            .toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`
-                        );
-                    }
+            getTapeSubmissionModelFromCartridge(cartridge.id).then(model => {
+                if (model[0] == TAPE_SUBMIT_MODEL.FREE) {
+                    setCurrentPrice("Free");
+                    setPriceBg("bg-emerald-400");
+                } else if (model[0] == TAPE_SUBMIT_MODEL.OWNERSHIP) {
+                    getCartridgeBondInfo(cartridge.id,true).then((bond: BondInfo|null) => {
+                        if (bond && bond.buyPrice) {
+                            if (bond.buyPrice.eq(0)) {
+                                setCurrentPrice(`- ${bond.currencySymbol}`);
+                            } else {
+                                setCurrentPrice(`${parseFloat(
+                                    ethers.utils.formatUnits(bond.buyPrice,bond.currencyDecimals))
+                                    .toLocaleString("en", { maximumFractionDigits: 3 })}${bond.currencySymbol}`
+                                );
+                            }
+                            setPriceBg("bg-rives-purple");
+                        }
+                    });
+                } else if (model[0] == TAPE_SUBMIT_MODEL.FEE) {
+                    getSubmitPrice(model[1]).then(priceInfo => {
+                        if (priceInfo) {
+                            if (priceInfo.value == BigInt(0)) {
+                                setCurrentPrice(`- ${priceInfo.symbol} Fee`);
+                            } else {
+                                setCurrentPrice(`${parseFloat(
+                                    ethers.utils.formatUnits(priceInfo.value,priceInfo.decimals))
+                                    .toLocaleString("en", { maximumFractionDigits: 3 })}${priceInfo.symbol} Fee`
+                                );
+                            }
+                            setPriceBg("bg-[#4e99e0]");
+                        }
+                    });
+                } else {
+                    setCurrentPrice("Demo");
+                    setPriceBg("bg-slate-400");
+                }
             });
         }
     }, [])
@@ -90,7 +117,7 @@ export default function CartridgeCard(
                 </div>
 
                 {currentPrice ? <div className="flex flex-1 justify-end text-wrap -me-2">
-                    <div className="h-fit px-1 bg-rives-purple text-black text-xs">
+                    <div className={"h-fit px-1 text-black text-xs " + priceBg}>
                         {currentPrice}
                     </div>
                     

@@ -26,14 +26,17 @@ import TextField from '@mui/material/TextField';
 import { GIF_FRAME_FREQ, gameplayContext } from "../play/GameplayContextProvider";
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayloadProxy, cartridge, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { FormatInCardPayload, InfoCartridge, RuleInfo } from "../backend-libs/core/ifaces";
-import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
+import { FormatInCardPayload, RuleInfo } from "../backend-libs/core/ifaces";
+import { ContestStatus, getContestStatus } from "../utils/common";
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
-import { buildUrl, cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
+import { buildUrl, cartridgeIdFromBytes, generateEntropy, ruleIdFromBytes} from "../utils/util";
+// import ReactGA from "react-ga4";
+// import { sendEvent } from "../utils/googleAnalytics";
+import { sendGAEvent } from '@next/third-parties/google'
 
 let canvasPlaying = false;
 
@@ -54,12 +57,13 @@ export interface TapeInfo {
 const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     const formatedCartridgeId = cartridgeId.substring(0, 2) === "0x"? cartridgeIdFromBytes(cartridgeId): cartridgeId;
 
-    const response = await fetch(buildUrl("/cartridges-data", cartridgeId),
+    const response = await fetch(buildUrl(envClient.CARTRIDGES_URL, cartridgeId),
         {
             method: "GET",
             headers: {
                 "Content-Type": "application/octet-stream",
-            }
+            },
+            mode: 'cors'
         }
     );
     const blob = await response.blob();
@@ -89,27 +93,12 @@ const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     throw new Error(`Cartridge ${formatedCartridgeId} not found!`);
 }
 
-export function generateEntropy(userAddress?:String, ruleId?:String): string {
-
-    const hexRuleId = `0x${ruleId}`;
-    if (!userAddress || userAddress.length != 42 || !ethers.utils.isHexString(userAddress) || !ethers.utils.isHexString(hexRuleId)) {
-        return "";
-    }
-
-    const userBytes = ethers.utils.arrayify(`${userAddress}`);
-    const ruleIdBytes = ethers.utils.arrayify(hexRuleId);
-
-    var fullEntropyBytes = new Uint8Array(userBytes.length + ruleIdBytes.length);
-    fullEntropyBytes.set(userBytes);
-    fullEntropyBytes.set(ruleIdBytes, userBytes.length);
-    return sha256(fullEntropyBytes);
-}
-
 const getRule = async (ruleId:string):Promise<RuleInfo> => {
     const formatedRuleId = ruleId;
     const data = await rules(
         {
             id:formatedRuleId,
+            enable_deactivated: true,
             full:true
         },
         {
@@ -122,18 +111,6 @@ const getRule = async (ruleId:string):Promise<RuleInfo> => {
     if (data.total === 0 || data.data.length === 0) throw new Error(`Rule ${ruleId} not found!`);
     
     return data.data[0];
-}
-
-const getScore = async (tapeId:string):Promise<string> => {
-    const out:Array<VerificationOutput> = (await getOutputs(
-        {
-            tags: ["score",tapeId],
-            type: 'notice'
-        },
-        {cartesiNodeUrl: envClient.CARTESI_NODE_URL}
-    )).data;
-    if (out.length === 0) return "";
-    return out[0].score.toString();
 }
 
 const getTapePayload = async (tapeId:string):Promise<VerifyPayloadProxy> => {
@@ -161,7 +138,6 @@ function RivemuPlayer(
     const [cartridgeData, setCartridgeData] = useState<Uint8Array>();
     const [rule, setRule] = useState<RuleInfo>();
     const [tape, setTape] = useState<VerifyPayloadProxy>();
-    const [tapeInfo, setTapeInfo] = useState<TapeInfo>();
     const [entropy, setEntropy] = useState<string>("entropy");
     const [currScore, setCurrScore] = useState<number>();
     const [playing, setPlaying] = useState({isPlaying: false, playCounter: 0})
@@ -241,7 +217,7 @@ function RivemuPlayer(
 
     }, [rule,tapeInCard,usedTapes]);
 
-    const loadRule = (ruleId:string, currTapeInfo?: TapeInfo) => {
+    const loadRule = (ruleId:string) => {
         setLoadingMessage("Loading rule");
         getRule(ruleId).then((out: RuleInfo) => {
             if (!out) {
@@ -259,9 +235,6 @@ function RivemuPlayer(
                 setLoadingMessage(undefined);
             });
 
-            if (tape_id) { //} && [ContestStatus.INVALID,ContestStatus.VALIDATED].indexOf(getContestStatus(out)) > -1) {
-                getScore(tape_id).then((out) => setTapeInfo({...currTapeInfo,score:out}))
-            }
         });
     }
 
@@ -274,15 +247,9 @@ function RivemuPlayer(
             }
             setTape(out);
 
-            const player = `${out._msgSender.slice(0, 6)}...${out._msgSender.substring(out._msgSender.length-4,out._msgSender.length)}`;
-            const timestamp = timeToDateUTCString(out._timestamp*1000);
-            const size = formatBytes(out.tape.length);
-            const currTapeInfo: TapeInfo = {player,timestamp,size};
-
-            setTapeInfo({...tapeInfo,...{player,timestamp,size}});
             setEntropy(generateEntropy(out._msgSender,ruleIdFromBytes(out.rule_id)));
             if (loadRuleFromTape) {
-                loadRule(ruleIdFromBytes(out.rule_id),currTapeInfo)
+                loadRule(ruleIdFromBytes(out.rule_id))
             } else {
                 setLoadingMessage(undefined);
             }
@@ -419,7 +386,7 @@ function RivemuPlayer(
         canvasPlaying = false;
         if (isTape && totalFrames && totalFrames != 0)
             setCurrProgress(100);
-        if (!isTape && rule && signerAddress && !restarting) {
+        if (!isTape && rule && !rule.deactivated && signerAddress && !restarting) {
             let score: number | undefined = undefined;
             if (scoreFunctionEvaluator && decoder.decode(outcard.slice(0,4)) == 'JSON') {
                 const outcard_str = decoder.decode(outcard);
@@ -449,6 +416,10 @@ function RivemuPlayer(
     };
 
     async function play() {
+        const eventName = isTape? "Watch":"Play";
+        const eventLabel = isTape? `Watch ${tape_id}`: `Play ${rule?.id}`
+        sendGAEvent('event', eventName, { event_category: "Rivemu", event_label: eventLabel });
+
         setSpeed(1.0);
         setPaused(false);
         setRestarting(true);
@@ -518,7 +489,8 @@ function RivemuPlayer(
                         <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
                         title={isTape ? "Restart" :"Record"}
                         onKeyDown={() => null} onKeyUp={() => null}
-                        onClick={play}>
+                        onClick={play}
+                        onMouseDown={(event:any) => event.preventDefault()}>
                             {isTape ? <RestartIcon/> : <FiberManualRecordIcon/>}
                         </button>
                         <button className="bg-gray-700 text-white border border-gray-700 hover:border-black"
@@ -526,6 +498,7 @@ function RivemuPlayer(
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={pause}
+                        onMouseDown={(event:any) => event.preventDefault()}
                         >
                             <PauseIcon/>
                         </button>
@@ -535,6 +508,7 @@ function RivemuPlayer(
                         disabled={!playing.isPlaying}
                         onKeyDown={() => null} onKeyUp={() => null}
                         onClick={stop}
+                        onMouseDown={(event:any) => event.preventDefault()}
                         >
                             <StopIcon/>
                         </button>
@@ -569,7 +543,7 @@ function RivemuPlayer(
                     
                 <div className="relative">
                 { !playing.isPlaying?
-                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 backdrop-blur-sm border border-gray-500'} onClick={play}
+                    <button className={'absolute gameplay-screen text-gray-500 hover:text-white t-0 border border-gray-500'} onClick={play}
                     title={isTape ? "Replay": "Record"}>
                         {
                             playing.playCounter === 0?

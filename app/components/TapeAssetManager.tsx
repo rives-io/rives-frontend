@@ -92,6 +92,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
     const [signer,setSigner] = useState<ethers.providers.JsonRpcSigner>();
     const [tapeCreator,setTapeCreator] = useState<String>();
     const [buyPrice,setBuyPrice] = useState<BigNumber>();
+    const [soldOut,setSoldOut] = useState<boolean>(false);
     const [sellPrice,setSellPrice] = useState<BigNumber>();
     const [amountOwned,setAmountOwned] = useState<BigNumber>();
     const [currencyOwned,setCurrencyOwned] = useState<BigNumber>();
@@ -137,7 +138,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
     
             const curContract = new ethers.Contract(envClient.TAPE_CONTRACT_ADDR,tapeAbi.abi,curSigner);
             curContract.provider.getCode(curContract.address).then((code) => {
-                if (code == '0x') {
+                if (!code || code == '0x') {
                     console.log("Couldn't get tape contract")
                     return;
                 }
@@ -156,6 +157,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
     useEffect(() => {
         if (!tapeContract || !signer) {
             setBuyPrice(undefined);
+            setSoldOut(false);
             setValidated(undefined)
             setSellPrice(undefined);
             setErc20(undefined);
@@ -166,10 +168,6 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
         tapeContract.exists(`0x${tape_id}`).then((exists:boolean) => {
             setTapeExists(exists);
             if (exists) {
-                tapeContract.getCurrentBuyPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
-                    // const {total,fees,finalPrice} = data;
-                    setBuyPrice(data[0]);
-                });
                 tapeContract.tapeBonds(`0x${tape_id}`).then((bond:any) => {
                     setValidated(bond.tapeOutputData.slice(2).length > 0)
 
@@ -177,6 +175,14 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                         tapeContract.getCurrentSellPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
                             setSellPrice(data[0]);
                         });
+                    }
+                    if (bond.bond.currentSupply.lt(bond.bond.steps[bond.bond.steps.length - 1].rangeMax)) {
+                        tapeContract.getCurrentBuyPrice(`0x${tape_id}`,1).then((data:BigNumber[]) => {
+                            // const {total,fees,finalPrice} = data;
+                            setBuyPrice(data[0]);
+                        });
+                    } else {
+                        setSoldOut(true);
                     }
 
                     setErc20Address(bond.bond.currencyToken);
@@ -186,7 +192,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     if (bond.bond.currencyToken != "0x0000000000000000000000000000000000000000") {
                         const curErc20Contract = new ethers.Contract(bond.bond.currencyToken,erc20abi,signer);
                         curErc20Contract.provider.getCode(curErc20Contract.address).then((code) => {
-                            if (code == '0x') {
+                            if (!code || code == '0x') {
                                 console.log("Couldn't get erc20 contract")
                                 return;
                             }
@@ -446,17 +452,24 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
         let modalBodyContent:JSX.Element;
 
         if (modalState.state == MODAL_STATE.BUY) {
+            let buyPriceText:string = modalPreviewPrice == undefined? "Collect":`Collect (${parseFloat(
+                ethers.utils.formatUnits(modalPreviewPrice, decimals))
+                .toLocaleString("en", {minimumFractionDigits: 6,})} ${symbol})`;
+            
+            if (modalPreviewPrice?.eq(0)) {
+                buyPriceText = `Collect (- ${symbol})`;
+            }
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
                         Buy Tape {amountOwned ? `(amount owned: ${amountOwned?.toString()})` : ""}
                     </Dialog.Title>
-                    <div className="mt-4 text-center grid grid-cols-1 gap-2">
+                    {/* <div className="mt-4 text-center grid grid-cols-1 gap-2">
                         <span className="place-self-start">Number of Tapes {modalPreviewPrice && currencyOwned?.lt(modalPreviewPrice) ? "(Not enough funds)" : ""}</span>
                         <Input className="text-black" aria-label="Tapes" placeholder="Tapes to buy" type="number" value={modalValue} onChange={(e) => changeModalInput(e.target.value,MODAL_STATE.BUY)} />
-                        {/* <span className="place-self-start">Slippage (%)</span>
-                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} /> */}
-                    </div>
+                        <span className="place-self-start">Slippage (%)</span>
+                        <Input className="text-black" aria-label="Slippage" placeholder="Slippage Accepted" type="number" value={modalSlippage} onChange={(e) => changeModalSlippage(e.target.value)} />
+                    </div> */}
     
                     <div className="flex pb-2 mt-4">
                         <button
@@ -472,12 +485,19 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                         onClick={buyTape}
                         disabled={modalValue == undefined || modalValue < 1}
                         >
-                            Buy {modalPreviewPrice ? `${parseFloat(ethers.utils.formatUnits(modalPreviewPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
+                            {buyPriceText}
                         </button>
                     </div>
                 </>
             )
         } else if (modalState.state == MODAL_STATE.SELL) {
+            let sellPriceText:string = modalPreviewPrice == undefined? "":`Sell (${parseFloat(
+                ethers.utils.formatUnits(modalPreviewPrice, decimals))
+                .toLocaleString("en", {minimumFractionDigits: 6,})} ${symbol})`;
+            
+            if (modalPreviewPrice?.eq(0)) {
+                sellPriceText = `Sell (- ${symbol})`;
+            }
             modalBodyContent = (
                 <>
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
@@ -505,7 +525,7 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                         onClick={sellTape}
                         disabled={modalValue != undefined && (modalValue < 1 || amountOwned?.lt(modalValue))}
                         >
-                            Sell {modalPreviewPrice ? `${parseFloat(ethers.utils.formatUnits(modalPreviewPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
+                            {sellPriceText}
                         </button>
                     </div>
                 </>
@@ -555,6 +575,43 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
         return <ErrorModal error={errorFeedback} />;
     }
 
+
+    //
+    // JSX
+    //
+    function marketplaceOptions() {
+        
+
+        let buyPriceText:string = buyPrice == undefined? "Collect":`Collect (${parseFloat(
+            ethers.utils.formatUnits(buyPrice, decimals))
+            .toLocaleString("en", {minimumFractionDigits: 6,})} ${symbol})`;
+        let sellPriceText:string = sellPrice == undefined? "Sell":`Sell (${parseFloat(
+            ethers.utils.formatUnits(sellPrice, decimals))
+            .toLocaleString("en", {minimumFractionDigits: 6,})} ${symbol})`;
+        
+        if (buyPrice?.eq(0)) {
+            buyPriceText = `Collect (- ${symbol})`;
+        } else if (soldOut) {
+            buyPriceText = `Sold Out`;
+        }
+        if (sellPrice?.eq(0)) {
+            sellPriceText = `Sell (- ${symbol})`;
+        }
+
+        return <>
+
+            <button title={amountOwned?.gt(0) ? "" : "No balance"} 
+                    className='bg-[#e04ec3] assets-btn zoom-btn' 
+                    onClick={() => {openModal(MODAL_STATE.SELL)}} disabled={!sellPrice || !amountOwned?.gt(0) }>
+                {sellPriceText}
+            </button>
+            <button className='bg-[#53fcd8] assets-btn zoom-btn' 
+                    onClick={() => {openModal(MODAL_STATE.BUY)}} disabled={!buyPrice}>
+                {buyPriceText}
+            </button>
+        </>;
+    }
+
     return (
         <>    
             <Transition appear show={modalState.isOpen} as={Fragment}>
@@ -601,19 +658,10 @@ function TapeAssetManager({tape_id,onChange}:{tape_id:string,onChange():void}) {
                     onClick={validate} disabled={validated || validated == undefined || !(tapeOutput?._proof)}>
                 {validated ? "Proved" : "Prove Tape Submission"}
                 </button> : <></>}
-                <button title={amountOwned?.gt(0) ? "" : "No balance"} 
-                        className='bg-[#e04ec3] assets-btn zoom-btn' 
-                        onClick={() => {openModal(MODAL_STATE.SELL)}} disabled={!sellPrice || !amountOwned?.gt(0) }>
-                    Sell {sellPrice ? `${parseFloat(ethers.utils.formatUnits(sellPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""}
-                </button>
-                <button 
-                        className='bg-[#53fcd8] assets-btn zoom-btn' 
-                        onClick={() => {openModal(MODAL_STATE.BUY)}} disabled={!buyPrice}>
-                    Buy {buyPrice ? `${parseFloat(ethers.utils.formatUnits(buyPrice,decimals)).toLocaleString("en", { minimumFractionDigits: 6 })} ${symbol}` : ""} 
-                </button>
+                {marketplaceOptions()}
                 </> :
                 <> <div></div><div></div>
-                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || tapeCreator?.toLowerCase() == signerAddress) ? 
+                {signerAddress && (envClient.OPERATOR_ADDR?.toLowerCase() == signerAddress || tapeCreator?.toLowerCase() == signerAddress) && tapeContract ? 
                     <button title={"Activate asset sales for this tape with standard parameters"} 
                             className='bg-[#4e99e0] assets-btn zoom-btn' 
                             onClick={activate} disabled={tapeExists}>

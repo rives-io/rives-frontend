@@ -139,6 +139,21 @@ export async function createRule(
     return result;
 }
 
+export async function deactivateRule(
+    client:Signer,
+    dappAddress:string,
+    inputData: ifaces.DeactivateRulePayloadProxy,
+    options?:MutationOptions
+):Promise<AdvanceOutput|ContractReceipt|any[]> {
+    const data: DeactivateRulePayloadProxy = new DeactivateRulePayloadProxy(inputData);
+    if (options?.decode) { options.sync = true; }
+    const result = await genericAdvanceInput<ifaces.DeactivateRulePayloadProxy>(client,dappAddress,'0x7db38ba8',data, options)
+    if (options?.decode) {
+        return decodeAdvance(result as AdvanceOutput,decodeToModel,options);
+    }
+    return result;
+}
+
 export async function verify(
     client:Signer,
     dappAddress:string,
@@ -536,6 +551,16 @@ export function exportToRuleDataProxy(data: ifaces.RuleDataProxy): string {
     const dataToExport: RuleDataProxy = new RuleDataProxy(data);
     return dataToExport.export();
 }
+export class DeactivateRulePayloadProxyInput extends Input<ifaces.DeactivateRulePayloadProxy> { constructor(data: CartesiInput) { super(models['DeactivateRulePayloadProxy'],data,true); } }
+export function decodeToDeactivateRulePayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): DeactivateRulePayloadProxyInput {
+    return new DeactivateRulePayloadProxyInput(output as CartesiInput);
+}
+
+export class DeactivateRulePayloadProxy extends IOData<ifaces.DeactivateRulePayloadProxy> { constructor(data: ifaces.DeactivateRulePayloadProxy, validate: boolean = true) { super(models['DeactivateRulePayloadProxy'],data,validate); } }
+export function exportToDeactivateRulePayloadProxy(data: ifaces.DeactivateRulePayloadProxy): string {
+    const dataToExport: DeactivateRulePayloadProxy = new DeactivateRulePayloadProxy(data);
+    return dataToExport.export();
+}
 export class VerifyPayloadProxyInput extends Input<ifaces.VerifyPayloadProxy> { constructor(data: CartesiInput) { super(models['VerifyPayloadProxy'],data,true); } }
 export function decodeToVerifyPayloadProxyInput(output: CartesiReport | CartesiNotice | CartesiVoucher | InspectReport | CartesiInput): VerifyPayloadProxyInput {
     return new VerifyPayloadProxyInput(output as CartesiInput);
@@ -822,6 +847,14 @@ export const models: Models = {
         exporter: exportToRuleDataProxy,
         validator: ajv.compile<ifaces.RuleDataProxy>(JSON.parse('{"title": "RuleDataProxy", "type": "object", "properties": {"cartridge_id": {"type": "string", "format": "binary"}, "name": {"type": "string"}, "description": {"type": "string"}, "args": {"type": "string"}, "in_card": {"type": "string", "format": "binary"}, "score_function": {"type": "string"}, "start": {"type": "integer"}, "end": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}}, "tapes": {"type": "array", "items": {"type": "string", "format": "binary"}}, "allow_tapes": {"type": "boolean"}, "allow_in_card": {"type": "boolean"}, "save_tapes": {"type": "boolean"}, "save_out_cards": {"type": "boolean"}}, "required": ["cartridge_id", "name", "description", "args", "in_card", "score_function", "start", "end", "tags", "tapes", "allow_tapes", "allow_in_card", "save_tapes", "save_out_cards"]}'.replaceAll('integer','string","format":"biginteger')))
     },
+    'DeactivateRulePayloadProxy': {
+        ioType:IOType.mutationPayload,
+        abiTypes:['bytes32'],
+        params:['rule_id'],
+        decoder: decodeToDeactivateRulePayloadProxyInput,
+        exporter: exportToDeactivateRulePayloadProxy,
+        validator: ajv.compile<ifaces.DeactivateRulePayloadProxy>(JSON.parse('{"title": "DeactivateRulePayloadProxy", "type": "object", "properties": {"rule_id": {"type": "string", "format": "binary"}}, "required": ["rule_id"]}'.replaceAll('integer','string","format":"biginteger')))
+    },
     'VerifyPayloadProxy': {
         ioType:IOType.mutationPayload,
         abiTypes:['bytes32', 'bytes32', 'bytes', 'int', 'bytes32[]', 'bytes'],
@@ -929,10 +962,10 @@ export const models: Models = {
     'GetRulesPayload': {
         ioType:IOType.queryPayload,
         abiTypes:[],
-        params:['cartridge_id', 'id', 'ids', 'active_ts', 'has_start', 'has_end', 'created_by', 'name', 'page', 'page_size', 'order_by', 'order_dir', 'tags', 'tags_or', 'full'],
+        params:['cartridge_id', 'id', 'ids', 'active_ts', 'has_start', 'has_end', 'created_by', 'name', 'page', 'page_size', 'order_by', 'order_dir', 'tags', 'tags_or', 'full', 'enable_deactivated'],
         decoder: decodeToGetRulesPayloadInput,
         exporter: exportToGetRulesPayload,
-        validator: ajv.compile<ifaces.GetRulesPayload>(JSON.parse('{"title": "GetRulesPayload", "type": "object", "properties": {"cartridge_id": {"type": "string"}, "id": {"type": "string"}, "ids": {"type": "array", "items": {"type": "string"}}, "active_ts": {"type": "integer"}, "has_start": {"type": "boolean"}, "has_end": {"type": "boolean"}, "created_by": {"type": "string"}, "name": {"type": "string"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "order_by": {"type": "string"}, "order_dir": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}, "tags_or": {"type": "boolean"}, "full": {"type": "boolean"}}}'))
+        validator: ajv.compile<ifaces.GetRulesPayload>(JSON.parse('{"title": "GetRulesPayload", "type": "object", "properties": {"cartridge_id": {"type": "string"}, "id": {"type": "string"}, "ids": {"type": "array", "items": {"type": "string"}}, "active_ts": {"type": "integer"}, "has_start": {"type": "boolean"}, "has_end": {"type": "boolean"}, "created_by": {"type": "string"}, "name": {"type": "string"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "order_by": {"type": "string"}, "order_dir": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}, "tags_or": {"type": "boolean"}, "full": {"type": "boolean"}, "enable_deactivated": {"type": "boolean"}}}'))
     },
     'GetRuleTagsPayload': {
         ioType:IOType.queryPayload,
@@ -999,7 +1032,7 @@ export const models: Models = {
         abiTypes:[],
         params:['data', 'total', 'page'],
         decoder: decodeToRulesOutput,
-        validator: ajv.compile<ifaces.RulesOutput>(JSON.parse('{"title": "RulesOutput", "type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/RuleInfo"}}, "total": {"type": "integer"}, "page": {"type": "integer"}}, "required": ["data", "total", "page"], "definitions": {"RuleInfo": {"title": "RuleInfo", "type": "object", "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "description": {"type": "string"}, "cartridge_id": {"type": "string"}, "created_by": {"type": "string"}, "created_at": {"type": "integer"}, "input_index": {"type": "integer"}, "args": {"type": "string"}, "in_card": {"type": "string", "format": "binary"}, "score_function": {"type": "string"}, "start": {"type": "integer"}, "end": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}}, "allow_tapes": {"type": "boolean"}, "allow_in_card": {"type": "boolean"}, "save_tapes": {"type": "boolean"}, "save_out_cards": {"type": "boolean"}, "tapes": {"type": "array", "items": {"type": "string"}}}, "required": ["id", "name", "description", "cartridge_id", "created_by", "created_at", "args", "in_card", "score_function", "tags"]}}}'))
+        validator: ajv.compile<ifaces.RulesOutput>(JSON.parse('{"title": "RulesOutput", "type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/RuleInfo"}}, "total": {"type": "integer"}, "page": {"type": "integer"}}, "required": ["data", "total", "page"], "definitions": {"RuleInfo": {"title": "RuleInfo", "type": "object", "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "description": {"type": "string"}, "cartridge_id": {"type": "string"}, "created_by": {"type": "string"}, "created_at": {"type": "integer"}, "input_index": {"type": "integer"}, "args": {"type": "string"}, "in_card": {"type": "string", "format": "binary"}, "score_function": {"type": "string"}, "start": {"type": "integer"}, "end": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}}, "allow_tapes": {"type": "boolean"}, "allow_in_card": {"type": "boolean"}, "save_tapes": {"type": "boolean"}, "save_out_cards": {"type": "boolean"}, "tapes": {"type": "array", "items": {"type": "string"}}, "deactivated": {"type": "boolean"}}, "required": ["id", "name", "description", "cartridge_id", "created_by", "created_at", "args", "in_card", "score_function", "tags"]}}}'))
     },
     'RuleTagsOutput': {
         ioType:IOType.report,

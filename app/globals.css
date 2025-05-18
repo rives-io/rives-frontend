@@ -389,3 +389,11 @@ body {
     width: 752px;
   }
 }
+
+.MuiOutlinedInput-input.Mui-focused {
+  color: black;
+}
+
+.MuiOutlinedInput-root.Mui-focused {
+  color: black;
+}

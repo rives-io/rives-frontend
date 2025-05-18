@@ -50,5 +50,30 @@ export const envClient = envsafe({
     input: process.env.OLYMPICS_DATA_URL,
     desc: "URL with the JSON that has the Olympics data.",
     default: "https://storage.googleapis.com/rives-vanguard-public/tournament/doom-olympics/leaderboard.json"
-  })
+  }),
+  CARTRIDGES_URL: url({
+    input: process.env.NEXT_PUBLIC_CARTRIDGES_URL,
+    desc: "Cartridges URL."
+  }),
+  CARTRIDGE_FREE_INSERTION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_CARTRIDGE_FREE_INSERTION_MODEL,
+    desc: "Cartridges insertion model address."
+  }),
+  TAPE_FREE_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_FREE_SUBMISSION_MODEL,
+    desc: "Free tape submission model address."
+  }),
+  TAPE_OWNERSHIP_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_OWNERSHIP_SUBMISSION_MODEL,
+    desc: "Ownership tape submission model address."
+  }),
+  TAPE_FEE_SUBMISSION_MODEL: str({
+    input: process.env.NEXT_PUBLIC_TAPE_FEE_SUBMISSION_MODEL,
+    desc: "Fee tape submission model address."
+  }),
+  GOOGLE_ANALYTICS_MEASUREMENT_ID: str({
+    input: process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID,
+    desc: "Google analytics id.",
+    default: "G-0QV24G07N2"
+  }),
 })

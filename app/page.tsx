@@ -10,7 +10,8 @@ import { getTapes } from "./utils/util";
 import { getTotalCartridges, getTotalTapes, prettyNumberFormatter } from "./utils/assets";
 import ContestCard from "./components/ContestCard";
 import { getUsersByAddress, User } from "./utils/privyApi";
-import OlympicsBanner from "./components/OlympicsBanner";
+import SeasonBanner from "./components/SeasonBanner";
+
 
 export const revalidate = 0 // revalidate data always
 
@@ -39,17 +40,24 @@ async function getLatestsCartridges() {
 }
 
 async function getLatestsTapes() {
-  const res = (await getTapes(
-    {
-      currentPage: 1,
-      pageSize: 4,
-      orderBy: "timestamp",
-      orderDir: "desc"
-    }
-  ));
+  let tapes:Array<VerifyPayloadProxy> = [];
 
-  const tapes = res.data;
-  total_tapes = res.total;
+  try {
+    const res = (await getTapes(
+      {
+        currentPage: 1,
+        pageSize: 4,
+        orderBy: "timestamp",
+        orderDir: "desc"
+      }
+    ));
+    tapes = res.data;
+    total_tapes = res.total;
+        
+  } catch (error) {
+    console.log((error as Error).message)
+  }
+
 
   return tapes;
 }
@@ -75,7 +83,7 @@ export default async function Home() {
   let tapes:Array<VerifyPayloadProxy>;
   let contests:Array<RuleInfo>;
   let userAddresses:Set<string> = new Set();
-  
+
   [cartridges, tapes, contests, total_collected_cartridges, total_collected_tapes] = await Promise.all(promises)
 
   let contestCartridges:Record<string, CartridgeInfo> = {};
@@ -123,8 +131,8 @@ export default async function Home() {
 
   return (
     <main className="gap-8">
+      
       <section className="flex flex-col items-center">
-        <OlympicsBanner/>
         
         <div className="homepageContainer">
           <h1 className={`text-4xl pixelated-font mb-4`}>Latest Cartridges</h1>
@@ -189,15 +197,15 @@ export default async function Home() {
               <span className={`text-5xl pixelated-font`}>{total_tapes}</span>
             </div>
 
-            <div className='p-8 bg-rives-gray flex flex-col text-center'>
+            {total_collected_cartridges ? <div className='p-8 bg-rives-gray flex flex-col text-center'>
               <span className={`text-3xl pixelated-font`}>Total Cartridges Collected</span>
               <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_cartridges.toNumber(),2)}</span>
-            </div>
+            </div> : <></>}
 
-            <div className='p-8 bg-rives-gray flex flex-col text-center'>
+            {total_collected_tapes ? <div className='p-8 bg-rives-gray flex flex-col text-center'>
               <span className={`text-3xl pixelated-font`}>Total Tapes Collected</span>
               <span className={`text-5xl pixelated-font`}>{prettyNumberFormatter(total_collected_tapes.toNumber(),2)}</span>
-            </div>
+            </div> : <></>}
           </div>
         </div>
       </section>

@@ -6,9 +6,10 @@ import { DecodedIndexerOutput } from "../backend-libs/cartesapp/lib";
 import { cartridgeInfo, cartridges, getOutputs, rules, VerifyPayloadProxy } from "../backend-libs/core/lib";
 import { IndexerPayload } from "../backend-libs/indexer/ifaces";
 import { encrypt } from "@/lib";
+import { sha256 } from "js-sha256";
 import { CartridgeInfo, CartridgesOutput, CartridgesPayload, RuleInfo, VerificationOutput } from "../backend-libs/core/ifaces";
 import { getUsersByAddress, User } from "./privyApi";
-import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated } from "./common";
+import { Achievement, ContestDetails, OlympicData, ProfileAchievementAggregated, RaffleData } from "./common";
 import { ConnectedWallet } from "@privy-io/react-auth";
 
 const FRONTEND_ERROR_PREFIX = "RIVES Frontend ERROR:";
@@ -73,8 +74,8 @@ export function formatTime(time:number):string {
         val = Math.round(time / 60);
         return val == 1? `${val} minute`:`${val} minutes`;
     }
-  
-    return `${time} seconds`
+
+    return `${Math.round(time)} seconds`
 }
 
 // time in seconds
@@ -103,6 +104,22 @@ export function formatDate(date:Date) {
     year = year.substring(1);
 
     return `${month}/${day}/${year}, ${time}`;
+}
+
+export function generateEntropy(userAddress?:String, ruleId?:String): string {
+
+    const hexRuleId = `0x${ruleId}`;
+    if (!userAddress || userAddress.length != 42 || !ethers.utils.isHexString(userAddress) || !ethers.utils.isHexString(hexRuleId)) {
+        return "";
+    }
+
+    const userBytes = ethers.utils.arrayify(`${userAddress}`);
+    const ruleIdBytes = ethers.utils.arrayify(hexRuleId);
+
+    var fullEntropyBytes = new Uint8Array(userBytes.length + ruleIdBytes.length);
+    fullEntropyBytes.set(userBytes);
+    fullEntropyBytes.set(ruleIdBytes, userBytes.length);
+    return sha256(fullEntropyBytes);
 }
 
 export async function getTapeGif(tape_id:string):Promise<string|null> {
@@ -460,6 +477,10 @@ export function calculateTapeId(ruleId:string, log: Uint8Array): string {
     return `${ruleIdFromBytes(ruleId)}${truncateTapeHash(ethers.utils.keccak256(log))}`;
 }
 
+export function calculateCartridgeId(log: Uint8Array): string {
+    return cartridgeIdFromBytes(truncateTapeHash(ethers.utils.keccak256(log)));
+}
+
 export async function getUsersFromCartridges(cartridges:Array<CartridgeInfo>, currUserMap:Record<string, User>) {
     let newUserAddresses:Set<string> = new Set();
     for (let cartridge of cartridges) {
@@ -601,6 +622,7 @@ export async function getProfileAchievementsSummary(address:string) {
 
 export async function getOlympicsData(olympicId:string):Promise<OlympicData|null> {
     let res:Response;
+    let data:OlympicData|null;
     
     try {
         res = await fetch(envClient.OLYMPICS_DATA_URL,
@@ -613,13 +635,13 @@ export async function getOlympicsData(olympicId:string):Promise<OlympicData|null
                     revalidate: 30 // revalidate cache 300 seconds
                 }
             }
-        )            
+        )
+        
+        data = await res.json();
     } catch (error) {
         console.log(`Failed to fetch Olympics data\nError: ${(error as Error).message}`);
-        return null;
+        data = null;
     }
-
-    const data:OlympicData = await res.json();
 
     return data;
 }
@@ -660,4 +682,31 @@ export async function getRuleInfo(rule_id:string):Promise<RuleInfo|null> {
     if (rulesFound.length == 0) return null;
   
     return rulesFound[0];
-  }
+}
+
+
+export async function getSocialPrizes() {
+    let res:Response;
+    let data:RaffleData|null;
+
+    try {
+        res = await fetch("https://storage.googleapis.com/rives-mainnet-v5-public/tournament/doom-olympics/raffle.json",
+            {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                },
+                next: {
+                    revalidate: 30 // revalidate cache 300 seconds
+                }
+            }
+        )            
+        data = await res.json();
+    } catch (error) {
+        console.log(`Failed to social prizes\nError: ${(error as Error).message}`);
+        data = null;
+    }
+
+
+    return data;
+}

@@ -1,3 +1,4 @@
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import { cartridgeInfo, rules } from "@/app/backend-libs/core/lib";
 import { CartridgeInfo, RuleInfo } from "@/app/backend-libs/core/ifaces";
 import { envClient } from "@/app/utils/clientEnv";
@@ -36,21 +37,25 @@ export async function generateMetadata({ params }: { params: { contest_id: strin
 }
 
 function contestStatusMessage(contest:RuleInfo) {
-  if (!(contest.start && contest.end)) return <></>;
+  // if (!(contest.start && contest.end)) return <span>-</span>;
 
   const currDate = new Date().getTime() / 1000;
+  const start = contest.start ? contest.start : 0;
+  const end = contest.end ? contest.end : 32502815999;
 
-  if (currDate > contest.end) {
-      return <span className="text-red-500">CLOSED: ended {formatTime(currDate - contest.end)} ago </span>;
-  } else if (currDate < contest.start) {
-      return <span className="text-yellow-500">UPCOMING: starts in {formatTime(contest.start - currDate)} and lasts {formatTime(contest.end - contest.start)}</span>;
+  if (currDate > end) {
+      return <span className="text-red-500">CLOSED: ended {formatTime(currDate - end)} ago </span>;
+  } else if (currDate < start) {
+      const lasts = !contest.end ? '' : ` and lasts ${formatTime(end - start)}`;
+      return <span className="text-yellow-500">UPCOMING: starts in {formatTime(start - currDate)}{lasts}</span>;
   } else {
-      return <span className="text-green-500">OPEN: ends in {formatTime(contest.end - currDate)}</span>;
+      const endsIn = !contest.end ? '' : `: ends in ${formatTime(end - currDate)}`;
+      return <span className="text-green-500">OPEN{endsIn}</span>;
   }
 }
 
 const getRule = async(rule_id:string):Promise<RuleInfo|null> => {
-  const rulesFound:Array<RuleInfo> = (await rules({id: rule_id}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
+  const rulesFound:Array<RuleInfo> = (await rules({id: rule_id, enable_deactivated: true}, {cartesiNodeUrl: envClient.CARTESI_NODE_URL, decode: true})).data;
 
   if (rulesFound.length == 0) return null;
 
@@ -179,7 +184,10 @@ export default async function Contest({ params }: { params: { contest_id: string
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 mt-8">
           <div className="flex flex-col gap-4 lg:col-span-3">
               <div className="flex flex-col">
-                <h1 className="pixelated-font text-xl">Overview</h1>
+                <h1 className="pixelated-font text-xl">
+                  Overview {' '}
+                  <Link href={`/cartridges/${contest.cartridge_id}/play_modes/${contest.id}`} title='Show Details'><ManageSearchIcon></ManageSearchIcon></Link> {' '}
+                </h1>
 
                 <div className="grid grid-cols-2">
                   {/* TODO: Get tapes */}
@@ -190,7 +198,7 @@ export default async function Contest({ params }: { params: { contest_id: string
                   {contestStatusMessage(contest)}
 
                   <span className="text-gray-400">Start</span>
-                  {timeToDateUTCString(contest.created_at)}
+                  {contest.start? timeToDateUTCString(contest.start):"-"}
 
                   <span className="text-gray-400">End</span>
                   {contest.end? timeToDateUTCString(contest.end):"-"}
