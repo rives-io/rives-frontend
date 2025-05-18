@@ -26,14 +26,14 @@ import TextField from '@mui/material/TextField';
 import { GIF_FRAME_FREQ, gameplayContext } from "../play/GameplayContextProvider";
 import { sha256 } from "js-sha256";
 import { envClient } from "../utils/clientEnv";
-import { VerificationOutput, VerifyPayloadProxy, cartridge, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
+import { VerifyPayloadProxy, formatInCard, getOutputs, rules } from "../backend-libs/core/lib";
 import Rivemu, { RivemuRef } from "./Rivemu";
-import { FormatInCardPayload, InfoCartridge, RuleInfo } from "../backend-libs/core/ifaces";
-import { ContestStatus, formatBytes, getContestStatus, getContestStatusMessage } from "../utils/common";
+import { FormatInCardPayload, RuleInfo } from "../backend-libs/core/ifaces";
+import { ContestStatus, getContestStatus } from "../utils/common";
 import Image from "next/image";
 import rivesLogo from '../../public/logo.png';
 import { usePrivy } from "@privy-io/react-auth";
-import { buildUrl, cartridgeIdFromBytes, ruleIdFromBytes, timeToDateUTCString} from "../utils/util";
+import { buildUrl, cartridgeIdFromBytes, generateEntropy, ruleIdFromBytes} from "../utils/util";
 // import ReactGA from "react-ga4";
 // import { sendEvent } from "../utils/googleAnalytics";
 import { sendGAEvent } from '@next/third-parties/google'
@@ -91,22 +91,6 @@ const getCartridgeData = async (cartridgeId:string): Promise<Uint8Array> => {
     if (out.length > 0) return out[0];
 
     throw new Error(`Cartridge ${formatedCartridgeId} not found!`);
-}
-
-export function generateEntropy(userAddress?:String, ruleId?:String): string {
-
-    const hexRuleId = `0x${ruleId}`;
-    if (!userAddress || userAddress.length != 42 || !ethers.utils.isHexString(userAddress) || !ethers.utils.isHexString(hexRuleId)) {
-        return "";
-    }
-
-    const userBytes = ethers.utils.arrayify(`${userAddress}`);
-    const ruleIdBytes = ethers.utils.arrayify(hexRuleId);
-
-    var fullEntropyBytes = new Uint8Array(userBytes.length + ruleIdBytes.length);
-    fullEntropyBytes.set(userBytes);
-    fullEntropyBytes.set(ruleIdBytes, userBytes.length);
-    return sha256(fullEntropyBytes);
 }
 
 const getRule = async (ruleId:string):Promise<RuleInfo> => {
