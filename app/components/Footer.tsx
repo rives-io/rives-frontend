@@ -37,7 +37,7 @@ function Footer() {
             <Link href="https://discord.gg/FQnQqKWVn8" rel="noopener noreferrer" target="_blank" className='flex items-center space-x-2'>
                 <DiscordLogo/> <span className='hover:underline'>RiVES</span>
             </Link> */}
-      <div className='flex justify-center pixelated-font'>&copy; Rives 2024</div>
+      <div className='flex justify-center pixelated-font'>&copy; Rives 2025</div>
     </footer>
   )
 }
