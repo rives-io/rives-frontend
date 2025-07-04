@@ -76,4 +76,9 @@ export const envClient = envsafe({
     desc: "Google analytics id.",
     default: "G-0QV24G07N2"
   }),
+  B3_CONTEST_ID: str({
+    input: process.env.NEXT_PUBLIC_B3_CONTEST_ID,
+    desc: "B3 contest id.",
+    default: "8c6b995264ea8c6b995264eacfee7c08a98f4b56"
+  }),
 })
