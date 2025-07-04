@@ -36,7 +36,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { buildUrl, cartridgeIdFromBytes, generateEntropy, ruleIdFromBytes} from "../utils/util";
 // import ReactGA from "react-ga4";
 // import { sendEvent } from "../utils/googleAnalytics";
-import { sendGAEvent } from '@next/third-parties/google'
+import { sendGAEvent } from '@next/third-parties/google';
 
 let canvasPlaying = false;
 
