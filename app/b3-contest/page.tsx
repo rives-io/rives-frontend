@@ -11,6 +11,22 @@ import NoSubmitRivemuPlayer from "./NoSubmitRivemuPlayer";
 
 export async function generateMetadata() {
     const cartridge_id = cartridgeIdFromBytes(envClient.B3_CONTEST_ID);
+    if (!cartridge_id) {
+        return {
+            title: "Play RIVES B3 Contest",
+            openGraph: {
+                siteName: 'rives.io',
+                title: "RIVES B3 Contest",
+                description: "RIVES B3 Contest"
+            },
+            twitter: {
+                title: "RIVES B3 Contest",
+                card: 'summary',
+                creator: '@rives_io',
+                description: "RIVES B3 Contest"
+            },
+        };
+    }
 
     const rulePromise = getRuleInfo(envClient.B3_CONTEST_ID);
     const cartridgePromise = getCartridgeInfo(cartridge_id);
@@ -40,7 +56,7 @@ export async function generateMetadata() {
 
 export default async function PlayB3Contest() {
     const cartridge_id = cartridgeIdFromBytes(envClient.B3_CONTEST_ID);
-
+    
     const rulePromise = getRuleInfo(envClient.B3_CONTEST_ID);
     const cartridgePromise = getCartridgeInfo(cartridge_id);
 
