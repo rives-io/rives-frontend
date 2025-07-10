@@ -122,7 +122,7 @@ export default function NoSubmitRivemuPlayer(
         if (!b3token) {
             const error:ERROR_FEEDBACK = {
                 severity: "alert",
-                message: "You B3 token to submit your gameplay!",
+                message: "You'll need the B3 token to submit your gameplay!",
                 dismissible: true,
                 dissmissFunction: () => setErrorFeedback(undefined)
             };
