@@ -118,8 +118,47 @@ export default function NoSubmitRivemuPlayer(
 
     useEffect(() => {
         console.log("Token from search params: ", b3token, rule_id); 
+        let userAddress = "0x" + sha256(b3token || "").slice(0, 40); // token as address
+
+        if (!b3token) {
+            const error:ERROR_FEEDBACK = {
+                severity: "alert",
+                message: "You B3 token to submit your gameplay!",
+                dismissible: true,
+                dissmissFunction: () => setErrorFeedback(undefined)
+            };
+            setErrorFeedback(error);
+        } else {
+
+            const jwtSplitted = b3token.split(".");
+            if (jwtSplitted.length < 3) {
+                const error:ERROR_FEEDBACK = {
+                    severity: "alert",
+                    message: "Invalid jwt!",
+                    dismissible: true,
+                    dissmissFunction: () => setErrorFeedback(undefined)
+                };
+                setErrorFeedback(error);
+            }
+            const jwtHeader = JSON.parse(Buffer.from(jwtSplitted[0], "base64").toString('binary')); // decode header
+            const jwtBody = JSON.parse(Buffer.from(jwtSplitted[1], "base64").toString('binary')); // decode header
+            const jwtSecret = Buffer.from(jwtSplitted[2], "base64").toString('binary'); // decode header
+            console.log(`Received B3 contest jwt: jwtHeader(${JSON.stringify(jwtHeader)}), jwtBody(${JSON.stringify(jwtBody)})`);
+
+            if (!jwtHeader || !jwtBody || !jwtSecret || !jwtHeader.alg || jwtHeader.alg !== "HS256" ||  !jwtHeader.typ || jwtHeader.typ !== "JWT" || !jwtBody.address) {
+                const error:ERROR_FEEDBACK = {
+                    severity: "alert",
+                    message: "Invalid B3 jwt!",
+                    dismissible: true,
+                    dissmissFunction: () => setErrorFeedback(undefined)
+                };
+                setErrorFeedback(error);
+            }
+            userAddress = jwtBody.address;
+        }
+
         if (rule_id) {
-            loadRule(rule_id);
+            loadRule(rule_id,userAddress);
         }
         document.addEventListener("visibilitychange", (event) => {
             if (document.visibilityState == "hidden") {
@@ -130,19 +169,9 @@ export default function NoSubmitRivemuPlayer(
             }
         });
 
-        if (!b3token) {
-            const error:ERROR_FEEDBACK = {
-                severity: "alert",
-                message: "You B3 token to submit your gameplay!",
-                dismissible: true,
-                dissmissFunction: () => setErrorFeedback(undefined)
-            };
-            setErrorFeedback(error);
-        }
-
     }, []);
 
-    const loadRule = (ruleId:string) => {
+    const loadRule = (ruleId:string,userAddress:string) => {
         setLoadingMessage("Loading rule");
         getRule(ruleId).then((out: RuleInfo) => {
             if (!out) {
@@ -150,8 +179,7 @@ export default function NoSubmitRivemuPlayer(
                 return
             }
             setRule(out);
-            const tokenAsAddress = "0x" + sha256(b3token || "").slice(0, 40); 
-            setEntropy(generateEntropy(tokenAsAddress, out.id));
+            setEntropy(generateEntropy(userAddress, out.id));
             setLoadingMessage("Loading cartridge");
             getCartridgeData(out.cartridge_id).then((data) => {
                 if (!data) {
