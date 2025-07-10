@@ -117,7 +117,6 @@ export default function NoSubmitRivemuPlayer(
     const rivemuRef = useRef<RivemuRef>(null);
 
     useEffect(() => {
-        console.log("Token from search params: ", b3token, rule_id); 
         let userAddress = "0x" + sha256(b3token || "").slice(0, 40); // token as address
 
         if (!b3token) {
@@ -139,22 +138,27 @@ export default function NoSubmitRivemuPlayer(
                     dissmissFunction: () => setErrorFeedback(undefined)
                 };
                 setErrorFeedback(error);
-            }
-            const jwtHeader = JSON.parse(Buffer.from(jwtSplitted[0], "base64").toString('binary')); // decode header
-            const jwtBody = JSON.parse(Buffer.from(jwtSplitted[1], "base64").toString('binary')); // decode header
-            const jwtSecret = Buffer.from(jwtSplitted[2], "base64").toString('binary'); // decode header
-            console.log(`Received B3 contest jwt: jwtHeader(${JSON.stringify(jwtHeader)}), jwtBody(${JSON.stringify(jwtBody)})`);
+            } else {
+                try {
+                    const jwtHeader = JSON.parse(Buffer.from(jwtSplitted[0], "base64").toString('binary')); // decode header
+                    const jwtBody = JSON.parse(Buffer.from(jwtSplitted[1], "base64").toString('binary')); // decode header
+                    const jwtSecret = Buffer.from(jwtSplitted[2], "base64").toString('binary'); // decode header
 
-            if (!jwtHeader || !jwtBody || !jwtSecret || !jwtHeader.alg || jwtHeader.alg !== "HS256" ||  !jwtHeader.typ || jwtHeader.typ !== "JWT" || !jwtBody.address) {
-                const error:ERROR_FEEDBACK = {
-                    severity: "alert",
-                    message: "Invalid B3 jwt!",
-                    dismissible: true,
-                    dissmissFunction: () => setErrorFeedback(undefined)
-                };
-                setErrorFeedback(error);
+                    if (!jwtHeader || !jwtBody || !jwtSecret || !jwtHeader.alg || jwtHeader.alg !== "HS256" ||  !jwtHeader.typ || jwtHeader.typ !== "JWT" || !jwtBody.address) {
+                        throw new Error("Invalid jwt format");
+                    }
+                    userAddress = jwtBody.address;
+                } catch (e) {
+                    console.error("Error parsing jwt", e);
+                    const error:ERROR_FEEDBACK = {
+                        severity: "alert",
+                        message: "Invalid B3 jwt!",
+                        dismissible: true,
+                        dissmissFunction: () => setErrorFeedback(undefined)
+                    };
+                    setErrorFeedback(error);
+                }
             }
-            userAddress = jwtBody.address;
         }
 
         if (rule_id) {
